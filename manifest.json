@@ -6,7 +6,8 @@
 	"description": "Integrate MyAnimeList into MangaDex to autotrack read chapters.",
 
 	"permissions": [
-		"*://myanimelist.net/*"
+		"*://myanimelist.net/*",
+		"storage"
 	],
 
 	"icons": {
