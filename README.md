@@ -32,7 +32,7 @@ Required header to POST
 ```
 
 Colors used:
-* Last open:                       rebeccapurple
+* Last open: rebeccapurple
 * Actual last read chapter on mal: cadetblue
 
 ---
@@ -43,10 +43,12 @@ Optionnal sub chapter (the floating point)
 * Ch. [number].[sub_chapter]
 And the volume number (optionnal) on
 * Vol. [number]
+Detection on the chapter page:
+* optionnal Volume [number] and the chapter with optionnal sub chapter Chapter [number].[sub_chapter]
 
 ---
 
-##Manga Page
+## Manga Page
 1. check if user is logged in
   * abort if not logged in
 2. get manga name and mangadex_id
@@ -56,7 +58,7 @@ And the volume number (optionnal) on
     * if there is a mal link, add it to the MyMangaDex object and add the entry is the local storage
     * if there is no mal link, add the link entry form
 
-#Change log
+## Change log
 Before release done:
 * detect which page is the current one
 * detect if user is logged in
@@ -69,7 +71,7 @@ Before release done:
 * Check if there is a mal id stored to avoid looking for it
 * Store the mal url in local storage
 
-##TODO
+## TODO
 * check only every x minutes or so but check when sending data
 * Follow page:
   * Highlight if last_read
@@ -82,7 +84,7 @@ Before release done:
   * edit last read on mal and last opened
   * add manga to reading list if not in
 
-##Legacy code
+## Legacy code
 Optionnal way to fetch manga and chapter info on chapter page:
 ```javascript
 MyMangaDex.manga_name = document.getElementsByClassName("panel-title")[0].textContent;

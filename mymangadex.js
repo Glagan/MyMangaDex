@@ -20,6 +20,11 @@ function isEmpty(obj) {
    return true;
 }
 
+function debug_info() {
+    console.log(MyMangaDex);
+    browser.storage.local.get().then(data => console.log(data));
+}
+
 function start(logged_in) {
     // If user isn't logged in, can't do anything
     if (logged_in) {
@@ -196,10 +201,7 @@ function manga_page() {
             console.log("No MAL link avaible, can't do anything, try to add one if it exist.");
         }
 
-        // For Devlopment
-        console.log(MyMangaDex);
-        browser.storage.local.get().then(data => console.log(data));
-        // End
+        debug_info();
     }, (error) => {
         console.error("Error fetching data from local storage.", error);
     });
@@ -232,7 +234,7 @@ function chapter_page() {
             break;
         }
     }
-    console.log(MyMangaDex);
+    debug_info();
 }
 
 // START HERE
