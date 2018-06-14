@@ -18,3 +18,7 @@
 # sftp configuration file
 sftp-config.json
 
+node_modules
+.eslintrc.js
+package.json
+.old

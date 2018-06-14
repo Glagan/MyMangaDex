@@ -1,0 +1,24 @@
+{
+	"manifest_version": 2,
+	"name": "MyMangaDex",
+	"version": "1.0",
+
+	"description": "Integrate MyAnimeList into MangaDex to autotrack read chapters.",
+
+	"permissions": [
+		"*://myanimelist.net/*"
+	],
+
+	"icons": {
+		"48": "icons/mmd-48.png",
+		"96": "icons/mmd-96.png"
+	},
+
+	"content_scripts": [{
+		"matches": [
+			"https://mangadex.org/follows",
+			"https://mangadex.org/manga/*",
+			"https://mangadex.org/chapter/*"],
+		"js": ["mymangadex.js"]
+	}]
+}
