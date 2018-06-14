@@ -16,31 +16,35 @@ Stored data
 * Last opened chapter for each manga (manga id, manga name, chapter url, chapter name)
 * MAL url for a manga on mangadex (mal url, mangadex url)
 
---
+---
 
 Useful page ? https://myanimelist.net/mangalist/Glagan/load.json?offset=&status=1
 URL to edit manga on MAL: https://myanimelist.net/ownlist/manga/[id]/edit
 URL to add a manga on MAL: https://myanimelist.net/ownlist/manga/add?selected_manga_id=[id]
 Required header to POST
-headers: {
-    "Content-Type": "application/x-www-form-urlencoded",
-    "accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
-},
+```javascript
+{
+    headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+    }
+}
+```
 
---
+---
 
 Detect chapter number:
 * Ch. [number]
 And the volume number (optionnal) on
 * Vol. [number]
 
---
+---
 
 Colors:
 * Last open: rebeccapurple
 * Actual last read chapter on mal: cadetblue
 
---
+---
 
 Before release done:
 * detect which page is the current one
@@ -52,12 +56,12 @@ Before release done:
 
 Todo:
 * Follow page:
-** Highlight if last_read
+  * Highlight if last_read
 * Manga page:
-** highlight last open on list
-** offset
-** button to add manga to reading list
-** add mal link if there isn't on the page
+  * highlight last open on list
+  * offset
+  * button to add manga to reading list
+  * add mal link if there isn't on the page
 * chapter page:
-** edit last read on mal and last opened
-** add manga to reading list if not in
+  * edit last read on mal and last opened
+  * add manga to reading list if not in
