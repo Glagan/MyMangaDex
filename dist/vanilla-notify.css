@@ -39,10 +39,17 @@
       -webkit-transform: rotate(-45deg);
       -moz-transform: rotate(-45deg);
       transform: rotate(-45deg); }
-
+.vnotify-image {
+  max-width: 100px;
+  max-height: 100px; }
+.vnotify-body {
+  margin-left: 10px; }
 .vnotify-item {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
   width: 20em;
-  padding: 15px;
+  padding: 0;
   position: relative;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -63,11 +70,11 @@
   color: #fff; }
 
 .vnotify-success {
-  background: #2ecc71;
+  background: #2bad61;
   color: #fff; }
 
 .vnotify-error {
-  background: #e74c3c;
+  background: #d14738;
   color: #fff; }
 
 .vnotify-warning {
@@ -77,5 +84,3 @@
 .vnotify-notify {
   background: #333;
   color: #fff; }
-
-/*# sourceMappingURL=vanilla-notify.css.map */

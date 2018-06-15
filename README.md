@@ -85,6 +85,7 @@ Before release done:
 * Fetch all info of an entry to avoid erasing when updating
 * Retrieve total_chapter and total_volume
 * Notifications
+* Manga start and end when tracking chapter count
 
 ## TODO
 * check if online only every x minutes or so but check when sending data
@@ -92,10 +93,10 @@ Before release done:
   * Highlight if last_read or last_open
 * Manga page:
   * offset
-  * button to add manga to reading list
+  * button to add manga to reading list/plan to read
   * add mal link if there isn't on the page
-* chapter page:
-  * add manga to reading list if not in (with start date)
+* Modal to directly edit all informations of a manga
+* Display more information and better interface on manga page
 
 ## Legacy code
 Optionnal way to fetch manga and chapter info on chapter page:
