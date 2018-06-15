@@ -21,6 +21,7 @@
 			"https://mangadex.org/manga/*",
 			"https://mangadex.org/chapter/*",
 			"https://mangadex.org/about"],
-		"js": ["mymangadex.js"]
+		"js": ["dist/vanilla-notify.min.js", "mymangadex.js"],
+		"css": ["dist/vanilla-notify.css"]
 	}]
 }

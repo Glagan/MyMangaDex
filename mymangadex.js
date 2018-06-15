@@ -91,7 +91,6 @@ function fetch_mal_for_manga_data() {
         credentials: 'include'
     }).then((data) => {
         return data.text().then((text) => {
-            try {
             // Comments
             MyMangaDex.more_info.comments = /add_manga_comments.+>(.*)</.exec(text)[1];
             // Finish date
@@ -142,10 +141,9 @@ function fetch_mal_for_manga_data() {
             // Is re-reading - We'll see later for that
             //MyMangaDex.more_info.is_rereading = /add_manga_is_rereading.+value="(\d*)"/.exec(text)[1];
             MyMangaDex.more_info.is_rereading = 0;
-            }
-            catch (error) {
-                console.error(error);
-            }
+            // Bonus : total volume and chapter
+            MyMangaDex.more_info.total_volume = /id="totalVol">(\d*)?<\//.exec(text)[1];
+            MyMangaDex.more_info.total_chapter = /id="totalChap">(\d*)?<\//.exec(text)[1];
         })
     });
 }
@@ -200,8 +198,8 @@ function update_manga_last_read() {
                     }
                 }).then((data) => {
                     data.text().then((text) => {
-                        //console.log(text);
                         console.log("Updated");
+                        vNotify.success({ text: MyMangaDex.manga_name + " as been updated to Chapter " + MyMangaDex.current_chapter.chapter + " out of " + MyMangaDex.more_info.total_chapter, title: 'Manga updated', position: "bottomRight" });
                     });
                 }, (error) => {
                     console.log("Error updating the manga.");
@@ -211,6 +209,19 @@ function update_manga_last_read() {
             }
         } else {
             console.error("Error fetching the last read chapter on MyAnimeList.");
+        }
+    });
+}
+
+/**
+ * Update the last_open and last_open_sub of a mangadex_id entry
+ */
+function update_last_open() {
+    browser.storage.local.set({
+        [MyMangaDex.mangadex_id]: {
+            mal_id: MyMangaDex.mal_id,
+            last_open: MyMangaDex.last_open,
+            last_open_sub: MyMangaDex.last_open_sub
         }
     });
 }
@@ -371,7 +382,6 @@ function chapter_page() {
             break;
         }
     }
-
     // Update last open to this one
     MyMangaDex.last_open = MyMangaDex.current_chapter.chapter;
     MyMangaDex.last_open_sub = MyMangaDex.current_chapter.sub_chapter;
@@ -383,6 +393,7 @@ function chapter_page() {
         // Fetch it from mangadex manga page
         if (isEmpty(data)) {
             console.log("No MAL Link, fetching the manga page to search for one...");
+            vNotify.info({ text: "Fetching MangaDex manga page of " + MyMangaDex.manga_name + " to find a MyAnimeList id.", title: 'No MyAnimeList id', position: "bottomRight" });
             fetch("https://mangadex.org/manga/" + MyMangaDex.mangadex_id, {
                 method: 'GET'
             }).then((data) => {
@@ -393,6 +404,7 @@ function chapter_page() {
                     // If regex is empty, there is no mal link, can't do anything
                     if (MyMangaDex.mal_url === null) {
                         console.log("No MAL link avaible, can't do anything, try to add one if it exist.");
+                        vNotify.error({ text: "No MyAnimeList id found on the manga page, can't do anything.", title: 'No MyAnimeList id', position: "bottomRight" });
 
                         // We still update the last open in the local storage and store a 0 as mal_id to avoid checking
                         MyMangaDex.mal_id = 0;
@@ -407,13 +419,7 @@ function chapter_page() {
                     }
 
                     // Update local storage - after, it doesn't really matter
-                    browser.storage.local.set({
-                        [MyMangaDex.mangadex_id]: {
-                            mal_id: MyMangaDex.mal_id,
-                            last_open: MyMangaDex.last_open,
-                            last_open_sub: MyMangaDex.last_open_sub
-                        }
-                    }).then(debug_info);
+                    update_last_open();
                 });
             }, (error) => {
                 console.error(error);
@@ -428,13 +434,7 @@ function chapter_page() {
             }
 
             // We still update last open if there isn't a mal id
-            browser.storage.local.set({
-                [MyMangaDex.mangadex_id]: {
-                    mal_id: MyMangaDex.mal_id,
-                    last_open: MyMangaDex.last_open,
-                    last_open_sub: MyMangaDex.last_open_sub
-                }
-            });
+            update_last_open();
         }
     }, (error) => {
         console.error("Error fetching data from local storage.", error);

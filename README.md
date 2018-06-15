@@ -82,11 +82,14 @@ Before release done:
 * Avoid looking twice for mal link by setting it to 0
 * clear local storage when visiting https://mangadex.org/about
 * update mal chapter according to the current reading chapter on chapter page
+* Fetch all info of an entry to avoid erasing when updating
+* Retrieve total_chapter and total_volume
+* Notifications
 
 ## TODO
-* check only every x minutes or so but check when sending data
+* check if online only every x minutes or so but check when sending data
 * Follow page:
-  * Highlight if last_read
+  * Highlight if last_read or last_open
 * Manga page:
   * offset
   * button to add manga to reading list
