@@ -226,6 +226,23 @@ function update_last_open() {
     });
 }
 
+function insert_mal_button() {
+    // Insert on the header
+    var parent_node = document.getElementById("report_button").parentElement;
+    var mal_button = document.createElement("button");
+    mal_button.className = "btn btn-default";
+    mal_button.title = "Edit on MyAnimeList";
+    // Add a shiny edit icon to look fancy
+    var edit_icon = document.createElement("span");
+    edit_icon.className = "fas fa-edit fa-fw";
+    mal_button.appendChild(edit_icon);
+    // Have to mess with HTML, can't edit textContent
+    mal_button.innerHTML += " Edit on MyAnimeList";
+    parent_node.insertBefore(mal_button, parent_node.firstElementChild);
+    // Add a text node with only a space, to separate it on the right
+    parent_node.insertBefore(document.createTextNode(" "), parent_node.firstElementChild.nextElementSibling);
+}
+
 function follow_page() {
 }
 
@@ -310,11 +327,16 @@ function manga_page() {
                 // Check if the manga is already in the reading list
                 if (MyMangaDex.last_read > 0) {
                     // Add the current chapter on the page
-                    chapters_column_content.textContent = "Chapter " + MyMangaDex.last_read + " ";
+                    chapters_column_content.textContent = "Chapter " + MyMangaDex.last_read + " out of " + MyMangaDex.more_info.total_chapter + " ";
+                    // Add the MyAnimeList edit link
                     var chapters_column_content_edit = document.createElement("a");
                     chapters_column_content_edit.className = "btn btn-default";
                     chapters_column_content_edit.href = "https://myanimelist.net/ownlist/manga/" + MyMangaDex.mal_id + "/edit";
-                    chapters_column_content_edit.textContent = "Edit in MAL";
+                    // Add the icon
+                    var edit_icon = document.createElement("span");
+                    edit_icon.className = "fas fa-edit fa-fw";
+                    chapters_column_content_edit.appendChild(edit_icon);
+                    chapters_column_content_edit.innerHTML += " Edit on MyAnimeList";
                     // Append nodes
                     chapters_column_content.appendChild(chapters_column_content_edit);
 
@@ -390,10 +412,11 @@ function chapter_page() {
     browser.storage.local.get(MyMangaDex.mangadex_id)
     .then((data) => {
         // If there is no entry for mal link
-        // Fetch it from mangadex manga page
         if (isEmpty(data)) {
             console.log("No MAL Link, fetching the manga page to search for one...");
             vNotify.info({ text: "Fetching MangaDex manga page of " + MyMangaDex.manga_name + " to find a MyAnimeList id.", title: 'No MyAnimeList id', position: "bottomRight" });
+
+            // Fetch it from mangadex manga page
             fetch("https://mangadex.org/manga/" + MyMangaDex.mangadex_id, {
                 method: 'GET'
             }).then((data) => {
@@ -414,6 +437,8 @@ function chapter_page() {
                         // If there is a mal link, add it and save it in local storage
                         MyMangaDex.mal_id = /.+\/(\d+)/.exec(MyMangaDex.mal_url)[1];
 
+                        insert_mal_button();
+
                         // And finally add the chapter read
                         update_manga_last_read();
                     }
@@ -431,6 +456,7 @@ function chapter_page() {
             // If there is a MAL, we update the last read
             if (MyMangaDex.mal_id > 0) {
                 update_manga_last_read();
+                insert_mal_button();
             }
 
             // We still update last open if there isn't a mal id
