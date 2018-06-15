@@ -13,8 +13,8 @@ Chapter page
 * Update last chapter read to the current one if higher
 
 Stored data
-* Last opened chapter for each manga (manga id, manga name, chapter url, chapter name)
-* MAL url for a manga on mangadex (mal url, mangadex url) with a key mangadex id and the value is the mal id
+* MAL id, last open chapter (not saved on mal) and the sub chapter if there is one, for a MangaDex id
+  * mangadex_id:{last_open, last_open_sub, mal_id}
 
 ---
 
@@ -30,10 +30,17 @@ Required header to POST
     }
 }
 ```
+Useful to auto set the finish date
+```javascript
+add_manga[finish_date][year] = Datec.getFullYear();
+add_manga[finish_date][month] = Datec.getMonth()+1;
+add_manga[finish_date][day] = Datec.getDate();
+```
 
 Colors used:
 * Last open: rebeccapurple
 * Actual last read chapter on mal: cadetblue
+* All chapters lower than the last read and that are read: yellow (maybe)
 
 ---
 
@@ -43,6 +50,7 @@ Optionnal sub chapter (the floating point)
 * Ch. [number].[sub_chapter]
 And the volume number (optionnal) on
 * Vol. [number]
+
 Detection on the chapter page:
 * optionnal Volume [number] and the chapter with optionnal sub chapter Chapter [number].[sub_chapter]
 
@@ -65,24 +73,26 @@ Before release done:
 * fetch last read chapter on mal and display it
 * highlight last read chapter
 * detect each chapters, with optionnal volume and "sub" chapter (eg: 18[.2])
-
 * Better readme
 * separated each pages in functions for clarity
 * Check if there is a mal id stored to avoid looking for it
 * Store the mal url in local storage
+* Fetch MAL link from manga page if directly on chapter page
+* Track of last_open (update on chapter page)
+* Avoid looking twice for mal link by setting it to 0
+* clear local storage when visiting https://mangadex.org/about
+* update mal chapter according to the current reading chapter on chapter page
 
 ## TODO
 * check only every x minutes or so but check when sending data
 * Follow page:
   * Highlight if last_read
 * Manga page:
-  * highlight last open on list
   * offset
   * button to add manga to reading list
   * add mal link if there isn't on the page
 * chapter page:
-  * edit last read on mal and last opened
-  * add manga to reading list if not in
+  * add manga to reading list if not in (with start date)
 
 ## Legacy code
 Optionnal way to fetch manga and chapter info on chapter page:
