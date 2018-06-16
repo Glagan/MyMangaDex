@@ -15,12 +15,17 @@
 		"96": "icons/mmd-96.png"
 	},
 
+	"options_ui": {
+		"page": "options.html"
+	},
+
 	"content_scripts": [{
 		"matches": [
 			"https://mangadex.org/follows*",
 			"https://mangadex.org/manga/*",
 			"https://mangadex.org/chapter/*",
 			"https://mangadex.org/about",
+			"https://mangadex.org/changelog",
 			"https://mangadex.org/?page=search&title=*",
 			"https://mangadex.org/quick_search/*"],
 		"js": ["dist/vanilla-notify.min.js", "mymangadex.js"],

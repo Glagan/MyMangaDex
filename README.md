@@ -87,15 +87,15 @@ Before release done:
 * Notifications
 * Manga start and end when tracking chapter count
 * Better follow page
+* Real performance improvement by removing is_logged_in and checkin directly when fetching
+* Informations on options page
 
 ## TODO
-* check if online only every x minutes or so but check when sending data
 * Manga page:
   * offset
   * button to add manga to reading list/plan to read
   * add mal link if there isn't on the page
 * Modal to directly edit all informations of a manga
-* Display more information and better interface on manga page
 * "Init" page to fetch all mangas from batoto and myanimelist to sync them
 
 ## Legacy code
