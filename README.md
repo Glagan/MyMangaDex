@@ -86,17 +86,17 @@ Before release done:
 * Retrieve total_chapter and total_volume
 * Notifications
 * Manga start and end when tracking chapter count
+* Better follow page
 
 ## TODO
 * check if online only every x minutes or so but check when sending data
-* Follow page:
-  * Highlight if last_read or last_open
 * Manga page:
   * offset
   * button to add manga to reading list/plan to read
   * add mal link if there isn't on the page
 * Modal to directly edit all informations of a manga
 * Display more information and better interface on manga page
+* "Init" page to fetch all mangas from batoto and myanimelist to sync them
 
 ## Legacy code
 Optionnal way to fetch manga and chapter info on chapter page:
@@ -109,5 +109,35 @@ MyMangaDex.current_chapter = {
   volume: volume_and_chapter[2],
   chapter: volume_and_chapter[4],
   sub_chapter: volume_and_chapter[5]
+}
+```
+Add a follow button on search page
+```javascript
+if (MyMangaDex.url.indexOf("page=search") > -1) {
+  var result_list = document.getElementsByClassName("table table-striped table-condensed")[0].children[1].children;
+  var i = 0;
+  for (var manga of result_list) {
+    if (i%2 == 0) {
+      var regex = /manga\/(\d+)\/(.+)/.exec(manga.children[2].children[0].href);
+      var id = regex[1];
+      var name = regex[2];
+      var button = document.createElement("a");
+      button.textContent = "Follow";
+      button.className = "btn btn-default";
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+
+        fetch("https://mangadex.org/ajax/actions.ajax.php?function=manga_follow&id=" + id + "&type=1")
+        .then((data) => {
+          vNotify.success({title: "Manga followed", text: "<b>" + name + "</b> is now in the reading list.", position: "bottomRight"});
+        }, (error) => {
+          console.error(error);
+        })
+      })
+      manga.children[2].appendChild(document.createTextNode(" "));
+      manga.children[2].appendChild(button);
+    }
+    i++;
+  }
 }
 ```

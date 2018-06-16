@@ -17,7 +17,7 @@
 
 	"content_scripts": [{
 		"matches": [
-			"https://mangadex.org/follows",
+			"https://mangadex.org/follows*",
 			"https://mangadex.org/manga/*",
 			"https://mangadex.org/chapter/*",
 			"https://mangadex.org/about",
