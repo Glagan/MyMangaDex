@@ -56,15 +56,47 @@ Detection on the chapter page:
 
 ---
 
-## Manga Page
-1. check if user is logged in
-  * abort if not logged in
-2. get manga name and mangadex_id
-3. check if there is a entry for this manga in the local storage
-  * if there is an entry, add the mal id to the MyMangaDex object
-  * if there is no entry, check if there is a mal link
-    * if there is a mal link, add it to the MyMangaDex object and add the entry is the local storage
-    * if there is no mal link, add the link entry form
+# Steps
+## Follow page
+1. For each row
+  1. Check if manga is in local storage
+  2. if row is the last open chapter, highlight it
+  3. if row is lower than the last open chapter, delete it (useless)
+2. if row is another chapter of a previous row
+  * if it's the last open chapter, highlight it and all previous rows of the same manga
+## Manga page
+1. check if there is a entry for this manga in the local storage
+  * if there is an entry
+    1. add the mal id to the MyMangaDex object
+    2. Fetch information on MyAnimeList
+    3. Display them and hightlight last read chapter
+  * if there is no entry
+    1. check if there is a mal link
+      * if there is a mal link
+        1. add it to the MyMangaDex object
+        2. save it i, the local storage
+        3. Fetch information on MyAnimeList
+        4. Display them and hightlight last read chapter
+      * if there is no mal link
+        1. add the link entry form
+        2. Abort
+## Chapter page
+1. Check if there is an entry for this manga in the local storage
+  * if there is an entry
+    1. Fetch information on MyAnimeList
+    2. Update the last read chapter on mal if it's lower than the current chapter
+      * Set the manga to finish if it's the last chapter
+      * Start reading the manga if it's the first chapter
+  * if there is no entry
+    1. Fetch mangadex manga page
+    2. Search for a MyAnimeList link
+      * if there is a link
+        1. Save it to the local storage
+        2. Fetch information on MyAnimeList
+        3. Update the last read chapter on mal if it's lower than the current chapter (And do the same as higher)
+      * if there is no mal link, abort
+
+---
 
 ## Change log
 Before release done:
@@ -117,6 +149,7 @@ if (MyMangaDex.url.indexOf("page=search") > -1) {
   var result_list = document.getElementsByClassName("table table-striped table-condensed")[0].children[1].children;
   var i = 0;
   for (var manga of result_list) {
+    // One manga takes two rows, for the thumbnail (???)
     if (i%2 == 0) {
       var regex = /manga\/(\d+)\/(.+)/.exec(manga.children[2].children[0].href);
       var id = regex[1];
