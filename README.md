@@ -18,9 +18,14 @@ Stored data
 
 ---
 
+Import favorites from kissmanga https://old.reddit.com/r/manga/comments/8qebu4/import_kissmanga_bookmarks_to_mangadex/
+
 Useful page ? https://myanimelist.net/mangalist/Glagan/load.json?offset=&status=1
+
 URL to edit manga on MAL: https://myanimelist.net/ownlist/manga/[id]/edit
+
 URL to add a manga on MAL: https://myanimelist.net/ownlist/manga/add?selected_manga_id=[id]
+
 Required header to POST
 ```javascript
 {
@@ -129,6 +134,7 @@ Before release done:
   * offset
   * add mal link if there isn't on the page
 * Modal to directly edit all informations of a manga
+* Detect not approved manga
 
 ## Legacy code
 Optionnal way to fetch manga and chapter info on chapter page:

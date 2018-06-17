@@ -21,8 +21,9 @@ window.MyMangaDex = {
 };
 
 function fetch_mal_manga(mal_manga, offset=0) {
-    console.log("fetch " + offset + "-" + (offset+300));
-    fetch("https://myanimelist.net/mangalist/Glagan/load.json?offset=" + offset + "&status=7", {
+    console.log("fetch mal manga from " + offset + " to " + (offset+300));
+
+    return fetch("https://myanimelist.net/mangalist/Glagan/load.json?offset=" + offset + "&status=7", {
         method: 'GET',
         redirect: 'follow',
         credentials: 'include'
@@ -47,9 +48,9 @@ function fetch_mal_manga(mal_manga, offset=0) {
 
 //table table-striped table-hover table-condensed
 function fetch_mangadex_manga(mangadex_list, page=1, max_page=1) {
-    console.log("fetch page " + page + " of " + max_page);
+    console.log("fetch mangadex follow page " + page + " of " + max_page);
 
-    fetch("https://mangadex.org/follows/manga/0/0/" + page + "/", {
+    return fetch("https://mangadex.org/follows/manga/0/0/" + page + "/", {
         method: 'GET',
         redirect: 'follow',
         credentials: 'include'
@@ -75,8 +76,6 @@ function fetch_mangadex_manga(mangadex_list, page=1, max_page=1) {
             // We fetch the next page if required
             if (page < max_page) {
                 fetch_mangadex_manga(mangadex_list, page+1, max_page);
-            } else {
-                update_all_manga_with_mal_data(mangadex_list);
             }
         });
     }).catch((error) => {
@@ -84,64 +83,69 @@ function fetch_mangadex_manga(mangadex_list, page=1, max_page=1) {
     });
 }
 
-function update_all_manga_with_mal_data(mangadex_list, index=0) {
-    if (index < mangadex_list.length) {
-        console.log("Updating " + (index+1) + "/" + mangadex_list.length);
-        fetch("https://mangadex.org/manga/" + mangadex_list[index], {
-            method: 'GET',
-            cache: 'no-cache'
-        }).then((data) => {
-            data.text().then((text) => {
-                // Scan the manga page for the mal icon and mal url
-                let manga_name = /<title>(.+)\s\(Manga\)/.exec(text)[1];
-                console.log("-> " + manga_name);
-                try {
-                let mal_url = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(text);
-                let manga_image = /src='\/(.+)'\swidth='100%'\stitle='Manga image'/.exec(text);
-                manga_image = "https://mangadex.org/" + manga_image[1];
+function update_all_manga_with_mal_data(mal_list, mangadex_list, index=0) {
+    console.log("Updating " + (index+1) + "/" + mangadex_list.length);
 
-                let manga = {
-                    mangadex_id: mangadex_list[index],
-                    mal_id: 0,
-                    manga_name: manga_name,
-                    manga_image: manga_image,
-                    last_open: 0,
-                    last_open_sub: undefined,
-                    more_info: {}
-                };
+    return fetch("https://mangadex.org/manga/" + mangadex_list[index], {
+        method: 'GET',
+        cache: 'no-cache'
+    }).then((data) => {
+        data.text().then((text) => {
+            // Scan the manga page for the mal icon and mal url
+            let manga_name = /<title>(.+)\s\(Manga\)/.exec(text)[1];
+            console.log("-> " + manga_name);
 
-                // If regex is empty, there is no mal link, can't do anything
-                if (mal_url === null) {
-                    // insert in local storage
-                    update_last_open(manga).then((data) => {
-                        index++;
-                        update_all_manga_with_mal_data(mangadex_list, index);
-                    });
-                } else {
-                    // Finish gettint the mal url
-                    mal_url = mal_url[1];
-                    // If there is a mal link, add it and save it in local storage
-                    manga.mal_id = /.+\/(\d+)/.exec(mal_url)[1];
+            let mal_url = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(text);
+            let manga_image = /src='\/(.+)'\swidth='100%'\stitle='Manga image'/.exec(text);
+            manga_image = "https://mangadex.org/" + manga_image[1];
 
-                    // fetch data from MyAnimeList
-                    fetch_mal_for_manga_data(manga)
-                    .then((data) => {
-                        manga.last_open = manga.last_read;
-                        console.log("-> Set to Chapter " + manga.last_open);
-                        update_last_open(manga).then((data) => {
-                            index++;
-                            update_all_manga_with_mal_data(mangadex_list, index);
-                        });
-                    });
+            let manga = {
+                mangadex_id: mangadex_list[index],
+                mal_id: 0,
+                manga_name: manga_name,
+                manga_image: manga_image,
+                last_open: 0,
+                last_open_sub: undefined,
+                more_info: {}
+            };
+
+            // If regex is empty, there is no mal link, can't do anything
+            if (mal_url === null) {
+                // insert in local storage
+                update_last_open(manga).then((data) => {
+                    index++;
+                    if (index < mangadex_list.length) {
+                        update_all_manga_with_mal_data(mal_list, mangadex_list, index);
+                    }
+                });
+            } else {
+                // Finish gettint the mal url
+                mal_url = mal_url[1];
+                // If there is a mal link, add it and save it in local storage
+                manga.mal_id = /.+\/(\d+)/.exec(mal_url)[1];
+
+                // Search for data from the mal_list object
+                let is_in_list = false;
+                for (var mal_manga of mal_list) {
+                    if (mal_manga.manga_id == manga.mal_id) {
+                        manga.last_open = mal_manga.num_read_chapters;
+                        break;
+                    }
                 }
-                } catch (error) {
-                    console.error(error);
-                }
-            });
-        }).catch((error) => {
-            console.error(error);
+
+                // Update last open for the manga
+                console.log("-> Set to Chapter " + manga.last_open);
+                update_last_open(manga).then((data) => {
+                    index++;
+                    if (index < mangadex_list.length) {
+                        update_all_manga_with_mal_data(mal_list, mangadex_list, index);
+                    }
+                });
+            }
         });
-    }
+    }).catch((error) => {
+        console.error(error);
+    });
 }
 
 // FUNCTIONS
@@ -172,10 +176,21 @@ function start() {
         let mal_manga = [];
         let mangadex_manga = [];
         //fetch_mal_manga(mal_manga);
-        fetch_mangadex_manga(mangadex_manga);
+        Promise.all([fetch_mal_manga(mal_manga), fetch_mangadex_manga(mangadex_manga)])
+        .then(() => {
+            update_all_manga_with_mal_data(mal_manga, mangadex_manga);
+        }).then(() => {
+            vNotify.success({
+                title: 'All MyAnimeList data imported.',
+                message: 'You can review manga without a MyAnimeList link in the list.',
+                position: "bottomRight",
+                image: "https://i.imgur.com/oMV2BJt.png",
+                sticky: true
+            });
+        });
     } else if (MyMangaDex.url.indexOf("org/about") > -1) {
         // =============
-        //browser.storage.local.clear();
+        browser.storage.local.clear();
         vNotify.notify({ text: 'text', title: 'title', sticky:true, position: "bottomRight" });
         vNotify.notify({ text: 'text', title: 'title', sticky:true, position: "bottomRight", image:"https://mangadex.org/images/manga/18331.jpg?1528247512"});
         debug_info();
@@ -731,7 +746,7 @@ function manga_page() {
                     var parent_node = document.getElementsByClassName("table table-condensed")[0].firstElementChild;
                     var chapters_row = document.createElement("tr");
                     var chapters_column_header = document.createElement("th");
-                    chapters_column_header.textContent = "Statut:";
+                    chapters_column_header.textContent = "Status:";
                     var chapters_column_content = document.createElement("td");
 
                     // Check if the manga is already in the reading list
