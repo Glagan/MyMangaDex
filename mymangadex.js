@@ -20,6 +20,130 @@ window.MyMangaDex = {
     more_info: {}
 };
 
+function fetch_mal_manga(mal_manga, offset=0) {
+    console.log("fetch " + offset + "-" + (offset+300));
+    fetch("https://myanimelist.net/mangalist/Glagan/load.json?offset=" + offset + "&status=7", {
+        method: 'GET',
+        redirect: 'follow',
+        credentials: 'include'
+    }).then(function(response) {
+        return response.json();
+    }).then((data) => {
+        // Insert each manga fetched in the list
+        for (let manga of data) {
+            mal_manga.push(manga);
+        }
+
+        // If there is 300 items, we might have reached the list limit so we try again
+        if (data.length == 300) {
+            fetch_mal_manga(mal_manga, offset+300);
+        } else {
+            console.log(mal_manga);
+        }
+    }).catch((error) => {
+        console.error(error);
+    });
+}
+
+//table table-striped table-hover table-condensed
+function fetch_mangadex_manga(mangadex_list, page=1, max_page=1) {
+    console.log("fetch page " + page + " of " + max_page);
+
+    fetch("https://mangadex.org/follows/manga/0/0/" + page + "/", {
+        method: 'GET',
+        redirect: 'follow',
+        credentials: 'include'
+    }).then((data) => {
+        return data.text().then((text) => {
+            let regex = /<a\sclass=''\stitle='.+'\shref='\/manga\/(\d+)\/.+'>.+<\/a>/g;
+            let m;
+
+            // Get all manga ids
+            while ((m = regex.exec(text)) !== null) {
+                // This is necessary to avoid infinite loops with zero-width matches
+                if (m.index === regex.lastIndex) {
+                    regex.lastIndex++;
+                }
+                mangadex_list.push(m[1]);
+            }
+
+            // Check the number of pages
+            if (page == 1) {
+                max_page = Math.ceil(/Showing\s\d+\sto\s\d+\sof\s(\d+)\stitles/.exec(text)[1] / 100);
+            }
+
+            // We fetch the next page if required
+            if (page < max_page) {
+                fetch_mangadex_manga(mangadex_list, page+1, max_page);
+            } else {
+                update_all_manga_with_mal_data(mangadex_list);
+            }
+        });
+    }).catch((error) => {
+        console.error(error);
+    });
+}
+
+function update_all_manga_with_mal_data(mangadex_list, index=0) {
+    if (index < mangadex_list.length) {
+        console.log("Updating " + (index+1) + "/" + mangadex_list.length);
+        fetch("https://mangadex.org/manga/" + mangadex_list[index], {
+            method: 'GET',
+            cache: 'no-cache'
+        }).then((data) => {
+            data.text().then((text) => {
+                // Scan the manga page for the mal icon and mal url
+                let manga_name = /<title>(.+)\s\(Manga\)/.exec(text)[1];
+                console.log("-> " + manga_name);
+                try {
+                let mal_url = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(text);
+                let manga_image = /src='\/(.+)'\swidth='100%'\stitle='Manga image'/.exec(text);
+                manga_image = "https://mangadex.org/" + manga_image[1];
+
+                let manga = {
+                    mangadex_id: mangadex_list[index],
+                    mal_id: 0,
+                    manga_name: manga_name,
+                    manga_image: manga_image,
+                    last_open: 0,
+                    last_open_sub: undefined,
+                    more_info: {}
+                };
+
+                // If regex is empty, there is no mal link, can't do anything
+                if (mal_url === null) {
+                    // insert in local storage
+                    update_last_open(manga).then((data) => {
+                        index++;
+                        update_all_manga_with_mal_data(mangadex_list, index);
+                    });
+                } else {
+                    // Finish gettint the mal url
+                    mal_url = mal_url[1];
+                    // If there is a mal link, add it and save it in local storage
+                    manga.mal_id = /.+\/(\d+)/.exec(mal_url)[1];
+
+                    // fetch data from MyAnimeList
+                    fetch_mal_for_manga_data(manga)
+                    .then((data) => {
+                        manga.last_open = manga.last_read;
+                        console.log("-> Set to Chapter " + manga.last_open);
+                        update_last_open(manga).then((data) => {
+                            index++;
+                            update_all_manga_with_mal_data(mangadex_list, index);
+                        });
+                    });
+                }
+                } catch (error) {
+                    console.error(error);
+                }
+            });
+        }).catch((error) => {
+            console.error(error);
+        });
+    }
+}
+
 // FUNCTIONS
 
 // https://stackoverflow.com/a/34491287/7794671
@@ -37,12 +161,21 @@ function debug_info() {
     });
 }
 
+// PAGES
+
 function start() {
     MyMangaDex.url = window.location.href;
 
-    if (MyMangaDex.url.indexOf("org/about") > -1) {
+    if (MyMangaDex.url.indexOf("org/changelog") > -1) {
+        console.log("Import page");
+        console.log("Fetching all manga...");
+        let mal_manga = [];
+        let mangadex_manga = [];
+        //fetch_mal_manga(mal_manga);
+        fetch_mangadex_manga(mangadex_manga);
+    } else if (MyMangaDex.url.indexOf("org/about") > -1) {
         // =============
-        browser.storage.local.clear();
+        //browser.storage.local.clear();
         vNotify.notify({ text: 'text', title: 'title', sticky:true, position: "bottomRight" });
         vNotify.notify({ text: 'text', title: 'title', sticky:true, position: "bottomRight", image:"https://mangadex.org/images/manga/18331.jpg?1528247512"});
         debug_info();
@@ -93,13 +226,13 @@ function insert_mal_link_form() {
 /**
  * Function that fetch the edit page of a manga and "parse" it to get the required data to update it later
  */
-function fetch_mal_for_manga_data() {
-    return fetch("https://myanimelist.net/ownlist/manga/" + MyMangaDex.mal_id + "/edit?hideLayout", {
+function fetch_mal_for_manga_data(manga) {
+    return fetch("https://myanimelist.net/ownlist/manga/" + manga.mal_id + "/edit?hideLayout", {
         method: 'GET',
         redirect: 'follow',
         credentials: 'include'
     }).then((data) => {
-        MyMangaDex.more_info.redirected = data.redirected;
+        manga.more_info.redirected = data.redirected;
         return data.text().then((text) => {
             if (text == "401 Unauthorized") {
                 vNotify.error({
@@ -111,62 +244,64 @@ function fetch_mal_for_manga_data() {
                 MyMangaDex.logged_in = false;
             } else {
                 // CSRF Token
-                MyMangaDex.csrf_token = /'csrf_token'\scontent='(.{40})'/.exec(text)[1];
+                manga.csrf_token = /'csrf_token'\scontent='(.{40})'/.exec(text)[1];
                 // Comments
-                MyMangaDex.more_info.comments = /add_manga_comments.+>(.*)</.exec(text)[1];
+                manga.more_info.comments = /add_manga_comments.+>(.*)</.exec(text)[1];
                 // Finish date
-                MyMangaDex.more_info.finish_date = {};
-                MyMangaDex.more_info.finish_date.month = (/add_manga_finish_date_month.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1] || "");
-                MyMangaDex.more_info.finish_date.day = (/add_manga_finish_date_day.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1] || "");
-                MyMangaDex.more_info.finish_date.year = (/add_manga_finish_date_year.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1] || "");
+                manga.more_info.finish_date = {};
+                manga.more_info.finish_date.month = (/add_manga_finish_date_month.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1] || "");
+                manga.more_info.finish_date.day = (/add_manga_finish_date_day.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1] || "");
+                manga.more_info.finish_date.year = (/add_manga_finish_date_year.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1] || "");
                 // Ask to discuss
-                MyMangaDex.more_info.ask_to_discuss = /add_manga_is_asked_to_discuss.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
-                MyMangaDex.more_info.ask_to_discuss = (MyMangaDex.more_info.ask_to_discuss === null) ? 0 : MyMangaDex.more_info.ask_to_discuss[1];
+                manga.more_info.ask_to_discuss = /add_manga_is_asked_to_discuss.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
+                manga.more_info.ask_to_discuss = (manga.more_info.ask_to_discuss === null) ? 0 : manga.more_info.ask_to_discuss[1];
                 // Last read chapter
-                MyMangaDex.last_read = /add_manga_num_read_chapters.+value="(\d+)?"/.exec(text);
-                MyMangaDex.last_read = (MyMangaDex.last_read === null) ? "" : MyMangaDex.last_read[1];
+                manga.last_read = /add_manga_num_read_chapters.+value="(\d+)?"/.exec(text);
+                manga.last_read = (manga.last_read === null) ? "" : manga.last_read[1];
                 // Total times re-read
-                MyMangaDex.more_info.total_reread = /add_manga_num_read_times.+value="(\d+)?"/.exec(text);
-                MyMangaDex.more_info.total_reread = (MyMangaDex.more_info.total_reread === null) ? 0 : MyMangaDex.more_info.total_reread[1];
+                manga.more_info.total_reread = /add_manga_num_read_times.+value="(\d+)?"/.exec(text);
+                manga.more_info.total_reread = (manga.more_info.total_reread === null) ? 0 : manga.more_info.total_reread[1];
                 // Last read volume
-                MyMangaDex.more_info.last_volume = /add_manga_num_read_volumes.+value="(\d+)?"/.exec(text);
-                MyMangaDex.more_info.last_volume = (MyMangaDex.more_info.last_volume === null) ? "" : MyMangaDex.more_info.last_volume[1];
+                manga.more_info.last_volume = /add_manga_num_read_volumes.+value="(\d+)?"/.exec(text);
+                manga.more_info.last_volume = (manga.more_info.last_volume === null) ? "" : manga.more_info.last_volume[1];
                 // Retail volumes
-                MyMangaDex.more_info.retail_volumes = /add_manga_num_retail_volumes.+value="(\d+)?"/.exec(text);
-                MyMangaDex.more_info.retail_volumes = (MyMangaDex.more_info.retail_volumes === null) ? "" : MyMangaDex.more_info.retail_volumes[1];
+                manga.more_info.retail_volumes = /add_manga_num_retail_volumes.+value="(\d+)?"/.exec(text);
+                manga.more_info.retail_volumes = (manga.more_info.retail_volumes === null) ? "" : manga.more_info.retail_volumes[1];
                 // Priority
-                MyMangaDex.more_info.priority = /add_manga_priority.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
-                MyMangaDex.more_info.priority = (MyMangaDex.more_info.priority === null) ? 0 : MyMangaDex.more_info.priority[1];
+                manga.more_info.priority = /add_manga_priority.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
+                manga.more_info.priority = (manga.more_info.priority === null) ? 0 : manga.more_info.priority[1];
                 // Re-read value
-                MyMangaDex.more_info.reread_value = /add_manga_reread_value.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
-                MyMangaDex.more_info.reread_value = (MyMangaDex.more_info.reread_value === null) ? "" : MyMangaDex.more_info.reread_value[1];
+                manga.more_info.reread_value = /add_manga_reread_value.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
+                manga.more_info.reread_value = (manga.more_info.reread_value === null) ? "" : manga.more_info.reread_value[1];
                 // Score
-                MyMangaDex.more_info.score = /add_manga_score.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
-                MyMangaDex.more_info.score = (MyMangaDex.more_info.score === null) ? "" : MyMangaDex.more_info.score[1];
+                manga.more_info.score = /add_manga_score.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
+                manga.more_info.score = (manga.more_info.score === null) ? "" : manga.more_info.score[1];
                 // SNS Post type
-                MyMangaDex.more_info.sns_post_type = /add_manga_sns_post_type.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)
-                MyMangaDex.more_info.sns_post_type = (MyMangaDex.more_info.sns_post_type === null) ? 0 : MyMangaDex.more_info.sns_post_type[1];
+                manga.more_info.sns_post_type = /add_manga_sns_post_type.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)
+                manga.more_info.sns_post_type = (manga.more_info.sns_post_type === null) ? 0 : manga.more_info.sns_post_type[1];
                 // Start date
-                MyMangaDex.more_info.start_date = {};
-                MyMangaDex.more_info.start_date.month = (/add_manga_start_date_month.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1] || "");
-                MyMangaDex.more_info.start_date.day = (/add_manga_start_date_day.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1] || "");
-                MyMangaDex.more_info.start_date.year = (/add_manga_start_date_year.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1] || "");
+                manga.more_info.start_date = {};
+                manga.more_info.start_date.month = (/add_manga_start_date_month.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1] || "");
+                manga.more_info.start_date.day = (/add_manga_start_date_day.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1] || "");
+                manga.more_info.start_date.year = (/add_manga_start_date_year.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1] || "");
                 // Status
-                MyMangaDex.more_info.status = /add_manga_status.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
-                MyMangaDex.more_info.status = (MyMangaDex.more_info.status === null) ? 1 : MyMangaDex.more_info.status[1];
+                manga.more_info.status = /add_manga_status.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
+                manga.more_info.status = (manga.more_info.status === null) ? 1 : manga.more_info.status[1];
                 // Storage type
-                MyMangaDex.more_info.storage_type = /add_manga_storage_type.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
-                MyMangaDex.more_info.storage_type = (MyMangaDex.more_info.storage_type === null) ? "" : MyMangaDex.more_info.storage_type[1];
+                manga.more_info.storage_type = /add_manga_storage_type.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
+                manga.more_info.storage_type = (manga.more_info.storage_type === null) ? "" : manga.more_info.storage_type[1];
                 // Tags
-                MyMangaDex.more_info.tags = /add_manga_tags.+>(.*)*</.exec(text)[1] || "";
+                manga.more_info.tags = /add_manga_tags.+>(.*)*</.exec(text)[1] || "";
                 // Is re-reading - We'll see later for that
-                //MyMangaDex.more_info.is_rereading = /add_manga_is_rereading.+value="(\d*)"/.exec(text)[1];
-                MyMangaDex.more_info.is_rereading = 0;
+                //manga.more_info.is_rereading = /add_manga_is_rereading.+value="(\d*)"/.exec(text)[1];
+                manga.more_info.is_rereading = 0;
                 // Bonus : total volume and chapter
-                MyMangaDex.more_info.total_volume = /id="totalVol">(\d*)?<\//.exec(text)[1];
-                MyMangaDex.more_info.total_chapter = /id="totalChap">(\d*)?<\//.exec(text)[1];
+                manga.more_info.total_volume = /id="totalVol">(.*)?<\//.exec(text)[1];
+                manga.more_info.total_chapter = /id="totalChap">(.*)?<\//.exec(text)[1];
             }
-        })
+        });
+    }).catch((error) => {
+        console.error(error);
     });
 }
 
@@ -177,7 +312,7 @@ function fetch_mal_for_manga_data() {
  *  And the second to update the last read chapter
  */
 function update_manga_last_read(set_status=1) {
-    return fetch_mal_for_manga_data().then((data) => {
+    return fetch_mal_for_manga_data(MyMangaDex).then((data) => {
         if (MyMangaDex.logged_in) {
             // If the current chapter is higher than the last read one
             if (MyMangaDex.last_read == "" || parseInt(MyMangaDex.last_read) < parseInt(MyMangaDex.current_chapter.chapter)) {
@@ -247,7 +382,7 @@ function update_manga_last_read(set_status=1) {
                         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
                     }
                 }).then((data) => {
-                    data.text().then((text) => {
+                    //data.text().then((text) => {
                         if (status == 6) {
                             vNotify.success({
                                 title: "Manga updated",
@@ -281,7 +416,7 @@ function update_manga_last_read(set_status=1) {
                                 });
                             }
                         }
-                    });
+                    //});
                 }, (error) => {
                     console.error("Error updating the manga.");
                 });
@@ -300,22 +435,22 @@ function update_manga_last_read(set_status=1) {
 /**
  * Update the last_open and last_open_sub of a mangadex_id entry
  */
-function update_last_open() {
-    browser.storage.local.set({
-        [MyMangaDex.mangadex_id]: {
-            mal_id: MyMangaDex.mal_id,
-            image: MyMangaDex.manga_image,
-            last_open: MyMangaDex.last_open,
-            last_open_sub: MyMangaDex.last_open_sub
+function update_last_open(manga) {
+    return browser.storage.local.set({
+        [manga.mangadex_id]: {
+            mal_id: manga.mal_id,
+            image: manga.manga_image,
+            last_open: manga.last_open,
+            last_open_sub: manga.last_open_sub
         }
     }).then((data) => {
         // Show a notification for updated last opened if there is no MyAnimeList id
-        if (MyMangaDex.mal_id == 0) {
+        if (manga.mal_id == 0) {
             vNotify.success({
                 title: "Manga updated",
-                text: "<b>" + MyMangaDex.manga_name + "</b> last open Chapter as been updated to " + MyMangaDex.current_chapter.chapter,
+                text: "<b>" + manga.manga_name + "</b> last open Chapter as been updated to " + manga.last_open,
                 position: "bottomRight",
-                image: MyMangaDex.manga_image
+                image: manga.manga_image
             });
         }
     });
@@ -416,17 +551,28 @@ function follow_page() {
     var main_table = document.getElementsByClassName("table table-striped table-hover table-condensed")[0];
     var main_chapter_table = main_table.querySelector("tbody");
 
+    // Keep informations about the previous rows if there is a row with empty name column
     var last_seen_info = {};
+
+    // Keep track of alone old updated chapters
+    var deleteable = [];
+    var check_delete = [];
+    var manga_count = {};
+
+    // Launch each row check as promise to process them once it's done
+    let promises = [];
     for (let element of main_chapter_table.children) {
         let manga_name = "";
         let manga_id = 0;
         let saved_nodes = [];
 
+        // If it's a row with a name
         if (element.firstElementChild.childElementCount > 0) {
             manga_name = element.firstElementChild.firstElementChild.textContent;
             manga_id = /\/manga\/(\d+)\//.exec(element.firstElementChild.firstElementChild.href)[1];
             // Save to last_seen_info
-            last_seen_info = {manga_name:manga_name, manga_id:manga_id,saved_nodes:[element.firstElementChild]};
+            last_seen_info = { manga_name: manga_name, manga_id: manga_id, saved_nodes: [element.firstElementChild] };
+        // Else it's a empty name row, so we load the previous row
         } else {
             manga_name = last_seen_info.manga_name;
             manga_id = last_seen_info.manga_id;
@@ -438,10 +584,24 @@ function follow_page() {
         let volume_and_chapter = /(Vol\.\s(\d+)|).*(Ch\.\s(\d+))\.*(\d+)*/.exec(element.children[2].firstElementChild.textContent);
 
         // Check local storage for last open
-        browser.storage.local.get(manga_id)
+        // Push in the array of promises to process later once every chapter is done
+        promises.push(
+            browser.storage.local.get(manga_id)
             .then((data) => {
                 if (!isEmpty(data)) {
                     let manga_info = data[manga_id];
+
+                    // Keep track of manga chapter count and their nodes
+                    if (manga_count.hasOwnProperty(manga_id)) {
+                        manga_count[manga_id].count++;
+                        manga_count[manga_id].nodes.push(element);
+                    } else {
+                        manga_count[manga_id] = {
+                            count: 1,
+                            nodes: [element]
+                        };
+                    }
+
                     // Highlight last read
                     if (parseInt(manga_info.last_open) == parseInt(volume_and_chapter[4]) &&
                         (volume_and_chapter[5] === undefined || manga_info.last_open_sub === undefined || parseInt(volume_and_chapter[5]) == parseInt(manga_info.last_open_sub))) {
@@ -454,18 +614,39 @@ function follow_page() {
                             }
                             saved_nodes[0].style.borderRadius = "12px 12px 0 0";
                         }
-                        // Delete useless chapter lower than what we already read
+                        // If we saw the last chapter of a manga, then everything else is deleteable
+                        deleteable.push(manga_id);
+                    // Delete useless chapter lower than what we already read
                     } else if (parseInt(manga_info.last_open) > parseInt(volume_and_chapter[4])) {
-                        //element.style.backgroundColor = "darkolivegreen";
-                        if (saved_nodes.length > 1) {
+                        // Delete all rows that have lower chapter than last opened
+                        // Don't delete the row with the name even if it contain a lower chapter
+                        if (saved_nodes.length > 1 || deleteable.indexOf(manga_id) > -1) {
+                            //element.style.backgroundColor = "darkolivegreen";
                             element.parentElement.removeChild(element);
+                        // Check later to wait if we see other chapter of the manga
+                        } else {
+                            if (!check_delete.includes(manga_id)) {
+                                check_delete.push(manga_id);
+                            }
                         }
                     }
                 }
             }, (error) => {
                 console.error(error);
-            });
+            })
+        );
     }
+
+    // Delete all remaining rows that are lower than last open and contain a name column
+    Promise.all(promises).then(() => {
+        for (var index of check_delete) {
+            let manga = manga_count[index];
+            if (manga.count == 1) {
+                manga.nodes[0].parentElement.removeChild(manga.nodes[0]);
+                //manga.nodes[0].style.backgroundColor = "darkolivegreen";
+            }
+        }
+    });
 }
 
 /**
@@ -545,12 +726,12 @@ function manga_page() {
         if (has_a_mal_link) {
             // Fetch the edit page of the manga
             // Overkill until api come to life
-            fetch_mal_for_manga_data().then((data) => {
+            fetch_mal_for_manga_data(MyMangaDex).then((data) => {
                 if (MyMangaDex.logged_in) {
                     var parent_node = document.getElementsByClassName("table table-condensed")[0].firstElementChild;
                     var chapters_row = document.createElement("tr");
                     var chapters_column_header = document.createElement("th");
-                    chapters_column_header.textContent = "MyAnimeList:";
+                    chapters_column_header.textContent = "Statut:";
                     var chapters_column_content = document.createElement("td");
 
                     // Check if the manga is already in the reading list
@@ -569,10 +750,10 @@ function manga_page() {
                             update_manga_last_read(1)
                             .then((d) => {
                                 // Display new informations
-                                fetch_mal_for_manga_data()
-                                    .then((data) => {
-                                        insert_mal_informations(chapters_column_content);
-                                    });
+                                fetch_mal_for_manga_data(MyMangaDex)
+                                .then((data) => {
+                                    insert_mal_informations(chapters_column_content);
+                                });
                             });
                         });
                         // And a "Plan to read" button
@@ -587,7 +768,7 @@ function manga_page() {
                             update_manga_last_read(6)
                             .then((d) => {
                                 // Display new informations
-                                fetch_mal_for_manga_data()
+                                fetch_mal_for_manga_data(MyMangaDex)
                                 .then((data) => {
                                     insert_mal_informations(chapters_column_content);
                                 });
@@ -657,7 +838,6 @@ function chapter_page() {
     .then((data) => {
         // If there is no entry for mal link
         if (isEmpty(data)) {
-            console.log("No MAL Link, fetching the manga page to search for one...");
             vNotify.info({
                 title: "No MyAnimeList id in storage",
                 text: "Fetching MangaDex manga page of <b>" + MyMangaDex.manga_name + "</b> to find a MyAnimeList id.",
@@ -677,7 +857,6 @@ function chapter_page() {
 
                     // If regex is empty, there is no mal link, can't do anything
                     if (MyMangaDex.mal_url === null) {
-                        console.log("No MAL link avaible, can't do anything, try to add one if it exist.");
                         vNotify.error({
                             title:"No MyAnimeList id found",
                             text:"You can add one using the form.<br>Last open chapter is still saved.",
@@ -700,7 +879,7 @@ function chapter_page() {
                     }
 
                     // Update local storage - after, it doesn't really matter
-                    update_last_open();
+                    update_last_open(MyMangaDex);
                 });
             }, (error) => {
                 console.error(error);
@@ -717,7 +896,7 @@ function chapter_page() {
             }
 
             // We still update last open if there isn't a mal id
-            update_last_open();
+            update_last_open(MyMangaDex);
         }
     }, (error) => {
         console.error("Error fetching data from local storage.", error);

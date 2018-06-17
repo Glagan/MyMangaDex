@@ -66,35 +66,35 @@ Detection on the chapter page:
   * if it's the last open chapter, highlight it and all previous rows of the same manga
 ## Manga page
 1. check if there is a entry for this manga in the local storage
-  * if there is an entry
-    1. add the mal id to the MyMangaDex object
-    2. Fetch information on MyAnimeList
-    3. Display them and hightlight last read chapter
-  * if there is no entry
-    1. check if there is a mal link
-      * if there is a mal link
-        1. add it to the MyMangaDex object
-        2. save it i, the local storage
-        3. Fetch information on MyAnimeList
-        4. Display them and hightlight last read chapter
-      * if there is no mal link
-        1. add the link entry form
-        2. Abort
+2. if there is an entry
+  1. add the mal id to the MyMangaDex object
+  2. Fetch information on MyAnimeList
+  3. Display them and hightlight last read chapter
+3. if there is no entry
+  1. check if there is a mal link
+    * if there is a mal link
+      1. add it to the MyMangaDex object
+      2. save it i, the local storage
+      3. Fetch information on MyAnimeList
+      4. Display them and hightlight last read chapter
+    * if there is no mal link
+      1. add the link entry form
+      2. Abort
 ## Chapter page
 1. Check if there is an entry for this manga in the local storage
-  * if there is an entry
-    1. Fetch information on MyAnimeList
-    2. Update the last read chapter on mal if it's lower than the current chapter
-      * Set the manga to finish if it's the last chapter
-      * Start reading the manga if it's the first chapter
-  * if there is no entry
-    1. Fetch mangadex manga page
-    2. Search for a MyAnimeList link
-      * if there is a link
-        1. Save it to the local storage
-        2. Fetch information on MyAnimeList
-        3. Update the last read chapter on mal if it's lower than the current chapter (And do the same as higher)
-      * if there is no mal link, abort
+2. if there is an entry
+  1. Fetch information on MyAnimeList
+  2. Update the last read chapter on mal if it's lower than the current chapter
+    * Set the manga to finish if it's the last chapter
+    * Start reading the manga if it's the first chapter
+3. if there is no entry
+  1. Fetch mangadex manga page
+  2. Search for a MyAnimeList link
+    * if there is a link
+      1. Save it to the local storage
+      2. Fetch information on MyAnimeList
+      3. Update the last read chapter on mal if it's lower than the current chapter (And do the same as higher)
+    * if there is no mal link, abort
 
 ---
 
@@ -121,14 +121,14 @@ Before release done:
 * Better follow page
 * Real performance improvement by removing is_logged_in and checkin directly when fetching
 * Informations on options page
+* Fetch all MAL links of all followed manga on MangaDex and set last read chapter
+* Even better follow page, delete rows of lower chapter and avoid deleting rows with information
 
 ## TODO
 * Manga page:
   * offset
-  * button to add manga to reading list/plan to read
   * add mal link if there isn't on the page
 * Modal to directly edit all informations of a manga
-* "Init" page to fetch all mangas from batoto and myanimelist to sync them
 
 ## Legacy code
 Optionnal way to fetch manga and chapter info on chapter page:
