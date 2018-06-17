@@ -128,6 +128,7 @@ Before release done:
 * Informations on options page
 * Fetch all MAL links of all followed manga on MangaDex and set last read chapter
 * Even better follow page, delete rows of lower chapter and avoid deleting rows with information
+* Import and export MyMangaDex data to switch between browsers or keep save
 
 ## TODO
 * Manga page:
@@ -135,6 +136,15 @@ Before release done:
   * add mal link if there isn't on the page
 * Modal to directly edit all informations of a manga
 * Detect not approved manga
+* Still fix the follow page
+
+---
+
+Follow page problem
+* Duplicate of same manga with different chapters when current last open is lower than all of them
+  * Not a real problem, could be usefull
+* Duplicate of same manga with different chapters when higher isn't on the same page
+  * Useless, need to be deleted
 
 ## Legacy code
 Optionnal way to fetch manga and chapter info on chapter page:
