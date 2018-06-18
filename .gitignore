@@ -22,3 +22,5 @@ node_modules
 .eslintrc.js
 package.json
 .old
+.jshintrc
+.vscode

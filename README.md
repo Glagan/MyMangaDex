@@ -129,6 +129,7 @@ Before release done:
 * Fetch all MAL links of all followed manga on MangaDex and set last read chapter
 * Even better follow page, delete rows of lower chapter and avoid deleting rows with information
 * Import and export MyMangaDex data to switch between browsers or keep save
+* Fully functionning and easily customizable follow if options are added
 
 ## TODO
 * Manga page:
@@ -136,15 +137,33 @@ Before release done:
   * add mal link if there isn't on the page
 * Modal to directly edit all informations of a manga
 * Detect not approved manga
-* Still fix the follow page
+* Add a "fusion" checkbox on import
+* Better handle for "Oneshot" ?
 
 ---
 
-Follow page problem
-* Duplicate of same manga with different chapters when current last open is lower than all of them
-  * Not a real problem, could be usefull
-* Duplicate of same manga with different chapters when higher isn't on the same page
-  * Useless, need to be deleted
+## Possible displays in follow page
+1. 1 single lower chapter
+  * Delete it
+2. 1 single higher chapter
+  * Keep it
+3. 1 single equal chapter
+  * Paint it rebeccapurple
+4. A list of all lower chapter
+  * Delete all of them
+5. A list of all higher chapter (with optionnal lower chapter after)
+  * Keep them all
+  * Delete all lower chapters
+6. A list with lower chapter before a equal or higher chapter
+  * Delete all lower unless it's the first line
+  * Build tree to the last equal chapter
+
+Order to process
+1. Loop through all nodes in the main table
+2. When the first column is empty, create a "serie" entry in the "series" array
+  * Feed data: manga_id, highest_on_list, dom_nodes, first_line_chapter (+_sub)
+3. Look for all patterns when the whole array as been processed for each "serie" entry
+4. Delete and paint each nodes everytime
 
 ## Legacy code
 Optionnal way to fetch manga and chapter info on chapter page:
@@ -188,5 +207,66 @@ if (MyMangaDex.url.indexOf("page=search") > -1) {
     }
     i++;
   }
+}
+```
+Code on follow page for a set as last open button
+```javascript
+let set_as_open = document.createElement("button");
+set_as_open.className = "btn btn-default";
+set_as_open.textContent = "Set as open";
+set_as_open.addEventListener("click", (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+
+  event.target.parentElement.parentElement.style.backgroundColor = "rebeccapurple";
+  event.target.style.display = "none";
+
+  browser.storage.local.get(manga_id)
+  .then((data) => {
+      // Create new entry if the manga isn't in local storage
+      if (isEmpty(data)) {
+          data[manga_id] = {
+              mal_id: -1,
+              manga_image: ""
+          };
+      }
+
+      data[manga_id].mangadex_id = manga_id;
+      data[manga_id].manga_name = manga_name;
+      data[manga_id].last_open = volume_and_chapter[4];
+      data[manga_id].last_open_sub = volume_and_chapter[5];
+
+      update_last_open(data[manga_id])
+      .then(() => {
+          event.target.parentElement.removeChild(event.target);
+      });
+  })
+});
+element.children[2].appendChild(set_as_open);
+```
+Code on manga_page for the set as last open button (when checking data)
+```javascript
+// If the entry was added from the follow page
+// The image might be null and the mal_id was set to -1
+/*else*/ if (MyMangaDex.mal_id == -1) {
+    MyMangaDex.mal_url = document.querySelector("img[src='/images/misc/mal.png'");
+    MyMangaDex.manga_image = document.querySelector("img[title='Manga image']").src;
+
+    if (MyMangaDex.mal_url !== null) {
+        MyMangaDex.mal_url = MyMangaDex.mal_url.nextElementSibling.href;
+        MyMangaDex.mal_id = /.+\/(\d+)/.exec(MyMangaDex.mal_url)[1];
+    } else {
+        has_a_mal_link = false;
+        MyMangaDex.mal_id = 0;
+    }
+
+    update_last_open(MyMangaDex);
+}
+```
+Hell i typed this so much
+```javascript
+try {
+} catch (error) {
+  console.error(error);
 }
 ```
