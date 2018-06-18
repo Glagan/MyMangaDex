@@ -43,7 +43,8 @@
   max-width: 100px;
   max-height: 100px; }
 .vnotify-body {
-  margin-left: 10px; }
+  margin-left: 10px;
+  padding: 10px; }
 .vnotify-item {
   display: flex;
   align-items: center;
@@ -56,9 +57,9 @@
   -ms-border-radius: 5px;
   border-radius: 5px;
   margin-bottom: 15px;
-  opacity: 0.75;
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=75)";
-  filter: alpha(opacity=75); }
+  opacity: 0.85;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=85)";
+  filter: alpha(opacity=85); }
   .vnotify-item:hover {
     opacity: 1; }
 

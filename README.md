@@ -130,13 +130,13 @@ Before release done:
 * Even better follow page, delete rows of lower chapter and avoid deleting rows with information
 * Import and export MyMangaDex data to switch between browsers or keep save
 * Fully functionning and easily customizable follow if options are added
+* Handle pending manga on MyAnimeList
 
 ## TODO
 * Manga page:
   * offset
   * add mal link if there isn't on the page
 * Modal to directly edit all informations of a manga
-* Detect not approved manga
 * Add a "fusion" checkbox on import
 * Better handle for "Oneshot" ?
 
