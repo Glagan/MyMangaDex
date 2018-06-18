@@ -138,7 +138,6 @@ Before release done:
   * add mal link if there isn't on the page
 * Modal to directly edit all informations of a manga
 * Add a "fusion" checkbox on import
-* Better handle for "Oneshot" ?
 
 ---
 

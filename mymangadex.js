@@ -20,8 +20,13 @@ window.MyMangaDex = {
     more_info: {}
 };
 
-function fetch_mal_manga(mal_manga, offset=0) {
-    console.log("fetch mal manga from " + offset + " to " + (offset+300));
+function append_to_output_and_scroll(output_node, text) {
+    output_node.value += "\n" + text;
+    output_node.scrollTop = output_node .scrollHeight;
+}
+
+function fetch_mal_manga(mal_manga, output_node, offset=0) {
+    append_to_output_and_scroll(output_node, "Fetching MyAnimeList manga from " + offset + " to " + (offset+300));
 
     return fetch("https://myanimelist.net/mangalist/Glagan/load.json?offset=" + offset + "&status=7", {
         method: 'GET',
@@ -37,7 +42,9 @@ function fetch_mal_manga(mal_manga, offset=0) {
 
         // If there is 300 items, we might have reached the list limit so we try again
         if (data.length == 300) {
-            fetch_mal_manga(mal_manga, offset+300);
+            return fetch_mal_manga(mal_manga, output_node, offset+300);
+        } else {
+            append_to_output_and_scroll(output_node, "Done fetching MyAnimeList manga.");
         }
     }).catch((error) => {
         console.error(error);
@@ -45,8 +52,8 @@ function fetch_mal_manga(mal_manga, offset=0) {
 }
 
 //table table-striped table-hover table-condensed
-function fetch_mangadex_manga(mangadex_list, page=1, max_page=1) {
-    console.log("fetch mangadex follow page " + page + " of " + max_page);
+function fetch_mangadex_manga(mangadex_list, output_node, page=1, max_page=1) {
+    append_to_output_and_scroll(output_node, "Fetching MangaDex follow page manga " + page + " of " + max_page);
 
     return fetch("https://mangadex.org/follows/manga/0/0/" + page + "/", {
         method: 'GET',
@@ -73,7 +80,9 @@ function fetch_mangadex_manga(mangadex_list, page=1, max_page=1) {
 
             // We fetch the next page if required
             if (page < max_page) {
-                fetch_mangadex_manga(mangadex_list, page+1, max_page);
+                fetch_mangadex_manga(mangadex_list, output_node, page+1, max_page);
+            } else {
+                append_to_output_and_scroll(output_node, "Done fetching MangaDex follow manga.");
             }
         });
     }).catch((error) => {
@@ -81,8 +90,8 @@ function fetch_mangadex_manga(mangadex_list, page=1, max_page=1) {
     });
 }
 
-function update_all_manga_with_mal_data(mal_list, mangadex_list, index=0) {
-    console.log("Updating " + (index+1) + "/" + mangadex_list.length);
+function update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, index=0) {
+    append_to_output_and_scroll(output_node, "Updating " + (index + 1) + "/" + mangadex_list.length);
 
     return fetch("https://mangadex.org/manga/" + mangadex_list[index], {
         method: 'GET',
@@ -91,7 +100,7 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, index=0) {
         data.text().then((text) => {
             // Scan the manga page for the mal icon and mal url
             let manga_name = /<title>(.+)\s\(Manga\)/.exec(text)[1];
-            console.log("-> " + manga_name);
+            append_to_output_and_scroll(output_node, "-> " + manga_name);
 
             let mal_url = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(text);
             let manga_image = /src='\/images\/manga\/(\d+\.[a-zA-Z0-9]{3,4})\??\d*'\swidth='100%'\stitle='Manga image'/.exec(text)[1];
@@ -108,11 +117,13 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, index=0) {
             // If regex is empty, there is no mal link, can't do anything
             if (mal_url === null) {
                 // insert in local storage
+                append_to_output_and_scroll(output_node, "-> Set to Chapter 0 (No MyAnimeList entry)");
                 return update_last_open(manga).then(() => {
                     index++;
                     if (index < mangadex_list.length) {
-                        update_all_manga_with_mal_data(mal_list, mangadex_list, index);
+                        update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, index);
                     } else {
+                        append_to_output_and_scroll(output_node, "Done. Refresh to see the new data.");
                         vNotify.success({
                             title: 'All MyAnimeList data imported.',
                             message: 'You can review manga without a MyAnimeList link in the list.',
@@ -137,12 +148,13 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, index=0) {
                 }
 
                 // Update last open for the manga
-                console.log("-> Set to Chapter " + manga.last_open);
+                append_to_output_and_scroll(output_node, "-> Set to Chapter " + manga.last_open);
                 return update_last_open(manga).then(() => {
                     index++;
                     if (index < mangadex_list.length) {
-                        update_all_manga_with_mal_data(mal_list, mangadex_list, index);
+                        update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, index);
                     } else {
+                        append_to_output_and_scroll(output_node, "Done. Refresh to see the new data.");
                         vNotify.success({
                             title: 'All MyAnimeList data imported.',
                             message: 'You can review manga without a MyAnimeList link in the list.',
@@ -181,13 +193,7 @@ function debug_info() {
 function start() {
     MyMangaDex.url = window.location.href;
 
-    if (MyMangaDex.url.indexOf("org/changelog") > -1) {
-        console.log("Import page");
-        import_page();
-    } else if (MyMangaDex.url.indexOf("org/about") > -1) {
-        console.log("Manage page");
-        manage_page();
-    } else if (MyMangaDex.url.indexOf("org/follows") > -1) {
+    if (MyMangaDex.url.indexOf("org/follows") > -1) {
         console.log("Follow page");
         follow_page();
     } else if (MyMangaDex.url.indexOf("org/manga") > -1) {
@@ -583,6 +589,7 @@ function volume_and_chapter_from_string(string) {
 
 function create_button(parent_node, title, icon, callback) {
     var new_button = document.createElement("li");
+    new_button.setAttribute("is-a-mmd-button", true);
     var new_button_link = document.createElement("a");
     new_button_link.innerHTML = "<span class='fas fa-" + icon + " fa-fw' aria-hidden='true' title=''></span> " + title;
     new_button_link.addEventListener("click", callback);
@@ -601,69 +608,14 @@ function insert_manage_buttons() {
 
     let nav_bar = document.querySelector("ul[role='tablist']");
     var last_active = 0;
-    create_button(nav_bar, "Export (MyMangaDex)", "download", (event) => {
-        event.preventDefault();
-        event.target.parentElement.classList.toggle("active");
-        event.target.parentElement.nextElementSibling.className = "";
-        event.target.parentElement.nextElementSibling.nextElementSibling.className = "";
-
-        if (manage_container.style.display == "none" || last_active != 1) {
-            last_active = 1;
-            manage_container.style.display = "block";
-            manage_container.innerHTML = "";
-
-            let json_container = document.createElement("textarea");
-            json_container.className = "form-control";
-            json_container.style.height = "300px";
-            json_container.style.overflow = "auto";
-            json_container.value = "Loading...";
-            manage_container.appendChild(json_container);
-
-            let copy_button = document.createElement("button");
-            copy_button.className = "btn btn-default";
-            copy_button.style.float = "right";
-            copy_button.style.margin = "15px";
-            copy_button.innerHTML = "<span class='fas fa-copy fa-fw' aria-hidden='true' title=''></span> Copy";
-            copy_button.addEventListener("click", (sub_event) => {
-                sub_event.preventDefault();
-
-                try {
-                    json_container.select();
-                    document.execCommand("Copy");
-
-                    vNotify.success({
-                        title: "Data copied",
-                        text: "Your data is in your Clipboard.",
-                        position: "bottomRight"
-                    });
-                } catch (error) {
-                    vNotify.error({
-                        title: "Error copying data",
-                        text: error,
-                        sticky: true,
-                        position: "bottomRight"
-                    });
-                    console.error(error);
-                }
-            });
-
-            // Print all data
-            browser.storage.local.get(null)
-                .then((data) => {
-                    json_container.value = JSON.stringify(data);
-                    manage_container.appendChild(copy_button);
-                });
-        } else {
-            manage_container.style.display = "none";
-        }
-    });
 
     // Create import data button
-    create_button(nav_bar, "Import (MyMangaDex)", "upload", (event) => {
+    create_button(nav_bar, "Import (MMD)", "upload", (event) => {
         event.preventDefault();
+        document.querySelectorAll("li[is-a-mmd-button='true']").forEach((node) => {
+            node.className = "";
+        });
         event.target.parentElement.classList.toggle("active");
-        event.target.parentElement.previousElementSibling.className = "";
-        event.target.parentElement.nextElementSibling.className = "";
 
         if (manage_container.style.display == "none" || last_active != 2) {
             last_active = 2;
@@ -720,15 +672,123 @@ function insert_manage_buttons() {
             manage_container.appendChild(send_button);
         } else {
             manage_container.style.display = "none";
+            event.target.parentElement.classList.toggle("active");
+        }
+    });
+
+    // Create an import from MyAnimeList button
+    create_button(nav_bar, "Import (MAL)", "upload", (event) => {
+        event.preventDefault();
+        document.querySelectorAll("li[is-a-mmd-button='true']").forEach((node) => {
+            node.className = "";
+        });
+        event.target.parentElement.classList.toggle("active");
+
+        if (manage_container.style.display == "none" || last_active != 4) {
+            last_active = 4;
+            manage_container.style.display = "block";
+            manage_container.innerHTML = "";
+
+            let confirm_import_button = document.createElement("button");
+            confirm_import_button.className = "btn btn-success";
+            confirm_import_button.style.margin = "0 auto";
+            confirm_import_button.style.display = "block";
+            confirm_import_button.innerHTML = "<span class='fas fa-check fa-fw' aria-hidden='true' title=''></span> Import data from MyAnimeList";
+            confirm_import_button.addEventListener("click", (sub_event) => {
+                sub_event.preventDefault();
+                sub_event.target.parentElement.removeChild(sub_event.target);
+
+                // Create the textarea which will show the data imported
+                let result_container = document.createElement("textarea");
+                result_container.className = "form-control";
+                result_container.style.height = "300px";
+                result_container.style.overflow = "auto";
+                result_container.readOnly = true;
+                result_container.value = "Loading... Don't close the browser tab or \"Import (MAL)\" tab.";
+                manage_container.appendChild(result_container);
+
+                // Start importing data
+                let mal_manga = [];
+                let mangadex_manga = [];
+                //fetch_mal_manga(mal_manga);
+                Promise.all([fetch_mal_manga(mal_manga, result_container), fetch_mangadex_manga(mangadex_manga, result_container)])
+                .then(() => {
+                    update_all_manga_with_mal_data(mal_manga, mangadex_manga, result_container);
+                });
+            });
+            manage_container.appendChild(confirm_import_button);
+        } else {
+            manage_container.style.display = "none";
+            event.target.parentElement.classList.toggle("active");
+        }
+    });
+
+    create_button(nav_bar, "Export (MMD)", "download", (event) => {
+        event.preventDefault();
+        document.querySelectorAll("li[is-a-mmd-button='true']").forEach((node) => {
+            node.className = "";
+        });
+        event.target.parentElement.classList.toggle("active");
+
+        if (manage_container.style.display == "none" || last_active != 1) {
+            last_active = 1;
+            manage_container.style.display = "block";
+            manage_container.innerHTML = "";
+
+            let json_container = document.createElement("textarea");
+            json_container.className = "form-control";
+            json_container.style.height = "300px";
+            json_container.style.overflow = "auto";
+            json_container.value = "Loading...";
+            manage_container.appendChild(json_container);
+
+            let copy_button = document.createElement("button");
+            copy_button.className = "btn btn-default";
+            copy_button.style.float = "right";
+            copy_button.style.margin = "15px";
+            copy_button.innerHTML = "<span class='fas fa-copy fa-fw' aria-hidden='true' title=''></span> Copy";
+            copy_button.addEventListener("click", (sub_event) => {
+                sub_event.preventDefault();
+
+                try {
+                    json_container.select();
+                    document.execCommand("Copy");
+
+                    vNotify.success({
+                        title: "Data copied",
+                        text: "Your data is in your Clipboard.",
+                        position: "bottomRight"
+                    });
+                } catch (error) {
+                    vNotify.error({
+                        title: "Error copying data",
+                        text: error,
+                        sticky: true,
+                        position: "bottomRight"
+                    });
+                    console.error(error);
+                }
+            });
+
+            // Print all data
+            browser.storage.local.get(null)
+            .then((data) => {
+                json_container.value = JSON.stringify(data);
+                manage_container.appendChild(copy_button);
+            });
+        } else {
+            manage_container.style.display = "none";
+            event.target.parentElement.classList.toggle("active");
         }
     });
 
     // Create clear data button
-    create_button(nav_bar, "Clear Data (MyMangaDex)", "trash", (event) => {
+    create_button(nav_bar, "Clear Data (MMD)", "trash", (event) => {
         event.preventDefault();
+        document.querySelectorAll("li[is-a-mmd-button='true']").forEach((node) => {
+            node.className = "";
+        });
         event.target.parentElement.classList.toggle("active");
-        event.target.parentElement.previousElementSibling.className = "";
-        event.target.parentElement.previousElementSibling.previousElementSibling.className = "";
 
         if (manage_container.style.display == "none" || last_active != 3) {
             last_active = 3;
@@ -760,31 +820,9 @@ function insert_manage_buttons() {
             manage_container.appendChild(confirm_delete_button);
         } else {
             manage_container.style.display = "none";
+            event.target.parentElement.classList.toggle("active");
         }
     });
-}
-
-/**
- * Page used to fetch all MAL urls and their last read values from all followed manga on MangaDex
- */
-function import_page() {
-    console.log("Fetching all manga in local storage...");
-    let mal_manga = [];
-    let mangadex_manga = [];
-    //fetch_mal_manga(mal_manga);
-    Promise.all([fetch_mal_manga(mal_manga), fetch_mangadex_manga(mangadex_manga)])
-    .then(() => {
-        update_all_manga_with_mal_data(mal_manga, mangadex_manga);
-    });
-}
-
-/**
- * Page used to see what's in the local storage, export and import it
- */
-function manage_page() {
-    //browser.storage.local.clear();
-    vNotify.notify({ text: 'text', title: 'title', sticky:true, position: "bottomRight" });
-    vNotify.notify({ text: 'text', title: 'title', sticky:true, position: "bottomRight", image:"https://mangadex.org/images/manga/18331.jpg?1528247512"});
 }
 
 /**
