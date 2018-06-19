@@ -24,3 +24,5 @@ package.json
 .old
 .jshintrc
 .vscode
+web-ext-artifacts
+export.json

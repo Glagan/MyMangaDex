@@ -19,7 +19,8 @@ If you really want to try it:
 2. Go to [about:debugging](about:debugging)
 3. Click "Load a temporary module"
 4. Select any file of the cloned repo, and it's working.
-Open an issue to tell me how bad it is.
+Open an issue to tell me how bad it is.  
+Works best with the dark theme !
 
 ## Features
 MyMangaDex improve 3 pages:
@@ -62,6 +63,7 @@ Before release done:
 * [ ] Store all read chapters and highlight them
 * [ ] Clean up
 * [ ] Use data-chapter-num and data-volume-num instead of regex
+* [ ] Options
 
 ## Legacy code
 Add a follow button on search page (not working)

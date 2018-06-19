@@ -3,6 +3,13 @@
 	"name": "MyMangaDex",
 	"version": "1.0",
 
+	"applications": {
+		"gecko": {
+			"id": "mymangadex@glagan",
+			"strict_min_version": "59.0"
+		}
+	},
+
 	"description": "Integrate MyAnimeList into MangaDex to autotrack read chapters.",
 
 	"permissions": [

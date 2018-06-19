@@ -402,18 +402,19 @@ function update_manga_last_read(set_status=1) {
                         }
                     }).then((data) => {
                         //data.text().then((text) => {
-                        //    document.getElementById("content").innerHTML = text;
+                        //    clear_dom_node(document.getElementById("content"));
+                        //    document.getElementById("content").textContent = text;
                             if (status == 6) {
                                 vNotify.success({
                                     title: "Manga updated",
-                                    text: "<b>" + MyMangaDex.manga_name + "</b> as been put in your endless <b>Plan to read</b> list !",
+                                    text: MyMangaDex.manga_name + " as been put in your endless <b>Plan to read</b> list !",
                                     position: "bottomRight",
                                     image: "https://mangadex.org/images/manga/" + MyMangaDex.manga_image
                                 });
                             } else {
                                 vNotify.success({
                                     title: "Manga updated",
-                                    text: "<b>" + MyMangaDex.manga_name + "</b> as been updated to Chapter " + MyMangaDex.current_chapter.chapter + " out of " + MyMangaDex.more_info.total_chapter,
+                                    text: MyMangaDex.manga_name + " as been updated to Chapter " + MyMangaDex.current_chapter.chapter + " out of " + MyMangaDex.more_info.total_chapter,
                                     position: "bottomRight",
                                     image: "https://mangadex.org/images/manga/" + MyMangaDex.manga_image
                                 });
@@ -421,7 +422,7 @@ function update_manga_last_read(set_status=1) {
                                 if (MyMangaDex.last_read == "") {
                                     vNotify.success({
                                         title: "Started manga",
-                                        text: "The start date of <b>" + MyMangaDex.manga_name + "</b> was set to today.",
+                                        text: "The start date of " + MyMangaDex.manga_name + " was set to today.",
                                         position: "bottomRight",
                                         image: "https://mangadex.org/images/manga/" + MyMangaDex.manga_image
                                     });
@@ -430,7 +431,7 @@ function update_manga_last_read(set_status=1) {
                                 if (parseInt(status) == 2) {
                                     vNotify.success({
                                         title: "Manga completed",
-                                        text: "<b>" + MyMangaDex.manga_name + "</b> was set as completed.",
+                                        text: MyMangaDex.manga_name + " was set as completed.",
                                         position: "bottomRight",
                                         image: "https://mangadex.org/images/manga/" + MyMangaDex.manga_image
                                     });
@@ -476,7 +477,7 @@ function update_last_open(manga) {
         if (manga.mal_id == 0) {
             vNotify.success({
                 title: "Manga updated",
-                text: "<b>" + manga.manga_name + "</b> last open Chapter as been updated to " + manga.last_open,
+                text: manga.manga_name + " last open Chapter as been updated to " + manga.last_open,
                 position: "bottomRight",
                 image: "https://mangadex.org/images/manga/" + manga.manga_image
             });
@@ -492,12 +493,11 @@ function insert_mal_button() {
     mal_button.className = "btn btn-default";
     mal_button.title = "Edit on MyAnimeList";
     mal_button.target = "_blank";
-    // Add a shiny edit icon to look fancy
-    var edit_icon = document.createElement("span");
-    edit_icon.className = "fas fa-edit fa-fw";
-    mal_button.appendChild(edit_icon);
-    // Have to mess with HTML, can't edit textContent
-    mal_button.innerHTML += " Edit on MyAnimeList";
+
+    // Add icon and text
+    append_text_with_icon(mal_button, "edit", "");
+    mal_button.appendChild(document.createElement(" Edit on MyAnimeList"));
+
     parent_node.insertBefore(mal_button, parent_node.firstElementChild);
     // Add a text node with only a space, to separate it on the right
     parent_node.insertBefore(document.createTextNode(" "), parent_node.firstElementChild.nextElementSibling);
@@ -532,37 +532,49 @@ function append_status(status, node) {
             text = "Plan to Read";
             break;
     }
-    node.innerHTML += "<span style='color:" + color +"'>" + text + "</span>";
+    let color_span = document.createElement("span");
+    color_span.style.color = color;
+    color_span.textContent = text;
+    node.appendChild(color_span);
+}
+
+function clear_dom_node(dom_node) {
+    while (dom_node.firstChild) {
+        dom_node.removeChild(dom_node.firstChild);
+    }
 }
 
 function insert_mal_informations(content_node) {
     // Delete node before adding anything to it, it's surely old thin anyway
-    content_node.innerHTML = "";
+    clear_dom_node(content_node);
 
     // Add the MyAnimeList edit link
-    var content_node_edit = document.createElement("a");
-    content_node_edit.className = "btn btn-default";
-    content_node_edit.href = "https://myanimelist.net/ownlist/manga/" + MyMangaDex.mal_id + "/edit";
-    content_node_edit.target = "_blank";
-    content_node_edit.style.float = "right";
-    // Add the icon
-    var edit_icon = document.createElement("span");
-    edit_icon.className = "fas fa-edit fa-fw";
-    content_node_edit.appendChild(edit_icon);
-    content_node_edit.innerHTML += " Edit on MyAnimeList";
-    // Append nodes
-    content_node.appendChild(content_node_edit);
+    var mal_button = document.createElement("a");
+    mal_button.href = "https://myanimelist.net/ownlist/manga/" + MyMangaDex.mal_id + "/edit";
+    mal_button.className = "btn btn-default";
+    mal_button.title = "Edit on MyAnimeList";
+    mal_button.target = "_blank";
+    mal_button.style.float = "right";
+    // Add icon and text
+    append_text_with_icon(mal_button, "edit", "");
+    mal_button.appendChild(document.createTextNode(" Edit on MyAnimeList"));
+    // Append node
+    content_node.appendChild(mal_button);
+
     // Add some informations on the page
-    //content_node.innerHTML += "Status: ";
     append_status(MyMangaDex.more_info.status, content_node);
-    content_node.innerHTML += "<br><span class='fas fa-book fa-fw' aria-hidden='true' title=''></span> Volume " + MyMangaDex.more_info.last_volume + " out of " + MyMangaDex.more_info.total_volume;
-    content_node.innerHTML += "<br><span class='fas fa-bookmark fa-fw' aria-hidden='true' title=''></span> Chapter " + MyMangaDex.last_read + " out of " + MyMangaDex.more_info.total_chapter + " ";
-    content_node.innerHTML += "<br><span class='fas fa-star fa-fw' aria-hidden='true' title=''></span> ";
+    content_node.appendChild(document.createElement("br"));
+    append_text_with_icon(content_node, "book", "Volume " + MyMangaDex.more_info.last_volume + " out of " + MyMangaDex.more_info.total_volume);
+    content_node.appendChild(document.createElement("br"));
+    append_text_with_icon(content_node, "bookmark", "Chapter " + MyMangaDex.last_read + " out of " + MyMangaDex.more_info.total_chapter + " ");
+    content_node.appendChild(document.createElement("br"));
+    let score_text;
     if (MyMangaDex.more_info.score == "") {
-        content_node.innerHTML += "Not scored yet";
+        score_text = "Not scored yet";
     } else {
-        content_node.innerHTML += "Scored " + MyMangaDex.more_info.score + " out of 10";
+        score_text = "Scored " + MyMangaDex.more_info.score + " out of 10";
     }
+    append_text_with_icon(content_node, "star", score_text);
 
     // Highlight last read chapter
     for (var chapter of MyMangaDex.chapters) {
@@ -597,7 +609,8 @@ function create_button(parent_node, title, icon, callback) {
     var new_button = document.createElement("li");
     new_button.setAttribute("is-a-mmd-button", true);
     var new_button_link = document.createElement("a");
-    new_button_link.innerHTML = "<span class='fas fa-" + icon + " fa-fw' aria-hidden='true' title=''></span> " + title;
+    append_text_with_icon(new_button_link, icon, "");
+    new_button_link.appendChild(document.createTextNode(" " + title));
     new_button_link.addEventListener("click", callback);
     new_button.appendChild(new_button_link);
     parent_node.appendChild(new_button);
@@ -627,7 +640,7 @@ function insert_manage_buttons() {
         if (manage_container.style.display == "none" || last_active != 2) {
             last_active = 2;
             manage_container.style.display = "block";
-            manage_container.innerHTML = "";
+            clear_dom_node(manage_container);
 
             let import_label = document.createElement("label");
             import_label.className = "col-sm-3 control-label";
@@ -642,7 +655,7 @@ function insert_manage_buttons() {
             send_button.className = "btn btn-default";
             send_button.style.float = "right";
             send_button.style.margin = "15px";
-            send_button.innerHTML = "<span class='fas fa-save fa-fw' aria-hidden='true' title=''></span> Send";
+            append_text_with_icon(send_button, "save", "Send");
 
             send_button.addEventListener("click", (sub_event) => {
                 sub_event.preventDefault();
@@ -653,7 +666,7 @@ function insert_manage_buttons() {
                         .then(() => {
                             vNotify.success({
                                 title: "Data imported",
-                                text: "Your data was successfully imported !<br>Refresh the page to see the modifications.",
+                                text: "Your data was successfully imported !\nRefresh the page to see the modifications.",
                                 sticky: true,
                                 position: "bottomRight"
                             });
@@ -694,7 +707,7 @@ function insert_manage_buttons() {
         if (manage_container.style.display == "none" || last_active != 4) {
             last_active = 4;
             manage_container.style.display = "block";
-            manage_container.innerHTML = "";
+            clear_dom_node(manage_container);
 
             let result_container = document.createElement("textarea");
             result_container.className = "form-control";
@@ -716,7 +729,7 @@ function insert_manage_buttons() {
             confirm_import_button.className = "btn btn-success";
             confirm_import_button.style.margin = "0 auto";
             confirm_import_button.style.display = "inline-block";
-            confirm_import_button.innerHTML = "<span class='fas fa-check fa-fw' aria-hidden='true' title=''></span> Import data from MyAnimeList";
+            append_text_with_icon(confirm_import_button, "check", "Import data from MyAnimeList");
             confirm_import_button.addEventListener("click", (sub_event) => {
                 sub_event.preventDefault();
 
@@ -775,7 +788,7 @@ function insert_manage_buttons() {
         if (manage_container.style.display == "none" || last_active != 1) {
             last_active = 1;
             manage_container.style.display = "block";
-            manage_container.innerHTML = "";
+            clear_dom_node(manage_container);
 
             let json_container = document.createElement("textarea");
             json_container.className = "form-control";
@@ -788,7 +801,7 @@ function insert_manage_buttons() {
             copy_button.className = "btn btn-default";
             copy_button.style.float = "right";
             copy_button.style.margin = "15px";
-            copy_button.innerHTML = "<span class='fas fa-copy fa-fw' aria-hidden='true' title=''></span> Copy";
+            append_text_with_icon(copy_button, "copy", "Copy");
             copy_button.addEventListener("click", (sub_event) => {
                 sub_event.preventDefault();
 
@@ -835,13 +848,13 @@ function insert_manage_buttons() {
         if (manage_container.style.display == "none" || last_active != 3) {
             last_active = 3;
             manage_container.style.display = "block";
-            manage_container.innerHTML = "";
+            clear_dom_node(manage_container);
 
             let confirm_delete_button = document.createElement("button");
             confirm_delete_button.className = "btn btn-danger";
             confirm_delete_button.style.margin = "0 auto";
             confirm_delete_button.style.display = "block";
-            confirm_delete_button.innerHTML = "<span class='fas fa-trash fa-fw' aria-hidden='true' title=''></span> Click here to Delete MyMangaDex local storage";
+            append_text_with_icon(confirm_delete_button, "trash", "Click here to Delete MyMangaDex local storage");
             confirm_delete_button.addEventListener("click", (sub_event) => {
                 sub_event.preventDefault();
 
@@ -865,6 +878,16 @@ function insert_manage_buttons() {
             event.target.parentElement.classList.toggle("active");
         }
     });
+}
+
+function append_text_with_icon(node, icon, text) {
+    let icon_node = document.createElement("span");
+    icon_node.className = "fas fa-" + icon + " fa-fw";
+    icon_node.setAttribute("aria-hidden", true);
+
+    node.appendChild(icon_node);
+    node.appendChild(document.createTextNode(" "));
+    node.appendChild(document.createTextNode(text));
 }
 
 /**
@@ -1060,7 +1083,7 @@ function manga_page() {
                 MyMangaDex.last_open = 0;
                 vNotify.error({
                     title: "No MyAnimeList id found",
-                    text: "You can add one using the form.<br>Last open chapter will still be saved.",
+                    text: "You can add one using the form.\nLast open chapter will still be saved.",
                     position: "bottomRight",
                     sticky: true
                 });
@@ -1106,7 +1129,7 @@ function manga_page() {
                                 chapters_column_content_add.textContent = "Start Reading";
                                 chapters_column_content_add.addEventListener("click", (event) => {
                                     // Delete the row content, to avoid clicking on any button again and to prepare for new content
-                                    chapters_column_content.innerHTML = "Loading...";
+                                    chapters_column_content.textContent = "Loading...";
 
                                     // Put it in the reading list
                                     update_manga_last_read(1)
@@ -1124,7 +1147,7 @@ function manga_page() {
                                 chapters_column_content_ptr.textContent = "Add to Plan to Read list";
                                 chapters_column_content_ptr.addEventListener("click", (event) => {
                                     // Delete the row content, to avoid clicking on any button again and to prepare for new content
-                                    chapters_column_content.innerHTML = "Loading...";
+                                    chapters_column_content.textContent = "Loading...";
 
                                     // Put it in the plan to read list
                                     update_manga_last_read(6)
@@ -1141,7 +1164,10 @@ function manga_page() {
                                 chapters_column_content.appendChild(chapters_column_content_ptr);
                             }
                         } else {
-                            chapters_column_content.innerHTML = "<span style='color:firebrick'>The manga is still pending on MyAnimelist and can't be updated.</span>";
+                            let color_span = document.createElement("span");
+                            color_span.style.color = "firebrick";
+                            color_span.textContent = "The manga is still pending on MyAnimelist and can't be updated";
+                            chapters_column_content.appendChild(color_span);
                         }
 
                         // Append nodes to the table to display
@@ -1209,7 +1235,7 @@ function chapter_page() {
         if (isEmpty(data)) {
             vNotify.info({
                 title: "No MyAnimeList id in storage",
-                text: "Fetching MangaDex manga page of <b>" + MyMangaDex.manga_name + "</b> to find a MyAnimeList id.",
+                text: "Fetching MangaDex manga page of " + MyMangaDex.manga_name + " to find a MyAnimeList id.",
                 position: "bottomRight"
             });
 
@@ -1227,7 +1253,7 @@ function chapter_page() {
                     if (MyMangaDex.mal_url === null) {
                         vNotify.error({
                             title:"No MyAnimeList id found",
-                            text:"You can add one using the form.<br>Last open chapter is still saved.",
+                            text:"You can add one using the form.\nLast open chapter is still saved.",
                             position:"bottomRight",
                             sticky:true
                         });
