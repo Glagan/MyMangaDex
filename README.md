@@ -11,7 +11,7 @@ Also, MangaDex offer MyAnimeList links on each manga page (Thanks to the communi
 I only store the least possible data:  
 An entry for each MangaDex manga that hold the last open chapter, the sub chapter if it exist, the MyAnimeList id and the MangaDex image of the manga (as a filename)
 
-## How to use
+## How to Install
 Right now, you shouldn't. Even, how did you find this repo ?
 First of all, it only works on Firefox right now.
 If you really want to try it:
@@ -21,6 +21,11 @@ If you really want to try it:
 4. Select any file of the cloned repo, and it's working.
 Open an issue to tell me how bad it is.  
 Works best with the dark theme !
+
+## How to use
+Once you have it installed, you have nothing to do!  
+Start reading manga and the add-on will track them automatically.  
+But if you have a lot of manga, or if you're coming from another site and want to set your follow page up-to-date, you can use the "Import (MAL)" button on the follow page that will update the last open of all followed manga if they have a MyAnimeList entry.
 
 ## Features
 MyMangaDex improve 3 pages:
