@@ -131,6 +131,7 @@ Before release done:
 * Import and export MyMangaDex data to switch between browsers or keep save
 * Fully functionning and easily customizable follow if options are added
 * Handle pending manga on MyAnimeList
+* Choose the username you want to import (not only Glagan now, eh)
 
 ## TODO
 * Manga page:

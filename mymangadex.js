@@ -25,26 +25,32 @@ function append_to_output_and_scroll(output_node, text) {
     output_node.scrollTop = output_node .scrollHeight;
 }
 
-function fetch_mal_manga(mal_manga, output_node, offset=0) {
+function fetch_mal_manga(mal_manga, username, output_node, offset=0, dummy=false) {
     append_to_output_and_scroll(output_node, "Fetching MyAnimeList manga from " + offset + " to " + (offset+300));
 
-    return fetch("https://myanimelist.net/mangalist/Glagan/load.json?offset=" + offset + "&status=7", {
+    return fetch("https://myanimelist.net/mangalist/" + username + "/load.json?offset=" + offset + "&status=7", {
         method: 'GET',
         redirect: 'follow',
         credentials: 'include'
     }).then(function(response) {
         return response.json();
     }).then((data) => {
-        // Insert each manga fetched in the list
-        for (let manga of data) {
-            mal_manga.push(manga);
-        }
-
-        // If there is 300 items, we might have reached the list limit so we try again
-        if (data.length == 300) {
-            return fetch_mal_manga(mal_manga, output_node, offset+300);
+        if (data.hasOwnProperty("errors")) {
+            append_to_output_and_scroll(output_node, data.errors[0].message);
         } else {
-            append_to_output_and_scroll(output_node, "Done fetching MyAnimeList manga.");
+            // Insert each manga fetched in the list
+            for (let manga of data) {
+                mal_manga.push(manga);
+            }
+
+            // If there is 300 items, we might have reached the list limit so we try again
+            if (data.length == 300) {
+                if (!dummy) {
+                    return fetch_mal_manga(mal_manga, username, output_node, offset+300);
+                }
+            } else {
+                append_to_output_and_scroll(output_node, "Done fetching MyAnimeList manga.");
+            }
         }
     }).catch((error) => {
         console.error(error);
@@ -123,7 +129,7 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, in
                     if (index < mangadex_list.length) {
                         update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, index);
                     } else {
-                        append_to_output_and_scroll(output_node, "Done. Refresh to see the new data.");
+                        append_to_output_and_scroll(output_node, "Done. Refresh the page to see the new data.");
                         vNotify.success({
                             title: 'All MyAnimeList data imported.',
                             message: 'You can review manga without a MyAnimeList link in the list.',
@@ -154,7 +160,7 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, in
                     if (index < mangadex_list.length) {
                         update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, index);
                     } else {
-                        append_to_output_and_scroll(output_node, "Done. Refresh to see the new data.");
+                        append_to_output_and_scroll(output_node, "Done. Refresh the page to see the new data.");
                         vNotify.success({
                             title: 'All MyAnimeList data imported.',
                             message: 'You can review manga without a MyAnimeList link in the list.',
@@ -602,6 +608,7 @@ function insert_manage_buttons() {
     manage_container.className = "form-group";
     manage_container.style.display = "none";
     manage_container.style.padding = "15px 0 0 0";
+    manage_container.style.textAlign = "center";
     let chapters_node = document.getElementById("chapters");
     chapters_node.style.clear = "both";
     chapters_node.parentElement.insertBefore(manage_container, chapters_node);
@@ -689,32 +696,67 @@ function insert_manage_buttons() {
             manage_container.style.display = "block";
             manage_container.innerHTML = "";
 
+            let result_container = document.createElement("textarea");
+            result_container.className = "form-control";
+            result_container.style.height = "300px";
+            result_container.style.overflow = "auto";
+            result_container.readOnly = true;
+            result_container.value = "Loading... Don't close the browser tab or \"Import (MAL)\" tab.";
+
+            let input_mal_username = document.createElement("input");
+            input_mal_username.className = "form-control";
+            input_mal_username.style.margin = "0 auto";
+            input_mal_username.style.display = "inline-block";
+            input_mal_username.style.width = "auto";
+            input_mal_username.placeholder = "MyAnimeList username";
+            manage_container.appendChild(input_mal_username);
+            manage_container.appendChild(document.createTextNode(" "));
+
             let confirm_import_button = document.createElement("button");
             confirm_import_button.className = "btn btn-success";
             confirm_import_button.style.margin = "0 auto";
-            confirm_import_button.style.display = "block";
+            confirm_import_button.style.display = "inline-block";
             confirm_import_button.innerHTML = "<span class='fas fa-check fa-fw' aria-hidden='true' title=''></span> Import data from MyAnimeList";
             confirm_import_button.addEventListener("click", (sub_event) => {
                 sub_event.preventDefault();
-                sub_event.target.parentElement.removeChild(sub_event.target);
 
-                // Create the textarea which will show the data imported
-                let result_container = document.createElement("textarea");
-                result_container.className = "form-control";
-                result_container.style.height = "300px";
-                result_container.style.overflow = "auto";
-                result_container.readOnly = true;
-                result_container.value = "Loading... Don't close the browser tab or \"Import (MAL)\" tab.";
-                manage_container.appendChild(result_container);
+                if (input_mal_username.value != "") {
+                    // Arrays with the data
+                    let mal_manga = [];
+                    let mangadex_manga = [];
 
-                // Start importing data
-                let mal_manga = [];
-                let mangadex_manga = [];
-                //fetch_mal_manga(mal_manga);
-                Promise.all([fetch_mal_manga(mal_manga, result_container), fetch_mangadex_manga(mangadex_manga, result_container)])
-                .then(() => {
-                    update_all_manga_with_mal_data(mal_manga, mangadex_manga, result_container);
-                });
+                    // Start a dummy request to MyAnimeList to see if we can fetch the data
+                    fetch_mal_manga(mal_manga, input_mal_username.value, result_container, 0, true)
+                    .then(() => {
+                        if (mal_manga.length == 0) {
+                            vNotify.error({
+                                title: 'Can\'t fetch',
+                                text: 'The list of this user isn\'t accessible, maybe you are not logged in on MyAnimeList ?',
+                                position: 'bottomRight',
+                                image: "https://i.imgur.com/oMV2BJt.png"
+                            });
+                        } else {
+                            sub_event.target.parentElement.removeChild(sub_event.target);
+                            input_mal_username.parentElement.removeChild(input_mal_username);
+
+                            // Create the textarea which will show the data imported
+                            manage_container.appendChild(result_container);
+
+                            // Start fetching the data
+                            Promise.all([fetch_mal_manga(mal_manga, input_mal_username.value, result_container, mal_manga.length), fetch_mangadex_manga(mangadex_manga, result_container)])
+                            .then(() => {
+                                update_all_manga_with_mal_data(mal_manga, mangadex_manga, result_container);
+                            });
+                        }
+                    });
+                } else {
+                    vNotify.error({
+                        title: 'Empty username',
+                        text: 'Can\'t import a non-existing user ?!',
+                        position: 'bottomRight',
+                        image: "https://i.imgur.com/oMV2BJt.png"
+                    });
+                }
             });
             manage_container.appendChild(confirm_import_button);
         } else {
