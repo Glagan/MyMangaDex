@@ -58,11 +58,11 @@ Before release done:
 - [x] Better follow page
 - [x] Display some informations and highlight last open on the manga page
 - [x] Export, import and delete MyMangaDex local storage
+- [x] Add a MyAnimeList link if there isn't one for a manga
 
 ## TODO
 * Manga page:
   * [ ] Offset
-  * [ ] Add MyAnimeList link if there isn't on the page
 * [ ] Modal to directly edit all informations
 * [ ] Add a "fusion" checkbox on import
 * [ ] Store all read chapters and highlight them
