@@ -69,6 +69,7 @@ Detection on the chapter page:
   3. if row is lower than the last open chapter, delete it (useless)
 2. if row is another chapter of a previous row
   * if it's the last open chapter, highlight it and all previous rows of the same manga
+
 ## Manga page
 1. check if there is a entry for this manga in the local storage
 2. if there is an entry
@@ -85,6 +86,7 @@ Detection on the chapter page:
     * if there is no mal link
       1. add the link entry form
       2. Abort
+
 ## Chapter page
 1. Check if there is an entry for this manga in the local storage
 2. if there is an entry
@@ -263,7 +265,7 @@ Code on manga_page for the set as last open button (when checking data)
     update_last_open(MyMangaDex);
 }
 ```
-Hell i typed this so much
+...
 ```javascript
 try {
 } catch (error) {
