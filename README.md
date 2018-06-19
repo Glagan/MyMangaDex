@@ -64,7 +64,6 @@ Before release done:
 * Manga page:
   * [ ] Offset
 * [ ] Modal to directly edit all informations
-* [ ] Add a "fusion" checkbox on import
 * [ ] Store all read chapters and highlight them
 * [ ] Clean up
 * [ ] Use data-chapter-num and data-volume-num instead of regex

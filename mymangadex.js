@@ -127,7 +127,7 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, in
                 return update_last_open(manga).then(() => {
                     index++;
                     if (index < mangadex_list.length) {
-                        update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, index);
+                        return update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, index);
                     } else {
                         append_to_output_and_scroll(output_node, "Done. Refresh the page to see the new data.");
                         vNotify.success({
@@ -679,239 +679,317 @@ function insert_manage_buttons() {
 
     let nav_bar = document.querySelector("ul[role='tablist']");
     var last_active = 0;
+    var is_clickable = true;
 
     // Create import data button
     create_button(nav_bar, "Import (MMD)", "upload", (event) => {
         event.preventDefault();
-        document.querySelectorAll("li[is-a-mmd-button='true']").forEach((node) => {
-            node.className = "";
-        });
-        event.target.parentElement.classList.toggle("active");
-
-        if (manage_container.style.display == "none" || last_active != 2) {
-            last_active = 2;
-            manage_container.style.display = "block";
-            clear_dom_node(manage_container);
-
-            let import_label = document.createElement("label");
-            import_label.className = "col-sm-3 control-label";
-            import_label.textContent = "JSON Data: ";
-
-            let import_text_container = document.createElement("div");
-            import_text_container.className = "col-sm-9";
-            let import_textarea = document.createElement("textarea");
-            import_textarea.className = "form-control";
-
-            let send_button = document.createElement("button");
-            send_button.className = "btn btn-default";
-            send_button.style.float = "right";
-            send_button.style.margin = "15px";
-            append_text_with_icon(send_button, "save", "Send");
-
-            send_button.addEventListener("click", (sub_event) => {
-                sub_event.preventDefault();
-
-                try {
-                    let imported_data = JSON.parse(import_textarea.value);
-                    browser.storage.local.set(imported_data)
-                        .then(() => {
-                            vNotify.success({
-                                title: "Data imported",
-                                text: "Your data was successfully imported !\nRefresh the page to see the modifications.",
-                                sticky: true,
-                                position: "bottomRight"
-                            });
-                        });
-                } catch (error) {
-                    vNotify.error({
-                        title: "Error importing",
-                        text: error,
-                        sticky: true,
-                        position: "bottomRight"
-                    });
-                    console.error(error);
-                }
-
-                // Hide menu
-                event.target.parentElement.classList.toggle("active");
-                manage_container.style.display = "none";
+        if (is_clickable) {
+            document.querySelectorAll("li[is-a-mmd-button='true']").forEach((node) => {
+                node.className = "";
             });
-
-            manage_container.appendChild(import_label);
-            import_text_container.appendChild(import_textarea);
-            manage_container.appendChild(import_text_container);
-            manage_container.appendChild(send_button);
-        } else {
-            manage_container.style.display = "none";
             event.target.parentElement.classList.toggle("active");
+
+            if (manage_container.style.display == "none" || last_active != 2) {
+                last_active = 2;
+                manage_container.style.display = "block";
+                clear_dom_node(manage_container);
+
+                let import_label = document.createElement("label");
+                import_label.className = "col-sm-3 control-label";
+                import_label.textContent = "JSON Data: ";
+
+                let import_text_container = document.createElement("div");
+                import_text_container.className = "col-sm-9";
+                let import_textarea = document.createElement("textarea");
+                import_textarea.className = "form-control";
+
+                let send_container = document.createElement("div");
+                send_container.style.textAlign = "right";
+                let merge_label = document.createElement("label");
+                let merge_checkbox = document.createElement("input");
+                merge_checkbox.type = "checkbox";
+                merge_checkbox.style.margin = "0 5px";
+                merge_checkbox.style.verticalAlign = "middle";
+                merge_checkbox.value = "Merge"
+                merge_label.appendChild(merge_checkbox);
+                merge_label.appendChild(document.createTextNode("Merge"));
+
+                let send_button = document.createElement("button");
+                send_button.className = "btn btn-default";
+                send_button.style.margin = "15px 0";
+                append_text_with_icon(send_button, "save", "Send");
+
+                send_container.appendChild(merge_label);
+                send_container.appendChild(document.createTextNode(" "));
+                send_container.appendChild(send_button);
+
+                send_button.addEventListener("click", (sub_event) => {
+                    sub_event.preventDefault();
+
+                    is_clickable = false;
+
+                    try {
+                        let imported_data = JSON.parse(import_textarea.value);
+
+                        // If we merge the impport, the current data won't be deleted
+                        // If there is an entry, the last open will be set to the highest of the two entries
+                        if (merge_checkbox.checked) {
+                            let promises = [];
+                            for (let mangadex_id in imported_data) {
+                                promises.push(
+                                    browser.storage.local.get(mangadex_id+"")
+                                    .then((data) => {
+                                        let to_insert = {
+                                            [mangadex_id]: imported_data[mangadex_id]
+                                        };
+
+                                        // If there is an entry we set it to the highest last_open
+                                        if (!isEmpty(data)) {
+                                            to_insert[mangadex_id].last_open = Math.max(data[mangadex_id].last_open, imported_data[mangadex_id].last_open);
+                                            to_insert[mangadex_id].last_open_sub = -1;
+                                        }
+
+                                        // Insert the entry in the local storage
+                                        return browser.storage.local.set(to_insert);
+                                    })
+                                );
+                            }
+                            Promise.all(promises)
+                            .then(() => {
+                                is_clickable = true;
+
+                                vNotify.success({
+                                    title: "Data imported",
+                                    text: "Your data was successfully imported and merged !\nRefresh the page to see the modifications.",
+                                    sticky: true,
+                                    position: "bottomRight"
+                                });
+                            });
+                        } else {
+                            browser.storage.local.set(imported_data)
+                            .then(() => {
+                                is_clickable = true;
+
+                                vNotify.success({
+                                    title: "Data imported",
+                                    text: "Your data was successfully imported !\nRefresh the page to see the modifications.",
+                                    sticky: true,
+                                    position: "bottomRight"
+                                });
+                            });
+                        }
+                    } catch (error) {
+                        is_clickable = true;
+
+                        vNotify.error({
+                            title: "Error importing",
+                            text: error,
+                            sticky: true,
+                            position: "bottomRight"
+                        });
+                        console.error(error);
+                    }
+
+                    // Hide menu
+                    event.target.parentElement.classList.toggle("active");
+                    manage_container.style.display = "none";
+                });
+
+                manage_container.appendChild(import_label);
+                import_text_container.appendChild(import_textarea);
+                import_text_container.appendChild(send_container);
+                manage_container.appendChild(import_text_container);
+            } else {
+                manage_container.style.display = "none";
+                event.target.parentElement.classList.toggle("active");
+            }
         }
     });
 
     // Create an import from MyAnimeList button
     create_button(nav_bar, "Import (MAL)", "upload", (event) => {
         event.preventDefault();
-        document.querySelectorAll("li[is-a-mmd-button='true']").forEach((node) => {
-            node.className = "";
-        });
-        event.target.parentElement.classList.toggle("active");
 
-        if (manage_container.style.display == "none" || last_active != 4) {
-            last_active = 4;
-            manage_container.style.display = "block";
-            clear_dom_node(manage_container);
-
-            let result_container = document.createElement("textarea");
-            result_container.className = "form-control";
-            result_container.style.height = "300px";
-            result_container.style.overflow = "auto";
-            result_container.readOnly = true;
-            result_container.value = "Loading... Don't close the browser tab or \"Import (MAL)\" tab.";
-
-            let input_mal_username = document.createElement("input");
-            input_mal_username.className = "form-control";
-            input_mal_username.style.margin = "0 auto";
-            input_mal_username.style.display = "inline-block";
-            input_mal_username.style.width = "auto";
-            input_mal_username.placeholder = "MyAnimeList username";
-            manage_container.appendChild(input_mal_username);
-            manage_container.appendChild(document.createTextNode(" "));
-
-            let confirm_import_button = document.createElement("button");
-            confirm_import_button.className = "btn btn-success";
-            confirm_import_button.style.margin = "0 auto";
-            confirm_import_button.style.display = "inline-block";
-            append_text_with_icon(confirm_import_button, "check", "Import data from MyAnimeList");
-            confirm_import_button.addEventListener("click", (sub_event) => {
-                sub_event.preventDefault();
-
-                if (input_mal_username.value != "") {
-                    // Arrays with the data
-                    let mal_manga = [];
-                    let mangadex_manga = [];
-
-                    // Start a dummy request to MyAnimeList to see if we can fetch the data
-                    fetch_mal_manga(mal_manga, input_mal_username.value, result_container, 0, true)
-                    .then(() => {
-                        if (mal_manga.length == 0) {
-                            vNotify.error({
-                                title: 'Can\'t fetch',
-                                text: 'The list of this user isn\'t accessible, maybe you are not logged in on MyAnimeList ?',
-                                position: 'bottomRight',
-                                image: "https://i.imgur.com/oMV2BJt.png"
-                            });
-                        } else {
-                            sub_event.target.parentElement.removeChild(sub_event.target);
-                            input_mal_username.parentElement.removeChild(input_mal_username);
-
-                            // Create the textarea which will show the data imported
-                            manage_container.appendChild(result_container);
-
-                            // Start fetching the data
-                            Promise.all([fetch_mal_manga(mal_manga, input_mal_username.value, result_container, mal_manga.length), fetch_mangadex_manga(mangadex_manga, result_container)])
-                            .then(() => {
-                                update_all_manga_with_mal_data(mal_manga, mangadex_manga, result_container);
-                            });
-                        }
-                    });
-                } else {
-                    vNotify.error({
-                        title: 'Empty username',
-                        text: 'Can\'t import a non-existing user ?!',
-                        position: 'bottomRight',
-                        image: "https://i.imgur.com/oMV2BJt.png"
-                    });
-                }
+        if (is_clickable) {
+            document.querySelectorAll("li[is-a-mmd-button='true']").forEach((node) => {
+                node.className = "";
             });
-            manage_container.appendChild(confirm_import_button);
-        } else {
-            manage_container.style.display = "none";
             event.target.parentElement.classList.toggle("active");
+
+            if (manage_container.style.display == "none" || last_active != 4) {
+                last_active = 4;
+                manage_container.style.display = "block";
+                clear_dom_node(manage_container);
+
+                let result_container = document.createElement("textarea");
+                result_container.className = "form-control";
+                result_container.style.height = "300px";
+                result_container.style.overflow = "auto";
+                result_container.readOnly = true;
+                result_container.value = "Loading... Don't close the browser tab or \"Import (MAL)\" tab.";
+
+                let input_mal_username = document.createElement("input");
+                input_mal_username.className = "form-control";
+                input_mal_username.style.margin = "0 auto";
+                input_mal_username.style.display = "inline-block";
+                input_mal_username.style.width = "auto";
+                input_mal_username.placeholder = "MyAnimeList username";
+                manage_container.appendChild(input_mal_username);
+                manage_container.appendChild(document.createTextNode(" "));
+
+                let confirm_import_button = document.createElement("button");
+                confirm_import_button.className = "btn btn-success";
+                confirm_import_button.style.margin = "0 auto";
+                confirm_import_button.style.display = "inline-block";
+                append_text_with_icon(confirm_import_button, "check", "Import data from MyAnimeList");
+                confirm_import_button.addEventListener("click", (sub_event) => {
+                    sub_event.preventDefault();
+
+                    if (input_mal_username.value != "") {
+                        is_clickable = false;
+
+                        // Arrays with the data
+                        let mal_manga = [];
+                        let mangadex_manga = [];
+
+                        // Start a dummy request to MyAnimeList to see if we can fetch the data
+                        fetch_mal_manga(mal_manga, input_mal_username.value, result_container, 0, true)
+                        .then(() => {
+                            if (mal_manga.length == 0) {
+                                is_clickable = true;
+
+                                vNotify.error({
+                                    title: 'Can\'t fetch',
+                                    text: 'The list of this user isn\'t accessible, maybe you are not logged in on MyAnimeList ?',
+                                    position: 'bottomRight',
+                                    image: "https://i.imgur.com/oMV2BJt.png"
+                                });
+                            } else {
+                                sub_event.target.parentElement.removeChild(sub_event.target);
+                                input_mal_username.parentElement.removeChild(input_mal_username);
+
+                                // Create the textarea which will show the data imported
+                                manage_container.appendChild(result_container);
+
+                                // Start fetching the data
+                                Promise.all([fetch_mal_manga(mal_manga, input_mal_username.value, result_container, mal_manga.length), fetch_mangadex_manga(mangadex_manga, result_container)])
+                                .then(() => {
+                                    update_all_manga_with_mal_data(mal_manga, mangadex_manga, result_container)
+                                    .then(() => {
+                                        is_clickable = true;
+                                    });
+                                });
+                            }
+                        });
+                    } else {
+                        vNotify.error({
+                            title: 'Empty username',
+                            text: 'Can\'t import a non-existing user ?!',
+                            position: 'bottomRight',
+                            image: "https://i.imgur.com/oMV2BJt.png"
+                        });
+                    }
+                });
+                manage_container.appendChild(confirm_import_button);
+            } else {
+                manage_container.style.display = "none";
+                event.target.parentElement.classList.toggle("active");
+            }
         }
     });
 
     create_button(nav_bar, "Export (MMD)", "download", (event) => {
         event.preventDefault();
-        document.querySelectorAll("li[is-a-mmd-button='true']").forEach((node) => {
-            node.className = "";
-        });
-        event.target.parentElement.classList.toggle("active");
 
-        if (manage_container.style.display == "none" || last_active != 1) {
-            last_active = 1;
-            manage_container.style.display = "block";
-            clear_dom_node(manage_container);
-
-            let json_container = document.createElement("textarea");
-            json_container.className = "form-control";
-            json_container.style.height = "300px";
-            json_container.style.overflow = "auto";
-            json_container.value = "Loading...";
-            manage_container.appendChild(json_container);
-
-            let copy_button = document.createElement("button");
-            copy_button.className = "btn btn-default";
-            copy_button.style.float = "right";
-            copy_button.style.margin = "15px";
-            append_text_with_icon(copy_button, "copy", "Copy");
-            copy_button.addEventListener("click", (sub_event) => {
-                sub_event.preventDefault();
-
-                try {
-                    json_container.select();
-                    document.execCommand("Copy");
-
-                    vNotify.success({
-                        title: "Data copied",
-                        text: "Your data is in your Clipboard.",
-                        position: "bottomRight"
-                    });
-                } catch (error) {
-                    vNotify.error({
-                        title: "Error copying data",
-                        text: error,
-                        sticky: true,
-                        position: "bottomRight"
-                    });
-                    console.error(error);
-                }
+        if (is_clickable) {
+            document.querySelectorAll("li[is-a-mmd-button='true']").forEach((node) => {
+                node.className = "";
             });
-
-            // Print all data
-            browser.storage.local.get(null)
-            .then((data) => {
-                json_container.value = JSON.stringify(data);
-                manage_container.appendChild(copy_button);
-            });
-        } else {
-            manage_container.style.display = "none";
             event.target.parentElement.classList.toggle("active");
+
+            if (manage_container.style.display == "none" || last_active != 1) {
+                last_active = 1;
+                manage_container.style.display = "block";
+                clear_dom_node(manage_container);
+
+                let json_container = document.createElement("textarea");
+                json_container.className = "form-control";
+                json_container.style.height = "300px";
+                json_container.style.overflow = "auto";
+                json_container.value = "Loading...";
+                manage_container.appendChild(json_container);
+
+                let copy_button = document.createElement("button");
+                copy_button.className = "btn btn-default";
+                copy_button.style.float = "right";
+                copy_button.style.margin = "15px";
+                append_text_with_icon(copy_button, "copy", "Copy");
+                copy_button.addEventListener("click", (sub_event) => {
+                    sub_event.preventDefault();
+
+                    try {
+                        json_container.select();
+                        document.execCommand("Copy");
+
+                        vNotify.success({
+                            title: "Data copied",
+                            text: "Your data is in your Clipboard.",
+                            position: "bottomRight"
+                        });
+                    } catch (error) {
+                        vNotify.error({
+                            title: "Error copying data",
+                            text: error,
+                            sticky: true,
+                            position: "bottomRight"
+                        });
+                        console.error(error);
+                    }
+                });
+
+                // Print all data
+                browser.storage.local.get(null)
+                .then((data) => {
+                    json_container.value = JSON.stringify(data);
+                    manage_container.appendChild(copy_button);
+                });
+            } else {
+                manage_container.style.display = "none";
+                event.target.parentElement.classList.toggle("active");
+            }
         }
     });
 
     // Create clear data button
     create_button(nav_bar, "Clear Data (MMD)", "trash", (event) => {
         event.preventDefault();
-        document.querySelectorAll("li[is-a-mmd-button='true']").forEach((node) => {
-            node.className = "";
-        });
-        event.target.parentElement.classList.toggle("active");
 
-        if (manage_container.style.display == "none" || last_active != 3) {
-            last_active = 3;
-            manage_container.style.display = "block";
-            clear_dom_node(manage_container);
+        if (is_clickable) {
+            document.querySelectorAll("li[is-a-mmd-button='true']").forEach((node) => {
+                node.className = "";
+            });
+            event.target.parentElement.classList.toggle("active");
 
-            let confirm_delete_button = document.createElement("button");
-            confirm_delete_button.className = "btn btn-danger";
-            confirm_delete_button.style.margin = "0 auto";
-            confirm_delete_button.style.display = "block";
-            append_text_with_icon(confirm_delete_button, "trash", "Click here to Delete MyMangaDex local storage");
-            confirm_delete_button.addEventListener("click", (sub_event) => {
-                sub_event.preventDefault();
+            if (manage_container.style.display == "none" || last_active != 3) {
+                last_active = 3;
+                manage_container.style.display = "block";
+                clear_dom_node(manage_container);
 
-                // Clear data
-                browser.storage.local.clear()
+                let confirm_delete_button = document.createElement("button");
+                confirm_delete_button.className = "btn btn-danger";
+                confirm_delete_button.style.margin = "0 auto";
+                confirm_delete_button.style.display = "block";
+                append_text_with_icon(confirm_delete_button, "trash", "Click here to Delete MyMangaDex local storage");
+                confirm_delete_button.addEventListener("click", (sub_event) => {
+                    sub_event.preventDefault();
+                    is_clickable = false;
+
+                    // Clear data
+                    browser.storage.local.clear()
                     .then(() => {
+                        is_clickable = true;
+
                         vNotify.success({
                             title: "Data deleted",
                             text: "Local storage as been cleared.",
@@ -919,14 +997,15 @@ function insert_manage_buttons() {
                         });
                     });
 
-                // Hide menu
-                event.target.parentElement.classList.toggle("active");
+                    // Hide menu
+                    event.target.parentElement.classList.toggle("active");
+                    manage_container.style.display = "none";
+                });
+                manage_container.appendChild(confirm_delete_button);
+            } else {
                 manage_container.style.display = "none";
-            });
-            manage_container.appendChild(confirm_delete_button);
-        } else {
-            manage_container.style.display = "none";
-            event.target.parentElement.classList.toggle("active");
+                event.target.parentElement.classList.toggle("active");
+            }
         }
     });
 }
