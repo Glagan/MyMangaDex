@@ -22,6 +22,18 @@ html {
     color: rgb(153, 153, 153);
 }
 
+.background-transition {
+    transition: background-color 0.5s ease-in-out;
+}
+
+.saved {
+    background-color: darkgreen !important;
+}
+
+.not-saved {
+    background-color: firebrick !important;
+}
+
 a {
     color: #ffffff;
     text-decoration: none;
@@ -136,6 +148,7 @@ input[type='checkbox'] {
 .btn-save {
     color: #ffffff;
     background-image: linear-gradient(limegreen, green 60%, darkgreen);
+    font-size: 20px;
 }
 
 .btn-save:hover {

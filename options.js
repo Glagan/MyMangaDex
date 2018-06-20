@@ -3,6 +3,13 @@ function isEmpty(obj) {
 	return true;
 }
 
+function flash_background(back_class) {
+	document.querySelector("#content").classList.add(back_class);
+	setTimeout(() => {
+		document.querySelector("#content").classList.remove(back_class);
+	}, 500);
+}
+
 function saveOptions(event) {
 	event.preventDefault();
 
@@ -27,6 +34,10 @@ function saveOptions(event) {
 		}
 	}).then(() => {
 		console.log("Saved");
+		flash_background("saved");
+	}).catch((error) => {
+		console.error(error);
+		flash_background("not-saved");
 	});
 }
 
@@ -51,6 +62,8 @@ function restoreOptions() {
 		document.querySelector("#follow_button").checked = opt.follow_button;
 		document.querySelector("#last_open_only_higher").checked = opt.last_open_only_higher;
 		document.querySelector("#save_all_opened").checked = opt.save_all_opened;
+
+		document.querySelector("#content").classList.add("background-transition");
 	});
 }
 
@@ -73,11 +86,11 @@ function restoreDefault(event) {
 		}
 	// If it's an input
 	} else if (node.type == "text") {
-		node.value = default_opt[node_name];
+		node.value = default_opt.colors[node_name];
 		document.querySelector("#" + node_name + "_color").style.backgroundColor = default_opt[node_name];
 	// Or it's a checkbox, no other choice right now
 	} else {
-		node.checked = default_opt[node_name];
+		node.checked = default_opt.colors[node_name];
 	}
 }
 
@@ -143,7 +156,7 @@ function removeColor(color_id) {
 // Default options
 let default_opt = {
 	colors: {
-		last_read: "cadetblue",
+		last_read: "rgba(95,158,160,0.6)",
 		lower_chapter: "darkolivegreen",
 		last_open: [
 			"rebeccapurple",

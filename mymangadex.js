@@ -12,12 +12,10 @@ window.MyMangaDex = {
     mal_url: "",
     last_read: 0,
     last_open: -1,
-    last_open_sub: -1,
     chapters: [],
     current_chapter: {
         volume: 0,
-        chapter: 0,
-        sub_chapter: 0
+        chapter: 0
     },
     more_info: {}
 };
@@ -27,7 +25,7 @@ function load_options(options_object) {
     .then((res) => {
         if (isEmpty(res)) {
             options_object.colors = {
-                last_read: "cadetblue",
+                last_read: "rgba(95,158,160,0.6)",
                 lower_chapter: "darkolivegreen",
                 last_open: [
                     "rebeccapurple",
@@ -152,8 +150,7 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, in
                 mal_id: 0,
                 manga_name: manga_name,
                 manga_image: manga_image,
-                last_open: 0,
-                last_open_sub: undefined
+                last_open: 0
             };
 
             // If regex is empty, there is no mal link, can't do anything
@@ -283,8 +280,7 @@ function insert_mal_link_form() {
                                 [MyMangaDex.mangadex_id]: {
                                     mal_id: MyMangaDex.mal_id,
                                     image: MyMangaDex.manga_image,
-                                    last_open: MyMangaDex.last_read,
-                                    last_open_sub: -1
+                                    last_open: MyMangaDex.last_read
                                 }
                             }).then(() => {
                                 try {
@@ -463,7 +459,8 @@ function update_manga_last_read(set_status=1) {
                     body += encodeURIComponent("add_manga[finish_date][month]") + "=" + MyMangaDex.more_info.finish_date.month + "&";
                     body += encodeURIComponent("add_manga[finish_date][day]") + "=" + MyMangaDex.more_info.finish_date.day + "&";
                     body += encodeURIComponent("add_manga[is_asked_to_discuss]") + "=" + MyMangaDex.more_info.ask_to_discuss + "&";
-                    body += encodeURIComponent("add_manga[num_read_chapters]") + "=" + MyMangaDex.current_chapter.chapter + "&";
+                    // parseInt the chapter we're going to put, since MyAnimeList doesn't accept sub chapters
+                    body += encodeURIComponent("add_manga[num_read_chapters]") + "=" + parseInt(MyMangaDex.current_chapter.chapter) + "&";
                     body += encodeURIComponent("add_manga[num_read_times]") + "=" + MyMangaDex.more_info.total_reread + "&";
                     body += encodeURIComponent("add_manga[num_read_volumes]") + "=" + MyMangaDex.current_chapter.volume + "&";
                     body += encodeURIComponent("add_manga[num_retail_volumes]") + "=" + MyMangaDex.more_info.retail_volumes + "&";
@@ -563,8 +560,7 @@ function update_last_open(manga, notification=true) {
         [manga.mangadex_id]: {
             mal_id: manga.mal_id,
             image: manga.manga_image,
-            last_open: manga.last_open,
-            last_open_sub: manga.last_open_sub
+            last_open: manga.last_open
         }
     }).then(() => {
         // Show a notification for updated last opened if there is no MyAnimeList id
@@ -641,7 +637,6 @@ function clear_dom_node(dom_node) {
 function insert_mal_informations(content_node, manga) {
     // Delete node before adding anything to it, it's surely old thin anyway
     clear_dom_node(content_node);
-
     insert_mal_button(content_node);
 
     // Add some informations on the page
@@ -653,6 +648,10 @@ function insert_mal_informations(content_node, manga) {
     content_node.appendChild(document.createElement("br"));
     if (manga.more_info.start_date.year != "") {
         append_text_with_icon(content_node, "calendar-alt", "Start date " + manga.more_info.start_date.year + "/" + manga.more_info.start_date.month + "/" + manga.more_info.start_date.day);
+        content_node.appendChild(document.createElement("br"));
+    }
+    if (manga.more_info.status == 2 && manga.more_info.finish_date.year != "") {
+        append_text_with_icon(content_node, "calendar-alt", "Finish date " + manga.more_info.finish_date.year + "/" + manga.more_info.finish_date.month + "/" + manga.more_info.finish_date.day);
         content_node.appendChild(document.createElement("br"));
     }
     let score_text;
@@ -667,31 +666,49 @@ function insert_mal_informations(content_node, manga) {
 // Highlight last read chapter
 function highlight_last_read_chapter(chapter_number, chapters) {
     for (var chapter of chapters) {
-        if (chapter.chapter == chapter_number) {
-            chapter.parent_node.style.backgroundColor = "cadetblue";
+        // parseInt the chapter, since MyAnimeList doesn't have sub chapters
+        // We would have no match if there was an actual sub chapter
+        if (parseInt(chapter.chapter) == chapter_number) {
+            chapter.parent_node.style.backgroundColor = MyMangaDexOptions.colors.last_read;
         }
     }
 }
 
+/**
+ * Get the attributes of a node to convert it to a object containing the volume and chapter
+ * Volume is set to 0 if null and chapter is set to 1 if it's a Oneshot
+ */
+function volume_and_chapter_from_node(node) {
+    let chapter = node.getAttribute("data-chapter-num");
 
+    // If it's a Oneshot or just attributes are empty, we use a regex on the title
+    if (chapter == "") {
+        // If the chapter isn't available in the attributes we get it with a good ol' regex
+        return volume_and_chapter_from_string(node.textContent);
+    }
+
+    return {
+        volume: parseInt(node.getAttribute("data-volume-num")) || 0,
+        chapter: parseFloat(chapter) || 1
+    };
+}
+
+/**
+ * Apply a regex to the string to return the volume and chapter of a title.
+ * Volume is set to 0 if null and chapter is set to 1 if it's a Oneshot
+ */
 function volume_and_chapter_from_string(string) {
-    // The ultimate regex ? Don't think so...
-    let regex_result = /(?:Vol(?:ume|\.)\s)?(\d+)?.*(?:(?:Ch\.|apter)\s)(\d+)\.*(\d+)*/.exec(string);
+    // The ultimate regex ? Don't think so... Volume[1] Chapter[2] + [3]
+    let regex_result = /(?:Vol(?:[.]|ume)\s([0-9]+)\s)?(?:Ch(?:[.]|apter)\s)?([0-9]+)([.][0-9]+)?/.exec(string);
 
-    // Weird fix for "chapter" without any indication
+    // If it's a Oneshot
     if (regex_result == null) {
-        if (string == "Oneshot") {
-            regex_result = [0, 0, 1, undefined];
-        } else {
-            regex_result = /(\d+)\.*(\d+)*/.exec(string);
-            regex_result = [0, 0, regex_result[1], regex_result[2]];
-        }
+        regex_result = [0, 0, 1, undefined];
     }
 
     return {
         volume: parseInt(regex_result[1]) || 0,
-        chapter: parseInt(regex_result[2]),
-        sub_chapter: parseInt(regex_result[3]) || undefined
+        chapter: parseFloat(regex_result[2] + "" + regex_result[3])
     };
 }
 
@@ -790,7 +807,6 @@ function insert_manage_buttons() {
                                         // If there is an entry we set it to the highest last_open
                                         if (!isEmpty(data)) {
                                             to_insert[mangadex_id].last_open = Math.max(data[mangadex_id].last_open, imported_data[mangadex_id].last_open);
-                                            to_insert[mangadex_id].last_open_sub = -1;
                                         }
 
                                         // Insert the entry in the local storage
@@ -1083,7 +1099,7 @@ function follow_page() {
     // Check each rows of the main table
     for (let element of main_chapter_table.children) {
         // Get volume and chapter number
-        let volume_and_chapter = volume_and_chapter_from_string(element.children[2].firstElementChild.textContent);
+        let volume_and_chapter = volume_and_chapter_from_node(element.children[2].firstElementChild);
 
         // If it's a row with a name
         if (element.firstElementChild.childElementCount > 0) {
@@ -1111,12 +1127,11 @@ function follow_page() {
         // If it's a single chapter
         if (serie.chapters.length == 1) {
             // If it's the last open chapter we paint it rebeccapurple
-            if (manga_info.last_open == serie.chapters[0].chapter &&
-                (manga_info.last_open_sub === undefined || manga_info.last_open_sub === -1 || serie.chapters[0].last_open_sub === undefined || parseInt(manga_info.last_open_sub) === serie.chapters[0].last_open_sub)) {
+            if (manga_info.last_open == serie.chapters[0].chapter) {
                 serie.dom_nodes[0].style.backgroundColor = going_for_color;
                 ccolor = (ccolor+1)%mcolor;
                 // If it's a lower than last open we delete it
-            } else if (parseInt(manga_info.last_open) > serie.chapters[0].chapter) {
+            } else if (manga_info.last_open > serie.chapters[0].chapter) {
                 if (MyMangaDexOptions.hide_lower) {
                     serie.dom_nodes[0].parentElement.removeChild(serie.dom_nodes[0]);
                 } else {
@@ -1131,14 +1146,11 @@ function follow_page() {
         // Or if it's a list of chapters
         } else {
             let highest_on_list = -1;
-            let highest_sub_on_list = -1;
 
             // Check the highest chapter on the list
             for (let chapter of serie.chapters) {
-                if (chapter.chapter > highest_on_list &&
-                    (chapter.sub_chapter === undefined || chapter.sub_chapter > highest_sub_on_list)) {
+                if (chapter.chapter > highest_on_list) {
                     highest_on_list = chapter.chapter;
-                    highest_sub_on_list = chapter.sub_chapter;
                 }
             }
 
@@ -1159,8 +1171,7 @@ function follow_page() {
                     let chapter = serie.chapters[chapter_index];
 
                     // Highlight if it's the current last open chapter, and start painting the name column from here
-                    if (chapter.chapter ==manga_info.last_open && !highlight_next &&
-                        (manga_info.last_open_sub === undefined || manga_info.last_open_sub === -1 || chapter.last_open_sub === undefined || manga_info.last_open_sub === chapter.last_open_sub)) {
+                    if (chapter.chapter == manga_info.last_open && !highlight_next) {
                         serie.dom_nodes[chapter_index].style.backgroundColor = going_for_color;
                         ccolor = (ccolor+1)%mcolor;
                         highlight_next = true;
@@ -1226,15 +1237,14 @@ function manga_page() {
 
     // Get the name of each "chapters" in the list
     for (var element of main_chapter_table.children) {
-        var name = element.children[1].firstChild.textContent;
-        var volume_and_chapter = volume_and_chapter_from_string(name);
+        var name = element.children[1].firstElementChild.textContent;
+        var volume_and_chapter = volume_and_chapter_from_node(element.children[1].firstElementChild);
 
         MyMangaDex.chapters.push({
             name: name,
             parent_node: element,
             volume: volume_and_chapter.volume,
-            chapter: volume_and_chapter.chapter,
-            sub_chapter: volume_and_chapter.sub_chapter
+            chapter: volume_and_chapter.chapter
         });
     }
 
@@ -1275,7 +1285,6 @@ function manga_page() {
         } else {
             MyMangaDex.mal_id = data[MyMangaDex.mangadex_id].mal_id;
             MyMangaDex.last_open = data[MyMangaDex.mangadex_id].last_open;
-            MyMangaDex.last_open_sub = data[MyMangaDex.mangadex_id].last_open_sub;
             MyMangaDex.manga_image = data[MyMangaDex.mangadex_id].image;
 
             if (MyMangaDex.mal_id == 0) {
@@ -1369,12 +1378,13 @@ function manga_page() {
             console.log("No MAL link avaible, can't do anything, try to add one if it exist.");
         }
 
+        console.log(MyMangaDex);
+
         // Highlight last_open in anycase
         if (MyMangaDex.last_open >= 0) {
             for (var chapter of MyMangaDex.chapters) {
-                if  (chapter.chapter == MyMangaDex.last_open &&
-                    ((MyMangaDex.last_open_sub === -1 || MyMangaDex.last_open_sub === undefined) || MyMangaDex.last_open_sub == chapter.sub_chapter)) {
-                    chapter.parent_node.style.backgroundColor = "rebeccapurple";
+                if  (chapter.chapter == MyMangaDex.last_open) {
+                    chapter.parent_node.style.backgroundColor = MyMangaDexOptions.colors.last_open[0];
                     break;
                 }
             }
@@ -1406,7 +1416,6 @@ function chapter_page() {
 
     // Update last open to this one
     MyMangaDex.last_open = MyMangaDex.current_chapter.chapter;
-    MyMangaDex.last_open_sub = MyMangaDex.current_chapter.sub_chapter;
 
     // Get MAL Url from the database
     browser.storage.local.get(MyMangaDex.mangadex_id+"")
@@ -1470,7 +1479,8 @@ function chapter_page() {
             }
 
             // We still update last open if there isn't a mal id - Only if it's higher
-            if (MyMangaDex.last_open > data[MyMangaDex.mangadex_id].last_open && MyMangaDexOptions.last_open_only_higher || !MyMangaDexOptions.last_open_only_higher) {
+            if ((MyMangaDex.last_open > data[MyMangaDex.mangadex_id].last_open && MyMangaDexOptions.last_open_only_higher) ||
+                !MyMangaDexOptions.last_open_only_higher) {
                 update_last_open(MyMangaDex);
             }
         }

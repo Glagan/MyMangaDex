@@ -67,7 +67,6 @@ Before release done:
 * [ ] Modal to directly edit all informations
 * [ ] Store all read chapters and highlight them
 * [ ] Clean up
-* [ ] Use data-chapter-num and data-volume-num instead of regex
 
 ## Legacy code
 Add a follow button on search page (not working)
