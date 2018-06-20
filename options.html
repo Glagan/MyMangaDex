@@ -2,9 +2,74 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" media="all" href="options.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/solid.css" integrity="sha384-Rw5qeepMFvJVEZdSo1nDQD5B6wX0m7c5Z/pLNvjkB14W6Yki1hKbSEQaX9ffUbWe" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/brands.css" integrity="sha384-VGCZwiSnlHXYDojsRqeMn3IVvdzTx5JEuHgqZ3bYLCLUBV8rvihHApoA1Aso2TZA" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/fontawesome.css" integrity="sha384-GVa9GOgVQgOk+TNYXu7S/InPTfSDTtBalSgkgqQ7sCik56N9ztlkoTr2f/T44oKV" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://code.cdn.mozilla.net/fonts/fira.css">
 </head>
 <body>
-    <p>Github page: <a href="https://github.com/Glagan/MyMangaDex">https://github.com/Glagan/MyMangaDex</a></p>
-    <p></p>
+    <div id="content">
+        <p>
+            <a id="save" class="btn btn-save"><i class="fas fa-save"></i> Save</a>
+            Github page <i class="fab fa-github"></i> <a href="https://github.com/Glagan/MyMangaDex" target="blank">https://github.com/Glagan/MyMangaDex</a><br>
+            Open an issue if you have any problem.
+        </p>
+        <h1><i class="fas fa-palette"></i> Colors</h1>
+        <p>Colors that exist in HTML are accepted but you can also use a value like <b>#RRGGBB</b>, <b>rgb(r,g,b)</b> or <b>rgba(r,g,b,a)</b>.</p>
+        <p>
+            <a id="default_last_read" class="btn btn-default"><i class="fas fa-trash"></i> Restore default</a>
+            Last read color <input type="text" id="last_read" class="color-input" value="cadetblue" /><span id="last_read_color" class="color-box default-last-read"></span>
+        </p>
+        <p>
+            <a id="default_last_open" class="btn btn-default"><i class="fas fa-trash"></i> Restore default</a>
+            Last open colors, highlighted chapters will cycle trough them
+        </p>
+        <ul id="last_open" class="indented">
+            <li><i class="fas fa-plus-circle"></i> <span id="add-a-color">Add a color</span>
+            </li>
+        </ul>
+        <p>
+            <a id="default_lower_chapter" class="btn btn-default"><i class="fas fa-trash"></i> Restore default</a>
+            Lower chapters color <input type="text" id="lower_chapter" class="color-input" value="darkolivegreen" /><span id="lower_chapter_color" class="color-box default-lower-chapter"></span>
+        </p>
+        <h1><i class="fas fa-bookmark"></i> Follow page</h1>
+        <p>
+            <a id="default_hide_lower" class="btn btn-default"><i class="fas fa-trash"></i> Restore default</a>
+            <label class="switch switch-flat">
+                <input id="hide_lower" class="switch-input" type="checkbox" checked="checked" />
+                <span class="switch-label" data-on="On" data-off="Off"></span>
+                <span class="switch-handle"></span>
+            </label> Hide lower chapters
+        </p>
+        <h1><i class="fas fa-search"></i> Search page</h1>
+        <p>
+            <a id="default_follow_button" class="btn btn-default"><i class="fas fa-trash"></i> Restore default</a>
+            <label class="switch switch-flat">
+                <input id="follow_button" class="switch-input" type="checkbox" disabled="true" />
+                <span class="switch-label" data-on="On" data-off="Off"></span>
+                <span class="switch-handle"></span>
+            </label> Display follow button on the search page <span style="color: firebrick">(Not implemented)</span>
+        </p>
+        <h1><i class="fas fa-file"></i> Chapter page</h1>
+        <p>
+            <a id="default_last_open_only_higher" class="btn btn-default"><i class="fas fa-trash"></i> Restore default</a>
+            <label class="switch switch-flat">
+                <input id="last_open_only_higher" class="switch-input" type="checkbox" checked="checked" />
+                <span class="switch-label" data-on="On" data-off="Off"></span>
+                <span class="switch-handle"></span>
+            </label> Set last open chapter only if it's higher
+        </p>
+        <p>
+            <a id="default_save_all_opened" class="btn btn-default"><i class="fas fa-trash"></i> Restore default</a>
+            <label class="switch switch-flat">
+                <input id="save_all_opened" class="switch-input" type="checkbox" disabled="true" />
+                <span class="switch-label" data-on="On" data-off="Off"></span>
+                <span class="switch-handle"></span>
+            </label> Save all opened chapters <span style="color: firebrick">(Not implemented)</span>
+        </p>
+    </div>
+
+    <script src="options.js"></script>
 </body>
 </html>

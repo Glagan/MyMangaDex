@@ -1,5 +1,7 @@
 // INIT
 
+window.MyMangaDexOptions = {colors:{last_open:[]}};
+
 window.MyMangaDex = {
     logged_in: true,
     url: "",
@@ -19,6 +21,40 @@ window.MyMangaDex = {
     },
     more_info: {}
 };
+
+function load_options(options_object) {
+    return browser.storage.local.get("options")
+    .then((res) => {
+        if (isEmpty(res)) {
+            options_object.colors = {
+                last_read: "cadetblue",
+                lower_chapter: "darkolivegreen",
+                last_open: [
+                    "rebeccapurple",
+	                "indigo"
+                ]
+            };
+            options_object.hide_lower = true;
+            options_object.follow_button = false;
+            options_object.last_open_only_higher = true;
+            options_object.save_all_opened = false;
+
+            return browser.storage.local.set({
+                options: options_object
+            });
+        } else {
+            options_object.colors = {
+                last_read: res.options.colors.last_read,
+                lower_chapter: res.options.colors.lower_chapter,
+                last_open: res.options.colors.last_open,
+            };
+            options_object.hide_lower = res.options.hide_lower;
+            options_object.follow_button = res.options.follow_button;
+            options_object.last_open_only_higher = res.options.last_open_only_higher;
+            options_object.save_all_opened = res.options.save_all_opened;
+        }
+    });
+}
 
 function append_to_output_and_scroll(output_node, text) {
     output_node.value += "\n" + text;
@@ -523,7 +559,6 @@ function update_manga_last_read(set_status=1) {
  * Update the last_open and last_open_sub of a mangadex_id entry
  */
 function update_last_open(manga, notification=true) {
-    console.log(manga);
     return browser.storage.local.set({
         [manga.mangadex_id]: {
             mal_id: manga.mal_id,
@@ -616,6 +651,10 @@ function insert_mal_informations(content_node, manga) {
     content_node.appendChild(document.createElement("br"));
     append_text_with_icon(content_node, "bookmark", "Chapter " + manga.last_read + " out of " + manga.more_info.total_chapter + " ");
     content_node.appendChild(document.createElement("br"));
+    if (manga.more_info.start_date.year != "") {
+        append_text_with_icon(content_node, "calendar-alt", "Start date " + manga.more_info.start_date.year + "/" + manga.more_info.start_date.month + "/" + manga.more_info.start_date.day);
+        content_node.appendChild(document.createElement("br"));
+    }
     let score_text;
     if (manga.more_info.score == "") {
         score_text = "Not scored yet";
@@ -737,6 +776,10 @@ function insert_manage_buttons() {
                         if (merge_checkbox.checked) {
                             let promises = [];
                             for (let mangadex_id in imported_data) {
+                                if (mangadex_id == "options") {
+                                    continue;
+                                }
+
                                 promises.push(
                                     browser.storage.local.get(mangadex_id+"")
                                     .then((data) => {
@@ -1033,8 +1076,8 @@ function follow_page() {
     var series_count = -1;
     //var color = "rebeccapurple"; // "darkmagenta", "darkorchid"
     // Switch between colors of this array
-    var colors = ["rebeccapurple", "indigo"];
-    var mcolor = 2;
+    var colors = MyMangaDexOptions.colors.last_open;
+    var mcolor = colors.length;
     var ccolor = 0;
 
     // Check each rows of the main table
@@ -1074,10 +1117,13 @@ function follow_page() {
                 ccolor = (ccolor+1)%mcolor;
                 // If it's a lower than last open we delete it
             } else if (parseInt(manga_info.last_open) > serie.chapters[0].chapter) {
-                //serie.dom_nodes[0].style.backgroundColor = "darkolivegreen";
-                serie.dom_nodes[0].parentElement.removeChild(serie.dom_nodes[0]);
+                if (MyMangaDexOptions.hide_lower) {
+                    serie.dom_nodes[0].parentElement.removeChild(serie.dom_nodes[0]);
+                } else {
+                    serie.dom_nodes[0].style.backgroundColor = MyMangaDexOptions.colors.lower_chapter;
+                }
             } else {
-                // Else it's a higher, we make it so clicking it make it rebeccapurple
+                // Else it's a higher, we make it so clicking it paint it
                 serie.dom_nodes[0].children[2].firstElementChild.addEventListener("auxclick", (event) => {
                     event.target.parentElement.parentElement.style.backgroundColor = going_for_color;
                 });
@@ -1099,10 +1145,13 @@ function follow_page() {
             // If all chapters are lower, delete all of them
             if (highest_on_list < manga_info.last_open) {
                 for (let node of serie.dom_nodes) {
-                    //node.style.backgroundColor = "darkolivegreen";
-                    node.parentElement.removeChild(node);
+                    if (MyMangaDexOptions.hide_lower) {
+                        node.parentElement.removeChild(node);
+                    } else {
+                        node.style.backgroundColor = MyMangaDexOptions.colors.lower_chapter;
+                    }
                 }
-                // Else we delete each lower rows except the first one
+            // Else we delete each lower rows except the first one
             } else {
                 let highlight_next = false;
                 // Reverse order so we can paint the name column once we see the current chapter if there is one
@@ -1117,9 +1166,12 @@ function follow_page() {
                         highlight_next = true;
                         // Delete if it's a lower chapter and not the first line (for the name)
                     } else if (chapter.chapter < manga_info.last_open && chapter_index > 0) {
-                        //serie.dom_nodes[chapter_index].style.backgroundColor = "darkolivegreen";
-                        serie.dom_nodes[chapter_index].parentElement.removeChild(serie.dom_nodes[chapter_index]);
-                        // Highlight the name column to show which title is the chapter corresponding to
+                        if (MyMangaDexOptions.hide_lower) {
+                            serie.dom_nodes[chapter_index].parentElement.removeChild(serie.dom_nodes[chapter_index]);
+                        } else {
+                            serie.dom_nodes[chapter_index].style.backgroundColor = MyMangaDexOptions.colors.lower_chapter;
+                        }
+                    // Highlight the name column to show which title is the chapter corresponding to
                     } else if (highlight_next) {
                         serie.dom_nodes[chapter_index].firstElementChild.style.backgroundColor = going_for_color;
 
@@ -1190,9 +1242,12 @@ function manga_page() {
     browser.storage.local.get(MyMangaDex.mangadex_id+"")
     .then((data) => {
         var has_a_mal_link = true;
+        let first_fetch = false;
 
         // If there is no entry try to find it
         if (isEmpty(data)) {
+            first_fetch = true;
+
             // Search the icon, find the link
             MyMangaDex.mal_url = document.querySelector("img[src='/images/misc/mal.png'");
             MyMangaDex.manga_image = document.querySelector("img[title='Manga image']").src; //"https://mangadex.org/images/manga/" + MyMangaDex.mangadex_id + ".jpg";
@@ -1247,6 +1302,11 @@ function manga_page() {
                             if (MyMangaDex.more_info.redirected == false) {
                                 insert_mal_informations(chapters_column_content, MyMangaDex);
                                 highlight_last_read_chapter(MyMangaDex.last_read, MyMangaDex.chapters);
+
+                                if (first_fetch) {
+                                    MyMangaDex.last_open = MyMangaDex.last_read;
+                                    update_last_open(MyMangaDex, false);
+                                }
                             } else {
                                 // Add a "Add to reading list" button
                                 var chapters_column_content_add = document.createElement("button");
@@ -1409,8 +1469,10 @@ function chapter_page() {
                 insert_mal_button(document.getElementById("report_button").parentElement);
             }
 
-            // We still update last open if there isn't a mal id
-            update_last_open(MyMangaDex);
+            // We still update last open if there isn't a mal id - Only if it's higher
+            if (MyMangaDex.last_open > data[MyMangaDex.mangadex_id].last_open && MyMangaDexOptions.last_open_only_higher || !MyMangaDexOptions.last_open_only_higher) {
+                update_last_open(MyMangaDex);
+            }
         }
     }, (error) => {
         console.error("Error fetching data from local storage.", error);
@@ -1419,4 +1481,4 @@ function chapter_page() {
 
 // START HERE
 
-start();
+load_options(MyMangaDexOptions).then(start);

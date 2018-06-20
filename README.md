@@ -1,5 +1,5 @@
 # MyMangaDex
-Script inspired from [KissAnimeList](https://github.com/lolamtisch/KissAnimeList) that synchronyze what you read on MangaDex.org to your MyAnimeList.net manga list.
+Extension inspired from [KissAnimeList](https://github.com/lolamtisch/KissAnimeList) that synchronyze what you read on MangaDex.org to your MyAnimeList.net manga list.
 
 * Why?
 Updating your manga one by one, by hand, when you have hundreds of them and read a lot of them each day is a long, tiring task...
@@ -59,6 +59,7 @@ Before release done:
 - [x] Display some informations and highlight last open on the manga page
 - [x] Export, import and delete MyMangaDex local storage
 - [x] Add a MyAnimeList link if there isn't one for a manga
+- [x] Some options
 
 ## TODO
 * Manga page:
@@ -67,7 +68,6 @@ Before release done:
 * [ ] Store all read chapters and highlight them
 * [ ] Clean up
 * [ ] Use data-chapter-num and data-volume-num instead of regex
-* [ ] Options
 
 ## Legacy code
 Add a follow button on search page (not working)
