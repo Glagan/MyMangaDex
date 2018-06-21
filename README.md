@@ -1,26 +1,28 @@
 # MyMangaDex
 Extension inspired from [KissAnimeList](https://github.com/lolamtisch/KissAnimeList) that synchronyze what you read on MangaDex.org to your MyAnimeList.net manga list.
 
-* Why?
+* Why?  
 Updating your manga one by one, by hand, when you have hundreds of them and read a lot of them each day is a long, tiring task...
-* Why no KissAnimeList fork?
+* Why no KissAnimeList fork?  
 I find the current script too "full". It's complicated, and there is a lot of useless features (for myself).  
 It was easier to just build a new script from scratch with only what was needed.  
 Also, MangaDex offer MyAnimeList links on each manga page (Thanks to the community), unlike KissManga, so there is no need for an additionnal database to check, so the script would have been very different only for MangaDex.
-* What you need buddy
+* What you need buddy  
 I only store the least possible data:  
 An entry for each MangaDex manga that hold the last open chapter, the MyAnimeList id, the MangaDex image of the manga (as a filename) and the list of all opened chapters for each manga (can be disabled)
 
 ## How to Install
-Right now, you shouldn't. Even, how did you find this repo ?
-First of all, it only works on Firefox right now.
-If you really want to try it:
-1. Clone the repo
-2. Go to [about:debugging](about:debugging)
-3. Click "Load a temporary module"
-4. Select any file of the cloned repo, and it's working.
-Open an issue to tell me how bad it is.  
-Works best with the dark theme !
+You can install it from the [Firefox add-ons site](https://addons.mozilla.org/fr/firefox/addon/mymangadex/).
+
+If you want to have some kind of experimentale experience, you can install it directly from this repo:
+1. Be sure that the version from the Firefox add-ons site is not installed (don't know what it would do, maybe just won't work)
+2. Clone the repo
+3. Go to [about:debugging](about:debugging)
+4. Click "Load a temporary module"
+5. Select any file of the cloned repo, and it's working.
+6. Open an issue to tell me how bad it is.
+
+Works best with the MangaDex dark theme !
 
 ## How to use
 Once you have it installed, you have nothing to do!  
@@ -36,10 +38,12 @@ You can also import your data from MyAnimeList here (The last read of every mang
 
 ### Manga page
 * Show some information about the manga entry on MyAnimeList if it exists
-* Highlight your last read chapter
+* Highlight your last read chapter and all opened chapters if you want
 
 ### Chapter page
 * Automatically update the MyAnimeList manga entry to the current chapter number if it's the highest
+* If it's the first chapter, the start date is set to today and the status is set to "Reading"
+* If it's the last chapter, the finish date is set to today and the status is set to "Completed"
 
 ## Useful links
 * Import favorites from KissManga to MangaDexx https://old.reddit.com/r/manga/comments/8qebu4/import_kissmanga_bookmarks_to_mangadex/
@@ -47,6 +51,8 @@ You can also import your data from MyAnimeList here (The last read of every mang
 ## Colors used
 * Last open: rebeccapurple or indigo
 * Actual last read chapter on MyAnimeList: cadetblue
+
+You can change them in the options.
 
 ---
 
@@ -62,96 +68,10 @@ Before release done:
 - [x] Some options
 
 ## TODO
+* [ ] Store all read chapters and highlight them
+* [ ] Show last read and manga image on title hover
+* [ ] Clean up
+* [ ] Modal to directly edit all informations
+* [ ] Re-reading
 * Manga page:
   * [ ] Offset
-* [ ] Modal to directly edit all informations
-* [ ] Store all read chapters and highlight them
-* [ ] Clean up
-* [ ] Show last read and manga image on title hover
-
-## Legacy code
-Add a follow button on search page (not working)
-```javascript
-if (MyMangaDex.url.indexOf("page=search") > -1) {
-    var result_list = document.getElementsByClassName("table table-striped table-condensed")[0].children[1].children;
-    var i = 0;
-    for (var manga of result_list) {
-        // One manga takes two rows, for the thumbnail (???)
-        if (i%2 == 0) {
-            var regex = /manga\/(\d+)\/(.+)/.exec(manga.children[2].children[0].href);
-            var id = regex[1];
-            var name = regex[2];
-            var button = document.createElement("a");
-            button.textContent = "Follow";
-            button.className = "btn btn-default";
-            button.addEventListener("click", (event) => {
-                event.preventDefault();
-
-                fetch("https://mangadex.org/ajax/actions.ajax.php?function=manga_follow&id=" + id + "&type=1")
-                .then((data) => {
-                vNotify.success({title: "Manga followed", text: "<b>" + name + "</b> is now in the reading list.", position: "bottomRight"});
-                }, (error) => {
-                console.error(error);
-                })
-            })
-            manga.children[2].appendChild(document.createTextNode(" "));
-            manga.children[2].appendChild(button);
-        }
-        i++;
-    }
-}
-```
-Code on follow page for a set as last open button (not working)
-```javascript
-let set_as_open = document.createElement("button");
-set_as_open.className = "btn btn-default";
-set_as_open.textContent = "Set as open";
-set_as_open.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    event.target.parentElement.parentElement.style.backgroundColor = "rebeccapurple";
-    event.target.style.display = "none";
-
-    browser.storage.local.get(manga_id)
-    .then((data) => {
-        // Create new entry if the manga isn't in local storage
-        if (isEmpty(data)) {
-            data[manga_id] = {
-                mal_id: -1,
-                manga_image: ""
-            };
-        }
-
-        data[manga_id].mangadex_id = manga_id;
-        data[manga_id].manga_name = manga_name;
-        data[manga_id].last_open = volume_and_chapter[4];
-        data[manga_id].last_open_sub = volume_and_chapter[5];
-
-        update_last_open(data[manga_id])
-        .then(() => {
-            event.target.parentElement.removeChild(event.target);
-        });
-    })
-});
-element.children[2].appendChild(set_as_open);
-```
-Code on manga_page for the set as last open button (when checking data) (not working)
-```javascript
-// If the entry was added from the follow page
-// The image might be null and the mal_id was set to -1
-/*else*/ if (MyMangaDex.mal_id == -1) {
-    MyMangaDex.mal_url = document.querySelector("img[src='/images/misc/mal.png'");
-    MyMangaDex.manga_image = document.querySelector("img[title='Manga image']").src;
-
-    if (MyMangaDex.mal_url !== null) {
-        MyMangaDex.mal_url = MyMangaDex.mal_url.nextElementSibling.href;
-        MyMangaDex.mal_id = /.+\/(\d+)/.exec(MyMangaDex.mal_url)[1];
-    } else {
-        has_a_mal_link = false;
-        MyMangaDex.mal_id = 0;
-    }
-
-    update_last_open(MyMangaDex);
-}
-```
