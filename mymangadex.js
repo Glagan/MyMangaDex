@@ -254,7 +254,7 @@ function insert_mal_link_form() {
     var add_mal_link_column_content_edit = document.createElement("input");
     add_mal_link_column_content_edit.id = "mymangadex-mal-link-input";
     add_mal_link_column_content_edit.className = "form-control";
-    // Style the input since the form-control style is fucked
+    // Style the input since the form-control style is bad
     add_mal_link_column_content_edit.style.display = "inline-block";
     add_mal_link_column_content_edit.style.width = "auto";
     add_mal_link_column_content_edit.style.verticalAlign = "middle";
