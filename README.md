@@ -9,7 +9,7 @@ It was easier to just build a new script from scratch with only what was needed.
 Also, MangaDex offer MyAnimeList links on each manga page (Thanks to the community), unlike KissManga, so there is no need for an additionnal database to check, so the script would have been very different only for MangaDex.
 * What you need buddy
 I only store the least possible data:  
-An entry for each MangaDex manga that hold the last open chapter, the sub chapter if it exist, the MyAnimeList id and the MangaDex image of the manga (as a filename)
+An entry for each MangaDex manga that hold the last open chapter, the MyAnimeList id, the MangaDex image of the manga (as a filename) and the list of all opened chapters for each manga (can be disabled)
 
 ## How to Install
 Right now, you shouldn't. Even, how did you find this repo ?
@@ -67,6 +67,7 @@ Before release done:
 * [ ] Modal to directly edit all informations
 * [ ] Store all read chapters and highlight them
 * [ ] Clean up
+* [ ] Show last read and manga image on title hover
 
 ## Legacy code
 Add a follow button on search page (not working)

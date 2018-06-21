@@ -427,7 +427,8 @@ function update_manga_last_read(set_status=1) {
         if (MyMangaDex.logged_in) {
             if (MyMangaDex.more_info.is_approved) {
                 // If the current chapter is higher than the last read one
-                if (MyMangaDex.last_read == "" || MyMangaDex.last_read < MyMangaDex.current_chapter.chapter) {
+                // Use parseInt on the current chapter to avoid updating even tough it's the same if this is a sub chapter
+                if (MyMangaDex.last_read == "" || parseInt(MyMangaDex.current_chapter.chapter) > MyMangaDex.last_read) {
                     // Status is always set to reading, or we complet it if it's the last chapter, and so we fill the finishh_date
                     var status = (parseInt(MyMangaDex.more_info.total_chapter) > 0 && parseInt(MyMangaDex.current_chapter.chapter) >= parseInt(MyMangaDex.more_info.total_chapter)) ? 2 : set_status;
                     var post_url = "https://myanimelist.net/ownlist/manga/" + MyMangaDex.mal_id + "/edit?hideLayout";
@@ -977,6 +978,7 @@ function insert_manage_buttons() {
                 json_container.style.height = "300px";
                 json_container.style.overflow = "auto";
                 json_container.value = "Loading...";
+                json_container.readOnly = true;
                 manage_container.appendChild(json_container);
 
                 let copy_button = document.createElement("button");
@@ -1257,6 +1259,7 @@ function manga_page() {
         // If there is no entry try to find it
         if (isEmpty(data)) {
             first_fetch = true;
+            MyMangaDex.last_open = 0;
 
             // Search the icon, find the link
             MyMangaDex.mal_url = document.querySelector("img[src='/images/misc/mal.png'");
@@ -1268,10 +1271,9 @@ function manga_page() {
                 MyMangaDex.mal_url = MyMangaDex.mal_url.nextElementSibling.href;
                 // Get MAL id of the manga from the mal link
                 MyMangaDex.mal_id = parseInt(/.+\/(\d+)/.exec(MyMangaDex.mal_url)[1]);
-            // If there is no MAL link, mal id is set to 0
             } else {
+            // If there is no MAL link, mal id is set to 0
                 MyMangaDex.mal_id = 0;
-                MyMangaDex.last_open = 0;
                 vNotify.error({
                     title: "No MyAnimeList id found",
                     text: "You can add one using the form.\nLast open chapter will still be saved.",
@@ -1279,9 +1281,10 @@ function manga_page() {
                     sticky: true
                 });
                 has_a_mal_link = false;
-
-                update_last_open(MyMangaDex, false);
             }
+
+            // Update it at least once to save the mal id
+                update_last_open(MyMangaDex, false);
         } else {
             MyMangaDex.mal_id = data[MyMangaDex.mangadex_id].mal_id;
             MyMangaDex.last_open = data[MyMangaDex.mangadex_id].last_open;
@@ -1377,8 +1380,6 @@ function manga_page() {
             insert_mal_link_form();
             console.log("No MAL link avaible, can't do anything, try to add one if it exist.");
         }
-
-        console.log(MyMangaDex);
 
         // Highlight last_open in anycase
         if (MyMangaDex.last_open >= 0) {
