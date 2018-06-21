@@ -27,3 +27,6 @@ package.json
 web-ext-artifacts
 export.json
 legacy_code.md
+
+.docs
+mini_doc.md
