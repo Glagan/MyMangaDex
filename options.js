@@ -29,7 +29,7 @@ function saveOptions(event) {
 			},
 			hide_lower: document.querySelector("#hide_lower").checked,
 			follow_button: document.querySelector("#follow_button").checked,
-			last_open_only_higher: document.querySelector("#last_open_only_higher").checked,
+			last_only_higher: document.querySelector("#last_only_higher").checked,
 			save_all_opened: document.querySelector("#save_all_opened").checked
 		}
 	}).then(() => {
@@ -60,7 +60,7 @@ function restoreOptions() {
 		document.querySelector("#lower_chapter_color").style.backgroundColor = opt.colors.lower_chapter;
 		document.querySelector("#hide_lower").checked = opt.hide_lower;
 		document.querySelector("#follow_button").checked = opt.follow_button;
-		document.querySelector("#last_open_only_higher").checked = opt.last_open_only_higher;
+		document.querySelector("#last_only_higher").checked = opt.last_only_higher;
 		document.querySelector("#save_all_opened").checked = opt.save_all_opened;
 
 		document.querySelector("#content").classList.add("background-transition");
@@ -165,8 +165,8 @@ let default_opt = {
 	},
 	hide_lower: true,
 	follow_button: false,
-	last_open_only_higher: true,
-	save_all_opened: false
+	last_only_higher: true,
+	save_all_opened: true
 };
 
 // Last open colors
@@ -183,7 +183,7 @@ document.querySelector("#default_last_open").addEventListener("click", restoreDe
 document.querySelector("#default_lower_chapter").addEventListener("click", restoreDefault);
 document.querySelector("#default_hide_lower").addEventListener("click", restoreDefault);
 document.querySelector("#default_follow_button").addEventListener("click", restoreDefault);
-document.querySelector("#default_last_open_only_higher").addEventListener("click", restoreDefault);
+document.querySelector("#last_only_higher").addEventListener("click", restoreDefault);
 document.querySelector("#default_save_all_opened").addEventListener("click", restoreDefault);
 document.querySelector("#add-a-color").addEventListener("click", () => {
 	addColor();

@@ -40,8 +40,7 @@
       -moz-transform: rotate(-45deg);
       transform: rotate(-45deg); }
 .vnotify-image {
-  max-width: 100px;
-  max-height: 100px; }
+  max-height: 200px }
 .vnotify-body {
   margin-left: 10px;
   padding: 20px; }
@@ -49,7 +48,7 @@
   display: flex;
   align-items: center;
   overflow: hidden;
-  width: 20em;
+  width: 25em;
   padding: 0;
   position: relative;
   -webkit-border-radius: 5px;
