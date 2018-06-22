@@ -36,9 +36,9 @@ function is_empty(obj) {
  * @param {string} key The key of the data to fetch in the storage
  */
 function storage_get(key) {
-    return browser.storage.local.get(key)
+    return browser.storage.local.get(key + "")
     .then((res) => {
-        return (key === null) ? res : res.key;
+        return (key === null) ? res : res[key];
     }).catch((error) => {
         console.error(error);
     });
@@ -54,7 +54,7 @@ function storage_set(key, data) {
     return browser.storage.local.set((key === null) ? data : {[key]:data})
     .catch((error) => {
         console.error(error);
-    });;
+    });
 }
 
 /**
@@ -66,7 +66,7 @@ function load_options() {
         if (res === undefined) {
             return storage_set("options", MMD_options);
         } else {
-            MMD_options = res.options;
+            MMD_options = res;
         }
     });
 }
@@ -181,9 +181,8 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, in
                     } else {
                         append_to_output_and_scroll(output_node, "Done. Refresh the page to see the new data.");
                         vNotify.success({
-                            title: 'All MyAnimeList data imported.',
-                            message: 'You can review manga without a MyAnimeList link in the list.',
-                            position: "bottomRight",
+                            title: "All MyAnimeList data imported.",
+                            text: "You can review manga without a MyAnimeList link in the list.",
                             image: "https://i.imgur.com/oMV2BJt.png",
                             sticky: true
                         });
@@ -212,9 +211,8 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, in
                     } else {
                         append_to_output_and_scroll(output_node, "Done. Refresh the page to see the new data.");
                         vNotify.success({
-                            title: 'All MyAnimeList data imported.',
-                            message: 'You can review manga without a MyAnimeList link in the list.',
-                            position: "bottomRight",
+                            title: "All MyAnimeList data imported.",
+                            text: "You can review manga without a MyAnimeList link in the list.",
                             image: "https://i.imgur.com/oMV2BJt.png",
                             sticky: true
                         });
@@ -289,7 +287,6 @@ function insert_mal_link_form() {
                                 vNotify.success({
                                     title: "MyAnimeList id set",
                                     text: "Nice.",
-                                    position: "bottomRight",
                                     image: "https://i.imgur.com/oMV2BJt.png"
                                 });
 
@@ -299,24 +296,21 @@ function insert_mal_link_form() {
                             });
                         } else {
                             vNotify.error({
-                                title: 'The manga doesn\'t exist.',
-                                text: 'Check the id maybe ?',
-                                position: 'bottomRight'
+                                title: "The manga doesn\'t exist.",
+                                text: "Check the id maybe ?",
                             });
                         }
                     });
                 } else {
                     vNotify.error({
-                        title: 'Wrong input',
-                        text: 'id need to be > 0',
-                        position: 'bottomRight'
+                        title: "Wrong input",
+                        text: "id need to be > 0"
                     });
                 }
             } else {
                 vNotify.error({
-                    title: 'Wrong input',
-                    text: 'You can only an url like https://myanimelist.net/manga/2, https://myanimelist.net/manga/2/Berserk, or an id',
-                    position: 'bottomRight'
+                    title: "Wrong input",
+                    text: "You can only an url like https://myanimelist.net/manga/2, https://myanimelist.net/manga/2/Berserk, or an id",
                 });
             }
         }
@@ -345,7 +339,6 @@ function fetch_mal_for_manga_data(manga) {
                 vNotify.error({
                     title: "Not logged in",
                     text: "Log in on MyAnimeList!",
-                    position: "bottomRight",
                     image: "https://i.imgur.com/oMV2BJt.png"
                 });
                 MyMangaDex.logged_in = false;
@@ -498,14 +491,12 @@ function update_manga_last_read(set_status=1) {
                                 vNotify.success({
                                     title: "Manga updated",
                                     text: MyMangaDex.manga_name + " as been put in your endless <b>Plan to read</b> list !",
-                                    position: "bottomRight",
                                     image: "https://mangadex.org/images/manga/" + MyMangaDex.manga_image
                                 });
                             } else {
                                 vNotify.success({
                                     title: "Manga updated",
                                     text: MyMangaDex.manga_name + " as been updated to Chapter " + MyMangaDex.current_chapter.chapter + " out of " + MyMangaDex.more_info.total_chapter,
-                                    position: "bottomRight",
                                     image: "https://mangadex.org/images/manga/" + MyMangaDex.manga_image
                                 });
 
@@ -513,7 +504,6 @@ function update_manga_last_read(set_status=1) {
                                     vNotify.success({
                                         title: "Started manga",
                                         text: "The start date of " + MyMangaDex.manga_name + " was set to today.",
-                                        position: "bottomRight",
                                         image: "https://mangadex.org/images/manga/" + MyMangaDex.manga_image
                                     });
                                 }
@@ -522,7 +512,6 @@ function update_manga_last_read(set_status=1) {
                                     vNotify.success({
                                         title: "Manga completed",
                                         text: MyMangaDex.manga_name + " was set as completed.",
-                                        position: "bottomRight",
                                         image: "https://mangadex.org/images/manga/" + MyMangaDex.manga_image
                                     });
                                 }
@@ -535,7 +524,6 @@ function update_manga_last_read(set_status=1) {
                     vNotify.info({
                         title: "Not updated",
                         text: "Last read chapter on MyAnimelist is higher or equal to the current chapter, it wasn't updated.",
-                        position: "bottomRight",
                         image: "https://mangadex.org/images/manga/" + MyMangaDex.manga_image
                     });
                 }
@@ -543,7 +531,6 @@ function update_manga_last_read(set_status=1) {
                 vNotify.info({
                     title: "Not updated",
                     text: "The manga is still pending on MyAnimelist and can't be updated.",
-                    position: "bottomRight",
                     image: "https://i.imgur.com/oMV2BJt.png",
                 });
             }
@@ -567,7 +554,6 @@ function update_last_open(manga, notification=true) {
             vNotify.success({
                 title: "Manga updated",
                 text: manga.manga_name + " last open Chapter as been updated to " + manga.last_open,
-                position: "bottomRight",
                 image: "https://mangadex.org/images/manga/" + manga.manga_image
             });
         }
@@ -804,7 +790,7 @@ function follow_page() {
 
     // Once we have information on all the chapters in the current page we paint or delete them
     for (let entry of entries) {
-        storage_get(entry.id+"")
+        storage_get(entry.id)
         .then((data) => {
             if (data !== undefined) {
                 // Switch colors between rows
@@ -995,7 +981,6 @@ function follow_page() {
                                 title: "Data imported",
                                 text: "Your data was successfully imported and merged !\nRefresh the page to see the modifications.",
                                 sticky: true,
-                                position: "bottomRight"
                             });
                         });
                     } else {
@@ -1007,7 +992,6 @@ function follow_page() {
                                 title: "Data imported",
                                 text: "Your data was successfully imported !\nRefresh the page to see the modifications.",
                                 sticky: true,
-                                position: "bottomRight"
                             });
                         });
                     }
@@ -1017,8 +1001,7 @@ function follow_page() {
                     vNotify.error({
                         title: "Error importing",
                         text: error,
-                        sticky: true,
-                        position: "bottomRight"
+                        sticky: true
                     });
                     console.error(error);
                 }
@@ -1085,9 +1068,8 @@ function follow_page() {
                             is_clickable = true;
 
                             vNotify.error({
-                                title: 'Can\'t fetch',
-                                text: 'The list of this user isn\'t accessible, maybe you are not logged in on MyAnimeList ?',
-                                position: 'bottomRight',
+                                title: "Can\'t fetch",
+                                text: "The list of this user isn't accessible, maybe you are not logged in on MyAnimeList ?",
                                 image: "https://i.imgur.com/oMV2BJt.png"
                             });
                         } else {
@@ -1109,9 +1091,8 @@ function follow_page() {
                     });
                 } else {
                     vNotify.error({
-                        title: 'Empty username',
-                        text: 'Can\'t import a non-existing user ?!',
-                        position: 'bottomRight',
+                        title: "Empty username",
+                        text: "Can't import a non-existing user ?!",
                         image: "https://i.imgur.com/oMV2BJt.png"
                     });
                 }
@@ -1158,15 +1139,13 @@ function follow_page() {
 
                     vNotify.success({
                         title: "Data copied",
-                        text: "Your data is in your Clipboard.",
-                        position: "bottomRight"
+                        text: "Your data is in your Clipboard."
                     });
                 } catch (error) {
                     vNotify.error({
                         title: "Error copying data",
                         text: error,
-                        sticky: true,
-                        position: "bottomRight"
+                        sticky: true
                     });
                     console.error(error);
                 }
@@ -1206,8 +1185,7 @@ function follow_page() {
 
                     vNotify.success({
                         title: "Data deleted",
-                        text: "Local storage as been cleared.",
-                        position: "bottomRight"
+                        text: "Local storage as been cleared."
                     });
                 });
 
@@ -1272,7 +1250,6 @@ function manga_page() {
                 vNotify.error({
                     title: "No MyAnimeList id found",
                     text: "You can add one using the form.\nLast open chapter will still be saved.",
-                    position: "bottomRight",
                     sticky: true
                 });
                 has_a_mal_link = false;
@@ -1421,7 +1398,6 @@ function chapter_page() {
             vNotify.info({
                 title: "No MyAnimeList id in storage",
                 text: "Fetching MangaDex manga page of " + MyMangaDex.manga_name + " to find a MyAnimeList id.",
-                position: "bottomRight"
             });
 
             // Fetch it from mangadex manga page
@@ -1437,10 +1413,9 @@ function chapter_page() {
                     // If regex is empty, there is no mal link, can't do anything
                     if (MyMangaDex.mal_url === null) {
                         vNotify.error({
-                            title:"No MyAnimeList id found",
-                            text:"You can add one using the form.\nLast open chapter is still saved.",
-                            position:"bottomRight",
-                            sticky:true
+                            title: "No MyAnimeList id found",
+                            text: "You can add one using the form.\nLast open chapter is still saved.",
+                            sticky: true
                         });
 
                         // We still update the last open in the local storage and store a 0 as mal_id to avoid checking
