@@ -49,15 +49,22 @@ You can also import your data from MyAnimeList here (The last read of every mang
 * Import favorites from KissManga to MangaDexx https://old.reddit.com/r/manga/comments/8qebu4/import_kissmanga_bookmarks_to_mangadex/
 
 ## Colors used
-* Last open: rebeccapurple or indigo
+* Last opened chapters in the follow page : rebeccapurple and indigo
+* Lower than last opened chapter in the follow page : darkolivegreen
 * Actual last read chapter on MyAnimeList: cadetblue
+* Opened chapter: darkslategrey
 
 You can change them in the options.
 
 ---
 
 ## Change log
-Before release done:
+### 1.2
+Lot of bugs fixed  
+- [x] Cleaner code (I hope)
+- [x] Keep track of any opened chapters and highlight them
+
+### 1.1 (1.0)
 - [x] Keep track of last open chapter for each manga
 - [x] Update manga info on MyAnimeList
 - [x] Import data from MyAnimeList
@@ -68,10 +75,6 @@ Before release done:
 - [x] Some options
 
 ## TODO
-* [ ] Store all read chapters and highlight them
 * [ ] Show last read and manga image on title hover
-* [ ] Clean up
 * [ ] Modal to directly edit all informations
 * [ ] Re-reading
-* Manga page:
-  * [ ] Offset

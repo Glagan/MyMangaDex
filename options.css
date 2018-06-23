@@ -92,19 +92,23 @@ input[type='checkbox'] {
 }
 
 .default-last-read {
-    background-color: cadetblue;
+    background-color: rgba(95, 158, 160, 0.6);
 }
 
 .default-last-open-1 {
-    background-color: rebeccapurple;
+    background-color: rgba(102, 51, 153, 0.6);
 }
 
 .default-last-open-2 {
-    background-color: indigo;
+    background-color: rgba(75, 0, 130, 0.6);
 }
 
 .default-lower-chapter {
     background-color: darkolivegreen;
+}
+
+.default-opened-chapters {
+    background-color: darkslategray;
 }
 
 .color-input {
