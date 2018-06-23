@@ -366,6 +366,7 @@ function fetch_mal_for_manga_data(manga) {
     return fetch("https://myanimelist.net/ownlist/manga/" + manga.mal + "/edit?hideLayout", {
         method: 'GET',
         redirect: 'follow',
+        cache: 'no-cache',
         credentials: 'include'
     }).then((data) => {
         // init and set if it was redirected - redirected often means not in list or not approved
@@ -427,7 +428,7 @@ function fetch_mal_for_manga_data(manga) {
                 manga.more_info.start_date.year = (parseInt(/add_manga_start_date_year.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1]) || "");
                 // Status
                 manga.more_info.status = /add_manga_status.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
-                manga.more_info.status = (manga.more_info.status === null) ? 1 : parseInt(manga.more_info.status[1]);
+                manga.more_info.status = (manga.more_info.status === null) ? 0 : parseInt(manga.more_info.status[1]);
                 // Storage type
                 manga.more_info.storage_type = /add_manga_storage_type.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
                 manga.more_info.storage_type = (manga.more_info.storage_type === null) ? "" : manga.more_info.storage_type[1];
@@ -462,18 +463,22 @@ function update_manga_last_read(manga, set_status=1) {
                     var post_url = "https://myanimelist.net/ownlist/manga/" + manga.mal + "/edit?hideLayout";
 
                     // Start reading manga if it's the first chapter
-                    if (manga.last_mal == 0) {
-                        // Set the start only if it's not already set and if we don't add it to PTR
-                        if (status != 6 && manga.more_info.start_date.year == "") {
-                            let MyDate = new Date();
-                            manga.more_info.start_date.year = MyDate.getFullYear();
-                            manga.more_info.start_date.month = MyDate.getMonth() + 1;
-                            manga.more_info.start_date.day = MyDate.getDate();
-                        }
+                    if (manga.more_info.status == 0) {
+                        // We updat the status for the next mal information display - since a status of 1 or 6 from the manga page might happen
+                        manga.more_info.status = status;
 
                         // We have to change the url if we're adding the manga to the list, not editing
                         post_url = "https://myanimelist.net/ownlist/manga/add?selected_manga_id=" + manga.mal_id + "&hideLayout";
                     }
+
+                    // Set the start only if it's not already set and if we don't add it to PTR and if it was in ptr or not in the list
+                    if (status != 6 && (manga.more_info.status == 6 || manga.more_info.status == 0) && manga.more_info.start_date.year == "") {
+                        let MyDate = new Date();
+                        manga.more_info.start_date.year = MyDate.getFullYear();
+                        manga.more_info.start_date.month = MyDate.getMonth() + 1;
+                        manga.more_info.start_date.day = MyDate.getDate();
+                    }
+
 
                     // Set the finish date if it's the last chapter and not set
                     if (status == 2 && manga.more_info.finish_date.year == "") {
@@ -486,9 +491,9 @@ function update_manga_last_read(manga, set_status=1) {
                     // Prepare the body
                     var body = "";
                     body += encodeURIComponent("add_manga[comments]") + "=" + encodeURIComponent(manga.more_info.comments) + "&";
-                    body += encodeURIComponent("add_manga[finish_date][year]") + "=" + manga.more_info.finish_date.year + "&";
-                    body += encodeURIComponent("add_manga[finish_date][month]") + "=" + manga.more_info.finish_date.month + "&";
                     body += encodeURIComponent("add_manga[finish_date][day]") + "=" + manga.more_info.finish_date.day + "&";
+                    body += encodeURIComponent("add_manga[finish_date][month]") + "=" + manga.more_info.finish_date.month + "&";
+                    body += encodeURIComponent("add_manga[finish_date][year]") + "=" + manga.more_info.finish_date.year + "&";
                     body += encodeURIComponent("add_manga[is_asked_to_discuss]") + "=" + manga.more_info.ask_to_discuss + "&";
                     // parseInt the chapter we're going to put, since MyAnimeList doesn't accept sub chapters
                     body += encodeURIComponent("add_manga[num_read_chapters]") + "=" + manga.current.chapter + "&";
@@ -499,9 +504,9 @@ function update_manga_last_read(manga, set_status=1) {
                     body += encodeURIComponent("add_manga[reread_value]") + "=" + manga.more_info.reread_value + "&";
                     body += encodeURIComponent("add_manga[score]") + "=" + manga.more_info.score + "&";
                     body += encodeURIComponent("add_manga[sns_post_type]") + "=" + manga.more_info.sns_post_type + "&";
-                    body += encodeURIComponent("add_manga[start_date][year]") + "=" + manga.more_info.start_date.year + "&";
-                    body += encodeURIComponent("add_manga[start_date][month]") + "=" + manga.more_info.start_date.month + "&";
                     body += encodeURIComponent("add_manga[start_date][day]") + "=" + manga.more_info.start_date.day + "&";
+                    body += encodeURIComponent("add_manga[start_date][month]") + "=" + manga.more_info.start_date.month + "&";
+                    body += encodeURIComponent("add_manga[start_date][year]") + "=" + manga.more_info.start_date.year + "&";
                     body += encodeURIComponent("add_manga[status]") + "=" + status + "&";
                     body += encodeURIComponent("add_manga[storage_type]") + "=" + manga.more_info.storage_type + "&";
                     body += encodeURIComponent("add_manga[tags]") + "=" + encodeURIComponent(manga.more_info.tags) + "&";
@@ -536,7 +541,7 @@ function update_manga_last_read(manga, set_status=1) {
                                 image: "https://mangadex.org/images/manga/" + manga.image
                             });
 
-                            if (manga.last_mal == 0) {
+                            if (status != 6 && (manga.more_info.status == 0 || manga.more_info.status == 6)) {
                                 vNotify.success({
                                     title: "Started manga",
                                     text: "The start date of " + manga.name + " was set to today.",
@@ -544,7 +549,7 @@ function update_manga_last_read(manga, set_status=1) {
                                 });
                             }
 
-                            if (parseInt(status) == 2) {
+                            if (status == 2) {
                                 vNotify.success({
                                     title: "Manga completed",
                                     text: manga.name + " was set as completed.",
@@ -710,7 +715,7 @@ function add_to_mal_list(manga, status, container_node) {
     container_node.textContent = "Loading...";
 
     // Put it in the reading list
-    update_manga_last_read(manga, 1)
+    update_manga_last_read(manga, status)
     .then(() => {
         // Set some according to the status to avoid an useless request to MyAnimeList
         // ...
@@ -862,7 +867,6 @@ function follow_page() {
                     let only_node = entry.dom_nodes[0];
                     // If it's the last open chapter we paint it rebeccapurple
                     if (entry.chapters[0].chapter == data.last) {
-                        console.log(data);
                         only_node.style.backgroundColor = going_for_color;
                         current_color = (current_color + 1) % max_color;
                     // If it's a lower than last open we delete it
@@ -1345,7 +1349,6 @@ function manga_page() {
                         // Check if the manga is already in the reading list
                         if (manga.more_info.redirected == false) {
                             insert_mal_informations(chapters_column_content, manga);
-                            highlight_chapters(manga, chapters);
 
                             if (first_fetch) {
                                 manga.last = manga.last_mal;
@@ -1378,6 +1381,9 @@ function manga_page() {
                         color_span.textContent = "The manga is still pending on MyAnimelist and can't be updated";
                         chapters_column_content.appendChild(color_span);
                     }
+
+                    // We highlight the chapters anyway, since they can be others that aren't saved on MyAnimeList
+                    highlight_chapters(manga, chapters);
 
                     // Append nodes to the table to display
                     chapters_row.appendChild(chapters_column_header);
