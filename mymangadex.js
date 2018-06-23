@@ -4,12 +4,13 @@
 // Is initialized with the default options
 let MMD_options = {
     colors: {
-        last_read: "rgba(95,158,160,0.6)",
+        last_read: "rgba(95,158,160,0.6)", // cadetblue
         lower_chapter: "darkolivegreen",
         last_open: [
-            "rebeccapurple",
-            "indigo"
-        ]
+            "rgba(102, 51, 153, 0.6)", // rebeccapurple
+            "rgba(75, 0, 130, 0.6)" // indigo
+        ],
+        opened_chapters: "darkslategray"
     },
     hide_lower: true,
     follow_button: false,
@@ -702,7 +703,7 @@ function highlight_chapters(manga, chapters) {
         } else if (MMD_options.save_all_opened) {
             for (let chapter of manga.chapters) {
                 if (page_chapter.chapter == chapter) {
-                    page_chapter.node.style.backgroundColor = "darkslategrey";
+                    page_chapter.node.style.backgroundColor = MMD_options.colors.opened_chapters;
                     break;
                 }
             }

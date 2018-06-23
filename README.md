@@ -50,7 +50,7 @@ You can also import your data from MyAnimeList here (The last read of every mang
 
 ## Colors used
 * Last opened chapters in the follow page : rebeccapurple and indigo
-* Lower than last opened chapter in the follow page : 
+* Lower than last opened chapter in the follow page : darkolivegreen
 * Actual last read chapter on MyAnimeList: cadetblue
 * Opened chapter: darkslategrey
 
@@ -59,6 +59,11 @@ You can change them in the options.
 ---
 
 ## Change log
+### 1.2
+Lot of bugs fixed  
+- [x] Cleaner code (I hope)
+- [x] Keep track of any opened chapters and highlight them
+
 ### 1.1 (1.0)
 - [x] Keep track of last open chapter for each manga
 - [x] Update manga info on MyAnimeList
@@ -68,11 +73,6 @@ You can change them in the options.
 - [x] Export, import and delete MyMangaDex local storage
 - [x] Add a MyAnimeList link if there isn't one for a manga
 - [x] Some options
-
-### 1.2
-- [x] Cleaner code (I hope)
-- Lot of bugs fixed
-- [x] Keep track of any opened chapters and highlight them
 
 ## TODO
 * [ ] Show last read and manga image on title hover

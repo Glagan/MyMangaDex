@@ -25,7 +25,8 @@ function saveOptions(event) {
 			colors: {
 				last_read: document.querySelector("#last_read").value,
 				lower_chapter: document.querySelector("#lower_chapter").value,
-				last_open: last_open_colors
+				last_open: last_open_colors,
+				opened_chapters: document.querySelector("#opened_chapters").value
 			},
 			hide_lower: document.querySelector("#hide_lower").checked,
 			follow_button: document.querySelector("#follow_button").checked,
@@ -52,12 +53,14 @@ function restoreOptions() {
 		document.querySelector("#last_read").value = opt.colors.last_read;
 		document.querySelector("#last_read_color").style.backgroundColor = opt.colors.last_read;
 		document.querySelector("#lower_chapter").value = opt.colors.lower_chapter;
+		document.querySelector("#lower_chapter_color").style.backgroundColor = opt.colors.lower_chapter;
+		document.querySelector("#opened_chapters").value = opt.colors.opened_chapters;
+		document.querySelector("#opened_chapters_color").style.backgroundColor = opt.colors.opened_chapters;
 		let i = 1;
 		for (let open_color of opt.colors.last_open) {
 			let id = addColor(open_color);
 			document.querySelector("#last_open_" + id + "_color").style.backgroundColor = open_color;
 		}
-		document.querySelector("#lower_chapter_color").style.backgroundColor = opt.colors.lower_chapter;
 		document.querySelector("#hide_lower").checked = opt.hide_lower;
 		document.querySelector("#follow_button").checked = opt.follow_button;
 		document.querySelector("#last_only_higher").checked = opt.last_only_higher;
@@ -156,12 +159,13 @@ function removeColor(color_id) {
 // Default options
 let default_opt = {
 	colors: {
-		last_read: "rgba(95,158,160,0.6)",
+		last_read: "rgba(95, 158, 160, 0.6)", // cadetblue
 		lower_chapter: "darkolivegreen",
 		last_open: [
-			"rebeccapurple",
-			"indigo"
-		]
+			"rgba(102, 51, 153, 0.6)", // rebeccapurple
+			"rgba(75, 0, 130, 0.6)" // indigo
+		],
+		opened_chapters: "darkslategray"
 	},
 	hide_lower: true,
 	follow_button: false,
@@ -181,6 +185,7 @@ document.querySelector("#save").addEventListener("click", saveOptions);
 document.querySelector("#default_last_read").addEventListener("click", restoreDefault);
 document.querySelector("#default_last_open").addEventListener("click", restoreDefault);
 document.querySelector("#default_lower_chapter").addEventListener("click", restoreDefault);
+document.querySelector("#default_opened_chapters").addEventListener("click", restoreDefault);
 document.querySelector("#default_hide_lower").addEventListener("click", restoreDefault);
 document.querySelector("#default_follow_button").addEventListener("click", restoreDefault);
 document.querySelector("#last_only_higher").addEventListener("click", restoreDefault);
@@ -192,3 +197,4 @@ document.querySelector("#add-a-color").addEventListener("click", () => {
 // Change the cute box
 document.querySelector("#last_read").addEventListener("input", changeColorBox);
 document.querySelector("#lower_chapter").addEventListener("input", changeColorBox);
+document.querySelector("#opened_chapters").addEventListener("input", changeColorBox);
