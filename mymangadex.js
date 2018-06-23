@@ -263,20 +263,12 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, in
     });
 }
 
-// PAGES
-
-function start() {
-    // URL so we can start the right function
-    if (URL.indexOf("org/follows") > -1) {
-        follow_page();
-    } else if (URL.indexOf("org/manga") > -1) {
-        manga_page();
-    } else if (URL.indexOf("org/chapter") > -1) {
-        chapter_page();
-    }
-}
-
-function insert_mal_link_form() {
+/**
+ * Insert a form to add a MyAnimeList link if there isn't one for the manga
+ * @param {Object} manga The manga object that will have the mal id updated
+ * @param {Object} chapters The chapters displayed on the page
+ */
+function insert_mal_link_form(manga, chapters) {
     var parent_node = document.getElementsByClassName("table table-condensed")[0].firstElementChild;
     var add_mal_link_row = document.createElement("tr");
     add_mal_link_row.id = "add_mal_link_row";
@@ -299,25 +291,19 @@ function insert_mal_link_form() {
     add_mal_link_column_content_send.textContent = "Send";
     add_mal_link_column_content_send.addEventListener("click", (event) => {
         if (add_mal_link_column_content_edit.value != "") {
-            let mal_id = /https:\/\/(?:www\.)?myanimelist\.net\/manga\/(\d+)(?:\/.+)?|(\d+)/.exec(add_mal_link_column_content_edit.value);
+            let mal_regex = /https:\/\/(?:www\.)?myanimelist\.net\/manga\/(\d+)(?:\/.+)?|(\d+)/.exec(add_mal_link_column_content_edit.value);
 
-            if (mal_id != null) {
-                MyMangaDex.mal_id =  parseInt(mal_id[1]) || parseInt(mal_id[2]);
+            if (mal_regex != null) {
+                manga.mal =  parseInt(mal_regex[1]) || parseInt(mal_regex[2]);
 
-                if (MyMangaDex.mal_id > 0) {
-                    fetch_mal_for_manga_data(MyMangaDex)
+                if (manga.mal > 0) {
+                    fetch_mal_for_manga_data(manga)
                     .then(() => {
-                        if (MyMangaDex.more_info.exist) {
-                            return browser.storage.local.set({
-                                [MyMangaDex.mangadex_id]: {
-                                    mal_id: MyMangaDex.mal_id,
-                                    image: MyMangaDex.manga_image,
-                                    last_open: MyMangaDex.last_read
-                                }
-                            }).then(() => {
-                                try {
-                                insert_mal_informations(add_mal_link_column_content, MyMangaDex);
-                                highlight_last_read_chapter(MyMangaDex.last_read, MyMangaDex.chapters);
+                        if (manga.more_info.exist) {
+                            return update_manga_local_storage(manga, false)
+                            .then(() => {
+                                insert_mal_informations(add_mal_link_column_content, manga);
+                                highlight_chapters(manga, chapters);
 
                                 // Show a notification for updated last opened if there is no MyAnimeList id
                                 vNotify.success({
@@ -325,10 +311,6 @@ function insert_mal_link_form() {
                                     text: "Nice.",
                                     image: "https://i.imgur.com/oMV2BJt.png"
                                 });
-
-                                } catch (error) {
-                                    console.error(error);
-                                }
                             });
                         } else {
                             vNotify.error({
@@ -361,7 +343,7 @@ function insert_mal_link_form() {
 
 /**
  * Function that fetch the edit page of a manga and "parse" it to get the required data to update it later
- * manga has to have the .mal property to fetch it
+ * @param {Object} manga A manga Object, with a mal property to fetch the right page, and that will hold the informations
  */
 function fetch_mal_for_manga_data(manga) {
     return fetch("https://myanimelist.net/ownlist/manga/" + manga.mal + "/edit?hideLayout", {
@@ -451,6 +433,10 @@ function fetch_mal_for_manga_data(manga) {
  * Send 2 request currently
  *  One to check the last chapter, and also get the required csrf_token on mal
  *  And the second to update the last read chapter
+ * Set the start date to today if the manga wasn't on the list or was in PTR list
+ * Finish date and completed status is also set if it is the last chapter
+ * @param {Object} manga The manga object that will contain the MyAnimeList informations and that is going to be updated
+ * @param {number} set_status Optionnal status, used if we want to put it in the PTR or an other list than the reading list
  */
 function update_manga_last_read(manga, set_status=1) {
     return fetch_mal_for_manga_data(manga).then((data) => {
@@ -578,9 +564,12 @@ function update_manga_last_read(manga, set_status=1) {
 }
 
 /**
- * Update the last_open of a manga entry, with a mangadex id as a key
+ * Update the last chapter of a manga entry, with a MangaDex id as a key
  * Optionnal notification about the update, if there is no mal id
  * Update only to the highest if the option is on
+ * Also update the chapters regardless of the option
+ * @param {Object} manga A manga object that will be updated
+ * @param {boolean} notification The function is able to display a notification if it is set to true
  */
 function update_manga_local_storage(manga, notification=true) {
     return storage_set(manga.id, {
@@ -600,6 +589,11 @@ function update_manga_local_storage(manga, notification=true) {
     });
 }
 
+/**
+ * Add a "Edit on MyAnimeList" button where parent_node is
+ * @param {Object} parent_node The node that will co ntain the MyAnimeList button
+ * @param {number} mal_id The id on MyAnimeList of tha manga
+ */
 function insert_mal_button(parent_node, mal_id) {
     // Insert on the header
     var mal_button = document.createElement("a");
@@ -618,6 +612,11 @@ function insert_mal_button(parent_node, mal_id) {
     parent_node.insertBefore(document.createTextNode(" "), parent_node.firstElementChild.nextElementSibling);
 }
 
+/**
+ * Append a colored node with the status to the node parameter
+ * @param {number} status The status of the manga
+ * @param {Object} node The node that will get the child
+ */
 function append_status(status, node) {
     let color = "";
     let text = "";
@@ -653,12 +652,21 @@ function append_status(status, node) {
     node.appendChild(color_span);
 }
 
+/**
+ * Totally empty a DOM node, better and faster than .innerHTML = ""
+ * @param {Object} dom_node The node to clear
+ */
 function clear_dom_node(dom_node) {
     while (dom_node.firstChild) {
         dom_node.removeChild(dom_node.firstChild);
     }
 }
 
+/**
+ * Display the status, current volume and chapter, and start and finish date if it exist
+ * @param {Object} content_node The node that will contain the MyAnimeList informations
+ * @param {Object} manga A manga object with the informations
+ */
 function insert_mal_informations(content_node, manga) {
     // Delete node before adding anything to it, it's surely old thin anyway
     clear_dom_node(content_node);
@@ -691,6 +699,7 @@ function insert_mal_informations(content_node, manga) {
 /**
  * Highlight last read chapter from MyAnimeList and also every read chapters if the option is on
  * @param {Object} manga The manga informations
+ * @param {Object} chapters The list of chapters displayed on the page
  */
 function highlight_chapters(manga, chapters) {
     for (let page_chapter of chapters) {
@@ -711,6 +720,13 @@ function highlight_chapters(manga, chapters) {
     }
 }
 
+/**
+ * Add the manga to the list, with a status, 1 for reading, 6 for PTR
+ * No need to fetch MyAnimeList data again, since it's already set in the manga object when updating and most of the data is empty anyway
+ * @param {Object} manga The manga object that hold the informations
+ * @param {number} status The status to be set when updating
+ * @param {Object} container_node The node that will contain the new informations after the update
+ */
 function add_to_mal_list(manga, status, container_node) {
     // Delete the row content, to avoid clicking on any button again and to prepare for new content
     container_node.textContent = "Loading...";
@@ -718,9 +734,6 @@ function add_to_mal_list(manga, status, container_node) {
     // Put it in the reading list
     update_manga_last_read(manga, status)
     .then(() => {
-        // Set some according to the status to avoid an useless request to MyAnimeList
-        // ...
-
         // Display new informations
         insert_mal_informations(container_node, manga);
     });
@@ -729,6 +742,7 @@ function add_to_mal_list(manga, status, container_node) {
 /**
  * Get the attributes of a node to convert it to a object containing the volume and chapter
  * Volume is set to 0 if null and chapter is set to 1 if it's a Oneshot
+ * @param {Object} node The node that have data-* attributes
  */
 function volume_and_chapter_from_node(node) {
     let chapter = node.getAttribute("data-chapter-num");
@@ -748,6 +762,9 @@ function volume_and_chapter_from_node(node) {
 /**
  * Apply a regex to the string to return the volume and chapter of a title.
  * Volume is set to 0 if null and chapter is set to 1 if it's a Oneshot
+ * String usually looks like: Volume x Chapter y.z, or Vol. x Ch. y.z, with optionnal "Volume" and .z decimal
+ * But there is some broken manga on MangaDex with just "1.4" as a title, gotta handle it
+ * @param {string} string The string with the volume and chapter
  */
 function volume_and_chapter_from_string(string) {
     // The ultimate regex ? Don't think so... Volume[1] Chapter[2] + [3]
@@ -764,7 +781,14 @@ function volume_and_chapter_from_string(string) {
     };
 }
 
-function create_button(parent_node, title, icon, callback) {
+/**
+ * Create a button on the nav bar, used on the follow page to build the "manage" navigation next to the current nav bar
+ * @param {Object} parent_node The ndoe that will contain the button, usually the nav bar
+ * @param {string} title The text of the button
+ * @param {string} icon The FontAwesome icon name
+ * @param {Function} callback The function that will be called when we click on the butto
+ */
+function create_nav_button(parent_node, title, icon, callback) {
     var new_button = document.createElement("li");
     new_button.setAttribute("is-a-mmd-button", true);
     var new_button_link = document.createElement("a");
@@ -806,6 +830,12 @@ function display_or_hide_container(id, last_active, container, button_node) {
     return true;
 }
 
+/**
+ * Create a simple node with a FontAwesome icon before it and append it to the node parameter
+ * @param {Object} node The node that will contain the new icon with text
+ * @param {string} icon The FontAwesome icon name
+ * @param {string} text The text next to the icon
+ */
 function append_text_with_icon(node, icon, text) {
     let icon_node = document.createElement("span");
     icon_node.className = "fas fa-" + icon + " fa-fw";
@@ -814,6 +844,22 @@ function append_text_with_icon(node, icon, text) {
     node.appendChild(icon_node);
     node.appendChild(document.createTextNode(" "));
     node.appendChild(document.createTextNode(text));
+}
+
+// PAGES
+
+/**
+ * Start
+ */
+function start() {
+    // URL so we can start the right function
+    if (URL.indexOf("org/follows") > -1) {
+        follow_page();
+    } else if (URL.indexOf("org/manga") > -1) {
+        manga_page();
+    } else if (URL.indexOf("org/chapter") > -1) {
+        chapter_page();
+    }
 }
 
 /**
@@ -966,7 +1012,7 @@ function follow_page() {
     var is_clickable = true;
 
     // Create import data button
-    create_button(nav_bar, "Import (MMD)", "upload", (event) => {
+    create_nav_button(nav_bar, "Import (MMD)", "upload", (event) => {
         event.preventDefault();
 
         if (is_clickable) {
@@ -1086,7 +1132,7 @@ function follow_page() {
     });
 
     // Create an import from MyAnimeList button
-    create_button(nav_bar, "Import (MAL)", "upload", (event) => {
+    create_nav_button(nav_bar, "Import (MAL)", "upload", (event) => {
         event.preventDefault();
 
         if (is_clickable) {
@@ -1168,7 +1214,7 @@ function follow_page() {
         }
     });
 
-    create_button(nav_bar, "Export (MMD)", "download", (event) => {
+    create_nav_button(nav_bar, "Export (MMD)", "download", (event) => {
         event.preventDefault();
 
         if (is_clickable) {
@@ -1225,7 +1271,7 @@ function follow_page() {
     });
 
     // Create clear data button
-    create_button(nav_bar, "Clear Data (MMD)", "trash", (event) => {
+    create_nav_button(nav_bar, "Clear Data (MMD)", "trash", (event) => {
         event.preventDefault();
 
         if (is_clickable) {
@@ -1270,6 +1316,11 @@ function follow_page() {
  * Optionnal MAL url with a mal icon
  */
 function manga_page() {
+    vNotify.success({
+        title: "MyAnimeList id set",
+        text: "Nice.",
+        image: "https://i.imgur.com/oMV2BJt.png"
+    });
     let manga = {
         name: document.getElementsByClassName("panel-title")[0].textContent.trim(),
         id: parseInt(/.+manga\/(\d+)/.exec(URL)[1]),
@@ -1393,7 +1444,7 @@ function manga_page() {
                 }
             });
         } else {
-            insert_mal_link_form();
+            insert_mal_link_form(manga, chapters);
             highlight_chapters(manga, chapters);
         }
     }, (error) => {

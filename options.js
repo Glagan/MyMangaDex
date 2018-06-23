@@ -1,8 +1,20 @@
+// https://stackoverflow.com/a/34491287/7794671
+/**
+ * Count the number of properties of an object to test if it's empty
+ * Could add more tests but it was enough for this extension
+ * @param {Object} obj The object to test
+ */
 function isEmpty(obj) {
 	for (var x in obj) { return false; }
 	return true;
 }
 
+/**
+ * Flash the background
+ * Do it by adding a class and remove it with a setTimeout
+ * To make it work the background have a transition on the background-color in the css
+ * @param {string} back_class The class of the background to apply
+ */
 function flash_background(back_class) {
 	document.querySelector("#content").classList.add(back_class);
 	setTimeout(() => {
@@ -10,6 +22,10 @@ function flash_background(back_class) {
 	}, 500);
 }
 
+/**
+ * Save the options in local storage and flash the background to show when it's done
+ * @param {Object} event The event of the Save button
+ */
 function saveOptions(event) {
 	event.preventDefault();
 
@@ -35,13 +51,18 @@ function saveOptions(event) {
 		}
 	}).then(() => {
 		console.log("Saved");
+		// Flash green, saved with success
 		flash_background("saved");
 	}).catch((error) => {
 		console.error(error);
+		// Flash red, save failed
 		flash_background("not-saved");
 	});
 }
 
+/**
+ * Restore the options from local storage when they're loaded
+ */
 function restoreOptions() {
 	var storageItem = browser.storage.local.get("options");
 	storageItem.then((res) => {
@@ -70,6 +91,11 @@ function restoreOptions() {
 	});
 }
 
+/**
+ * Restore the default options of a parameter
+ * The button is related to the input with the id: default_[id]
+ * @param {Object} event The event of the button clicked
+ */
 function restoreDefault(event) {
 	let node_name = /default_(.+)/.exec(event.target.id)[1];
 	let node = document.querySelector("#" + node_name);
@@ -97,6 +123,10 @@ function restoreDefault(event) {
 	}
 }
 
+/**
+ * Update a color box according to the input it's related to
+ * @param {Object} event The even of the input related to the color box
+ */
 function changeColorBox(event) {
 	let node_name = event.target.id;
 	let node = document.querySelector("#" + node_name + "_color");
@@ -104,6 +134,11 @@ function changeColorBox(event) {
 	node.style.backgroundColor = event.target.value;
 }
 
+/**
+ * Add a color to the open_colors object
+ * Create a color box that is updated like other color inputs
+ * @param {string} name The color name
+ */
 function addColor(name="") {
 	let color_list = document.querySelector("#last_open");
 	let id = Object.keys(open_colors).length + 1;
@@ -144,6 +179,11 @@ function addColor(name="") {
 	return id;
 }
 
+/**
+ * Remove a color added with add_color from the open_colors object
+ * Can't remove the last color, there need to be at least one
+ * @param {number} color_id The id of the color in the open_colors object
+ */
 function removeColor(color_id) {
 	if (Object.keys(open_colors).length > 1) {
 		let node = document.querySelector("#last_open_" + color_id);

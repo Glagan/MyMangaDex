@@ -78,5 +78,3 @@ Lot of bugs fixed
 * [ ] Show last read and manga image on title hover
 * [ ] Modal to directly edit all informations
 * [ ] Re-reading
-* [ ] Check what happen when a manga from the On-hold, or Dropped list is read
-* [ ] Offset for chapters
