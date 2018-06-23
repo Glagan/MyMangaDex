@@ -63,6 +63,7 @@ You can change them in the options.
 Lot of bugs fixed  
 - [x] Cleaner code (I hope)
 - [x] Keep track of any opened chapters and highlight them
+- [x] Show manga image on title hover
 
 ### 1.1 (1.0)
 - [x] Keep track of last open chapter for each manga
@@ -75,6 +76,6 @@ Lot of bugs fixed
 - [x] Some options
 
 ## TODO
-* [ ] Show last read and manga image on title hover
-* [ ] Modal to directly edit all informations
-* [ ] Re-reading
+- [ ] Modal to directly edit all informations
+- [ ] Re-reading
+- [ ] Show last opened chapters order by highest on the manga tooltip

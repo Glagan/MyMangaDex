@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
 	"name": "MyMangaDex",
-	"version": "1.1",
+	"version": "1.2",
 
 	"applications": {
 		"gecko": {
@@ -36,6 +36,6 @@
 			"https://mangadex.org/?page=search&title=*",
 			"https://mangadex.org/quick_search/*"],
 		"js": ["dist/vanilla-notify.min.js", "mymangadex.js"],
-		"css": ["dist/vanilla-notify.css"]
+		"css": ["dist/vanilla-notify.css", "mymangadex.css"]
 	}]
 }

@@ -1,0 +1,24 @@
+/*
+ * Simple Tooltip
+ * Handcrafted with love :)
+ */
+.mmd-tooltip {
+    display: block;
+    position: absolute;
+    border: 1px solid rgba(0, 0, 0, 0.6);
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: #2e3338;
+    min-width: 80px;
+    min-height: 100px;
+    opacity: 0;
+    transition: opacity 0.2s ease-in;
+}
+
+.mmd-loading {
+    display: none;
+}
+
+.mmd-active {
+    opacity: 1;
+}
