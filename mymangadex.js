@@ -91,9 +91,12 @@ function load_options() {
                         if (index == "options") {
                             // Update the version number if it's the options
                             MMD_options.version = version;
+                            // And the new color
+                            MMD_options.colors.opened_chapters = "darkslategray";
+
                             promises.push(storage_set("options", MMD_options));
                         } else {
-                            // Update for the new format if it's a manga
+                            // Else Update for the new format if it's a manga
                             promises.push(
                                 storage_set(index, {
                                     mal: data[index].mal_id,
@@ -279,7 +282,7 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, in
                         // 100 because more is just useless data honestly
                         if (MMD_options.save_all_opened) {
                             let min = Math.max(manga.last - 100, 0);
-                            for (let i = manga.last; i > max; i--) {
+                            for (let i = manga.last; i > min; i--) {
                                 manga.chapters.push(i);
                             }
                         }
@@ -944,7 +947,7 @@ function tooltip(node, u_id, entry, data=undefined) {
             tooltip.appendChild(tooltip_img);
 
             // Append the chapters if there is
-            if (MMD_options.save_all_opened && data !== undefined && data.chapters !== undefined) {
+            if (MMD_options.save_all_opened && data !== undefined && data.chapters !== undefined && data.chapters.length > 0) {
                 // Add a border below the iamge
                 tooltip_img.className = "mmd-tooltip-image";
 
@@ -1241,18 +1244,22 @@ function follow_page() {
                                             if (to_insert.chapters !== undefined) {
                                                 for (let chapter of data.chapters) {
                                                     if (to_insert.chapters.indexOf(chapter) === -1) {
-                                                        // Chapters are ordered
-                                                        let i = 0;
-                                                        let max = to_insert.chapters.length;
-                                                        let higher = true;
-                                                        while (i < max && higher) {
-                                                            if (to_insert.chapters[i] < chapter) {
-                                                                higher = false;
-                                                            } else {
-                                                                i++;
+                                                        if (to_insert.chapters.length == 0) {
+                                                            to_insert.chapters.push(chapter);
+                                                        } else {
+                                                            // Chapters are ordered
+                                                            let i = 0;
+                                                            let max = to_insert.chapters.length;
+                                                            let higher = true;
+                                                            while (i < max && higher) {
+                                                                if (to_insert.chapters[i] < chapter) {
+                                                                    higher = false;
+                                                                } else {
+                                                                    i++;
+                                                                }
                                                             }
+                                                            to_insert.chapters.splice(i, 0, chapter);
                                                         }
-                                                        to_insert.chapters.splice(i, 0, chapter);
                                                     }
                                                 }
                                             } else {
@@ -1709,18 +1716,22 @@ function chapter_page() {
 
             // We add the current chapter to the list of opened chapters if the option is on
             if (MMD_options.save_all_opened && manga.chapters.indexOf(manga.current.chapter) === -1) {
-                let i = 0;
-                let max = manga.chapters.length;
-                let higher = true;
-                // Chapters are ordered
-                while (i < max && higher) {
-                    if (manga.chapters[i] < manga.current.chapter) {
-                        higher = false;
-                    } else {
-                        i++;
+                if (manga.chapters.length == 0) {
+                    manga.chapters.push(manga.current.chapter);
+                } else {
+                    let i = 0;
+                    let max = manga.chapters.length;
+                    let higher = true;
+                    // Chapters are ordered
+                    while (i < max && higher) {
+                        if (manga.chapters[i] < manga.current.chapter) {
+                            higher = false;
+                        } else {
+                            i++;
+                        }
                     }
+                    manga.chapters.splice(i, 0, manga.current.chapter);
                 }
-                manga.chapters.splice(i, 0, manga.current.chapter);
             }
 
             // If there is a MAL, we update the last read

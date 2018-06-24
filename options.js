@@ -47,7 +47,8 @@ function saveOptions(event) {
 			hide_lower: document.querySelector("#hide_lower").checked,
 			follow_button: document.querySelector("#follow_button").checked,
 			last_only_higher: document.querySelector("#last_only_higher").checked,
-			save_all_opened: document.querySelector("#save_all_opened").checked
+			save_all_opened: document.querySelector("#save_all_opened").checked,
+			version: 1.2
 		}
 	}).then(() => {
 		console.log("Saved");
