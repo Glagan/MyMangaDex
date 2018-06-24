@@ -15,10 +15,10 @@ let MMD_options = {
     hide_lower: true,
     follow_button: false,
     last_open_only_higher: true,
-    save_all_opened: true,
-    version: 1.2
+    save_all_opened: true
 };
 
+let version = 1.2;
 let URL = window.location.href;
 let logged_in_mal = true;
 let csrf_token = "";
@@ -69,10 +69,50 @@ function storage_set(key, data) {
 function load_options() {
     return storage_get("options")
     .then((res) => {
+        // If there is nothing in the storage, default options
         if (res === undefined) {
+            MMD_options.version = version;
             return storage_set("options", MMD_options);
         } else {
             MMD_options = res;
+
+            if (MMD_options.version === undefined) {
+                // Here we go
+                vNotify.info({
+                    title: "Old version.",
+                    text: "Converting the storage for the new version..."
+                });
+
+                return storage_get(null)
+                .then((data) => {
+                    // Browse the whole local storage
+                    let promises = [];
+                    for (let index in data) {
+                        if (index == "options") {
+                            // Update the version number if it's the options
+                            MMD_options.version = version;
+                            promises.push(storage_set("options", MMD_options));
+                        } else {
+                            // Update for the new format if it's a manga
+                            promises.push(
+                                storage_set(index, {
+                                    mal: data[index].mal_id,
+                                    last: data[index].last_open,
+                                    chapters: [data[index].last_open]
+                                })
+                            );
+                        }
+                    }
+
+                    // Wait for everything to finish
+                    return Promise.all(promises);
+                }).then(() => {
+                    vNotify.success({
+                        title: "Done",
+                        text: "Conversion done."
+                    });
+                });
+            }
         }
     });
 }
@@ -506,8 +546,8 @@ function update_manga_last_read(manga, set_status=1) {
                     body += encodeURIComponent("add_manga[storage_type]") + "=" + manga.more_info.storage_type + "&";
                     body += encodeURIComponent("add_manga[tags]") + "=" + encodeURIComponent(manga.more_info.tags) + "&";
                     body += encodeURIComponent("csrf_token") + "=" + csrf_token + "&";
-                    // is_rereading is always set to 0 for the moment
-                    body += encodeURIComponent("add_manga[is_rereading]") + "=" + /*manga.is_rereading*/0 + "&";
+                    // is_rereading is not set for the moment - or it put it to re-reading mode
+                    //body += encodeURIComponent("add_manga[is_rereading]") + "=&";
                     body += "last_completed_vol=&";
                     body += "manga_id=" + manga.mal + "&";
                     body += "submitIt=0";
@@ -865,6 +905,80 @@ function append_text_with_icon(node, icon, text) {
     node.appendChild(document.createTextNode(text));
 }
 
+function tooltip(node, u_id, entry, data=undefined) {
+    node.addEventListener("mouseenter", (event) => {
+        event.preventDefault();
+
+        let node = document.getElementById("tooltip-" + u_id);
+        if (node === null) {
+            let tooltip = document.createElement("div");
+            tooltip.setAttribute("data-hover", true);
+            tooltip.className = "mmd-tooltip mmd-loading";
+            tooltip.id = "tooltip-" + u_id;
+
+            // Create the tooltip
+            let tooltip_img = document.createElement("img");
+            tooltip_img.src = "https://s1.mangadex.org/images/manga/" + entry.id + ".thumb.jpg";
+
+            // Value to set the position of the element - get them before or they might change we image is loaded
+            let row_rect = event.target.getBoundingClientRect();
+            let scroll_value = window.scrollY;
+
+            // When the ressource loaded we can adjust it's position
+            tooltip_img.addEventListener("load", () => {
+                tooltip.classList.remove("mmd-loading");
+
+                // Set it's position
+                let img_rect = tooltip_img.getBoundingClientRect();
+                tooltip.style.left = row_rect.x - img_rect.width - 5 + "px";
+                tooltip.style.top = row_rect.y + (row_rect.height / 2) + scroll_value - (img_rect.height / 2) + "px";
+                tooltip.style.maxWidth = img_rect.width + 2 + "px";
+
+                // if the element is still hovered, we active it
+                if (tooltip.getAttribute("data-hover") === "true") {
+                    tooltip.classList.add("mmd-active");
+                }
+            });
+
+            // Append the tooltip
+            tooltip.appendChild(tooltip_img);
+
+            // Append the chapters if there is
+            if (MMD_options.save_all_opened && data !== undefined && data.chapters !== undefined) {
+                // Add a border below the iamge
+                tooltip_img.className = "mmd-tooltip-image";
+
+                // We put the chapters in a container to have padding
+                let chapters_list_container = document.createElement("div");
+                chapters_list_container.className = "mmd-tooltip-content";
+                let max = Math.min(5, data.chapters.length);
+                for (let i = 0; i < max; i++) {
+                    append_text_with_icon(chapters_list_container, "eye", data.chapters[i]);
+                    chapters_list_container.appendChild(document.createElement("br"));
+                }
+                tooltip.appendChild(chapters_list_container);
+            }
+
+            // And then to the body
+            document.getElementById("mmd-tooltip").appendChild(tooltip);
+        } else {
+            node.setAttribute("data-hover", true);
+            node.classList.add("mmd-active");
+        }
+    });
+
+    // Hide the tooltip
+    node.addEventListener("mouseleave", (event) => {
+        event.preventDefault();
+
+        let node = document.getElementById("tooltip-" + u_id);
+        if (node !== null) {
+            node.setAttribute("data-hover", false);
+            node.classList.remove("mmd-active");
+        }
+    });
+}
+
 // PAGES
 
 /**
@@ -933,85 +1047,14 @@ function follow_page() {
 
         storage_get(entry.id)
         .then((data) => {
+            // Paint or not
             if (data !== undefined) {
                 // Switch colors between rows
                 let going_for_color = MMD_options.colors.last_open[current_color];
 
-                // Show a tooltip with the thumbnail
-                entry.dom_nodes[0].addEventListener("mouseenter", (event) => {
-                    event.preventDefault();
-
-                    let node = document.getElementById("tooltip-" + current_row_id);
-                    if (node === null) {
-                        let tooltip = document.createElement("div");
-                        tooltip.setAttribute("data-hover", true);
-                        tooltip.className = "mmd-tooltip mmd-loading";
-                        tooltip.id = "tooltip-" + current_row_id;
-
-                        // Create the tooltip
-                        let tooltip_img = document.createElement("img");
-                        tooltip_img.src = "https://s1.mangadex.org/images/manga/" + entry.id + ".thumb.jpg";
-
-                        // Value to set the position of the element - get them before or they might change we image is loaded
-                        let row_rect = event.target.getBoundingClientRect();
-                        let scroll_value = window.scrollY;
-
-                        // When the ressource loaded we can adjust it's position
-                        tooltip_img.addEventListener("load", () => {
-                            tooltip.classList.remove("mmd-loading");
-
-                            // Set it's position
-                            let img_rect = tooltip_img.getBoundingClientRect();
-                            tooltip.style.left = row_rect.x - img_rect.width - 5 + "px";
-                            tooltip.style.top = row_rect.y + (row_rect.height / 2) + scroll_value - (img_rect.height / 2) + "px";
-                            tooltip.style.maxWidth = img_rect.width + 2 + "px";
-
-                            // if the element is still hovered, we active it
-                            if (tooltip.getAttribute("data-hover") === "true") {
-                                tooltip.classList.add("mmd-active");
-                            }
-                        });
-
-                        // Append the tooltip
-                        tooltip.appendChild(tooltip_img);
-
-                        // Append the chapters if there is
-                        if (MMD_options.save_all_opened && data.chapters !== undefined) {
-                            // Add a border below the iamge
-                            tooltip_img.className = "mmd-tooltip-image";
-
-                            // We put the chapters in a container to have padding
-                            let chapters_list_container = document.createElement("div");
-                            chapters_list_container.className = "mmd-tooltip-content";
-                            let max = Math.min(5, data.chapters.length);
-                            for (let i = 0; i < max; i++) {
-                                append_text_with_icon(chapters_list_container, "eye", data.chapters[i]);
-                                chapters_list_container.appendChild(document.createElement("br"));
-                            }
-                            tooltip.appendChild(chapters_list_container);
-                        }
-
-                        // And then to the body
-                        document.getElementById("mmd-tooltip").appendChild(tooltip);
-                    } else {
-                        node.setAttribute("data-hover", true);
-                        node.classList.add("mmd-active");
-                    }
-                });
-
-                // Hide the tooltip
-                entry.dom_nodes[0].addEventListener("mouseleave", (event) => {
-                    event.preventDefault();
-
-                    let node = document.getElementById("tooltip-" + current_row_id);
-                    if (node !== null) {
-                        node.setAttribute("data-hover", false);
-                        node.classList.remove("mmd-active");
-                    }
-                });
-
                 // If it's a single chapter
                 if (entry.chapters.length == 1) {
+                    let show_tooltip = true;
                     let only_node = entry.dom_nodes[0];
 
                     // If it's the last open chapter we paint it rebeccapurple
@@ -1020,6 +1063,7 @@ function follow_page() {
                         current_color = (current_color + 1) % max_color;
                     // If it's a lower than last open we delete it
                     } else if (entry.chapters[0].chapter < data.last) {
+                        show_tooltip = false;
                         if (MMD_options.hide_lower) {
                             only_node.parentElement.removeChild(only_node);
                         } else {
@@ -1032,8 +1076,10 @@ function follow_page() {
                         });
                     }
 
-                    only_node.firstElementChild.classList.add("myTooltip");
-                    only_node.firstElementChild.setAttribute("title", "<img src='/images/manga/" + data.img + "' width='200px' />");
+                    if (show_tooltip) {
+                        // Show a tooltip with the thumbnail
+                        tooltip(only_node, current_row_id, entry, data);
+                    }
                 } else {
                     // Or if it's a list of chapters
                     let highest_on_list = -1;
@@ -1057,6 +1103,9 @@ function follow_page() {
                     // Else we delete each lower rows except the first one
                     } else {
                         let highlight_next = false;
+
+                        // Show a tooltip with the thumbnail
+                        tooltip(entry.dom_nodes[0], current_row_id, entry);
 
                         // Reverse order so we can paint the name column once we see the current chapter if there is one
                         for (let chapter_index = entry.chapters.length - 1; chapter_index >= 0; chapter_index--) {
@@ -1096,6 +1145,9 @@ function follow_page() {
                         }
                     }
                 }
+            } else {
+                // Show a tooltip with the thumbnail
+                tooltip(entry.dom_nodes[0], current_row_id, entry);
             }
         });
     }
@@ -1171,46 +1223,48 @@ function follow_page() {
                         let promises = [];
 
                         for (let mangadex_id in imported_data) {
-                            if (mangadex_id == "options" || mangadex_id == "version") {
-                                continue;
-                            }
+                            if (mangadex_id == "options") {
+                                promises.push(
+                                    storage_set("options", imported_data[mangadex_id])
+                                );
+                            } else {
+                                promises.push(
+                                    storage_get(mangadex_id)
+                                    .then((data) => {
+                                        let to_insert = imported_data[mangadex_id + ""];
 
-                            promises.push(
-                                storage_get(mangadex_id)
-                                .then((data) => {
-                                    let to_insert = imported_data[mangadex_id + ""];
+                                        // If there is an entry we set it to the highest last chapter and we mix all opened chapters
+                                        if (data !== undefined) {
+                                            to_insert.last = Math.max(data.last, to_insert.last);
 
-                                    // If there is an entry we set it to the highest last chapter and we mix all opened chapters
-                                    if (data !== undefined) {
-                                        to_insert.last = Math.max(data.last, to_insert.last);
-
-                                        // Merge chapters
-                                        if (to_insert.chapters !== undefined) {
-                                            for (let chapter of data.chapters) {
-                                                if (to_insert.chapters.indexOf(chapter) === -1) {
-                                                    // Chapters are ordered
-                                                    let i = 0;
-                                                    let max = to_insert.chapters.length;
-                                                    let higher = true;
-                                                    while (i < max && higher) {
-                                                        if (to_insert.chapters[i] < chapter) {
-                                                            higher = false;
-                                                        } else {
-                                                            i++;
+                                            // Merge chapters
+                                            if (to_insert.chapters !== undefined) {
+                                                for (let chapter of data.chapters) {
+                                                    if (to_insert.chapters.indexOf(chapter) === -1) {
+                                                        // Chapters are ordered
+                                                        let i = 0;
+                                                        let max = to_insert.chapters.length;
+                                                        let higher = true;
+                                                        while (i < max && higher) {
+                                                            if (to_insert.chapters[i] < chapter) {
+                                                                higher = false;
+                                                            } else {
+                                                                i++;
+                                                            }
                                                         }
+                                                        to_insert.chapters.splice(i, 0, chapter);
                                                     }
-                                                    to_insert.chapters.splice(i, 0, chapter);
                                                 }
+                                            } else {
+                                                to_insert.chapters = data.chapters || [];
                                             }
-                                        } else {
-                                            to_insert.chapters = data.chapters || [];
                                         }
-                                    }
 
-                                    // Insert the entry in the local storage
-                                    return storage_set(mangadex_id, to_insert);
-                                })
-                            );
+                                        // Insert the entry in the local storage
+                                        return storage_set(mangadex_id, to_insert);
+                                    })
+                                );
+                            }
                         }
 
                         // We wait until we checked all data
