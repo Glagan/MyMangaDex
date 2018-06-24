@@ -32,6 +32,7 @@ But if you have a lot of manga, or if you're coming from another site and want t
 ## Features
 MyMangaDex improve 3 pages:
 ### Follow page
+* Display the thumbnail of the manga when hovering
 * Highlight last read chapters
 * Remove old chapters from the list.
 You can also import your data from MyAnimeList here (The last read of every manga you follow on MangaDex)
@@ -39,6 +40,8 @@ You can also import your data from MyAnimeList here (The last read of every mang
 ### Manga page
 * Show some information about the manga entry on MyAnimeList if it exists
 * Highlight your last read chapter and all opened chapters if you want
+* Start reading the manga or add it to your Plan to Read list
+* Add a MyAnimeList id if there isn't one
 
 ### Chapter page
 * Automatically update the MyAnimeList manga entry to the current chapter number if it's the highest
@@ -46,7 +49,7 @@ You can also import your data from MyAnimeList here (The last read of every mang
 * If it's the last chapter, the finish date is set to today and the status is set to "Completed"
 
 ## Useful links
-* Import favorites from KissManga to MangaDexx https://old.reddit.com/r/manga/comments/8qebu4/import_kissmanga_bookmarks_to_mangadex/
+* Import favorites from KissManga to MangaDex https://old.reddit.com/r/manga/comments/8qebu4/import_kissmanga_bookmarks_to_mangadex/
 
 ## Colors used
 * Last opened chapters in the follow page : rebeccapurple and indigo
@@ -63,7 +66,7 @@ You can change them in the options.
 Lot of bugs fixed  
 - [x] Cleaner code (I hope)
 - [x] Keep track of any opened chapters and highlight them
-- [x] Show manga image on title hover
+- [x] Show manga image and last 5 highest opened chapters when hovering the title
 
 ### 1.1 (1.0)
 - [x] Keep track of last open chapter for each manga
@@ -78,4 +81,3 @@ Lot of bugs fixed
 ## TODO
 - [ ] Modal to directly edit all informations
 - [ ] Re-reading
-- [ ] Show last opened chapters order by highest on the manga tooltip

@@ -9,8 +9,6 @@
     border-radius: 4px;
     overflow: hidden;
     background-color: #2e3338;
-    min-width: 80px;
-    min-height: 100px;
     opacity: 0;
     transition: opacity 0.2s ease-in;
 }
@@ -21,4 +19,13 @@
 
 .mmd-active {
     opacity: 1;
+}
+
+.mmd-tooltip-image {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.6);
+}
+
+.mmd-tooltip-content {
+    display: inline-block;
+    padding: 4px;
 }

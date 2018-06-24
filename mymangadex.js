@@ -15,7 +15,8 @@ let MMD_options = {
     hide_lower: true,
     follow_button: false,
     last_open_only_higher: true,
-    save_all_opened: true
+    save_all_opened: true,
+    version: 1.2
 };
 
 let URL = window.location.href;
@@ -128,7 +129,6 @@ function fetch_mal_manga_list(mal_manga, username, output_node, offset=0, dummy=
 
 /**
  * Fetch the id of all manga in the follow list of the currently logged in user
- * TODO: Check if user is logged in (on MangaDex) - maybe that page should not display so we're fine
  * Recursive until we browsed all pages
  * @param {Object} mangadex_list Object that will contain the ids fetched
  * @param {Object} output_node Node used to display what we're doing
@@ -163,7 +163,7 @@ function fetch_mangadex_manga(mangadex_list, output_node, page=1, max_page=1) {
 
             // We fetch the next page if required
             if (page < max_page) {
-                fetch_mangadex_manga(mangadex_list, output_node, page+1, max_page);
+                return fetch_mangadex_manga(mangadex_list, output_node, page+1, max_page);
             } else {
                 append_to_output_and_scroll(output_node, "Done fetching MangaDex follow manga.");
             }
@@ -202,6 +202,7 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, in
                 id: mangadex_list[index],
                 mal: 0,
                 last: 0,
+                current: {volume: 0, chapter: 0},
                 chapters: []
             };
 
@@ -217,7 +218,7 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, in
                         append_to_output_and_scroll(output_node, "Done. Refresh the page to see the new data.");
                         vNotify.success({
                             title: "All MyAnimeList data imported.",
-                            text: "You can review manga without a MyAnimeList link in the list.",
+                            text: "Refresh the page to see the new data.",
                             image: "https://i.imgur.com/oMV2BJt.png",
                             sticky: true
                         });
@@ -231,15 +232,23 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, in
 
                 // Search for data from the mal_list object
                 for (var mal_manga of mal_list) {
-                    if (mal_manga.manga_id == manga.mal_id) {
+                    if (mal_manga.manga_id == manga.mal) {
                         manga.last = parseInt(mal_manga.num_read_chapters);
-                        manga.chapters.push(manga.last);
+
+                        // Add last 100 chapters since the current one in the opened array
+                        // 100 because more is just useless data honestly
+                        if (MMD_options.save_all_opened) {
+                            let min = Math.max(manga.last - 100, 0);
+                            for (let i = manga.last; i > max; i--) {
+                                manga.chapters.push(i);
+                            }
+                        }
                         break;
                     }
                 }
 
                 // Update last open for the manga
-                append_to_output_and_scroll(output_node, "-> Set to Chapter " + manga.last_open);
+                append_to_output_and_scroll(output_node, "-> Set to Chapter " + manga.last);
                 return update_manga_local_storage(manga).then(() => {
                     index++;
                     if (index < mangadex_list.length) {
@@ -248,7 +257,7 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, in
                         append_to_output_and_scroll(output_node, "Done. Refresh the page to see the new data.");
                         vNotify.success({
                             title: "All MyAnimeList data imported.",
-                            text: "You can review manga without a MyAnimeList link in the list.",
+                            text: "Refresh the page to see the new data.",
                             image: "https://i.imgur.com/oMV2BJt.png",
                             sticky: true
                         });
@@ -934,25 +943,28 @@ function follow_page() {
 
                     let node = document.getElementById("tooltip-" + current_row_id);
                     if (node === null) {
-                        // Create the tooltip - it's just an image
-                        let tooltip = document.createElement("img");
+                        let tooltip = document.createElement("div");
                         tooltip.setAttribute("data-hover", true);
-                        tooltip.id = "tooltip-" + current_row_id;
                         tooltip.className = "mmd-tooltip mmd-loading";
-                        tooltip.src = "https://s1.mangadex.org/images/manga/" + entry.id + ".thumb.jpg";
+                        tooltip.id = "tooltip-" + current_row_id;
+
+                        // Create the tooltip
+                        let tooltip_img = document.createElement("img");
+                        tooltip_img.src = "https://s1.mangadex.org/images/manga/" + entry.id + ".thumb.jpg";
 
                         // Value to set the position of the element - get them before or they might change we image is loaded
                         let row_rect = event.target.getBoundingClientRect();
                         let scroll_value = window.scrollY;
 
                         // When the ressource loaded we can adjust it's position
-                        tooltip.addEventListener("load", () => {
+                        tooltip_img.addEventListener("load", () => {
                             tooltip.classList.remove("mmd-loading");
 
                             // Set it's position
-                            let img_rect = tooltip.getBoundingClientRect();
+                            let img_rect = tooltip_img.getBoundingClientRect();
                             tooltip.style.left = row_rect.x - img_rect.width - 5 + "px";
                             tooltip.style.top = row_rect.y + (row_rect.height / 2) + scroll_value - (img_rect.height / 2) + "px";
+                            tooltip.style.maxWidth = img_rect.width + 2 + "px";
 
                             // if the element is still hovered, we active it
                             if (tooltip.getAttribute("data-hover") === "true") {
@@ -961,6 +973,25 @@ function follow_page() {
                         });
 
                         // Append the tooltip
+                        tooltip.appendChild(tooltip_img);
+
+                        // Append the chapters if there is
+                        if (MMD_options.save_all_opened && data.chapters !== undefined) {
+                            // Add a border below the iamge
+                            tooltip_img.className = "mmd-tooltip-image";
+
+                            // We put the chapters in a container to have padding
+                            let chapters_list_container = document.createElement("div");
+                            chapters_list_container.className = "mmd-tooltip-content";
+                            let max = Math.min(5, data.chapters.length);
+                            for (let i = 0; i < max; i++) {
+                                append_text_with_icon(chapters_list_container, "eye", data.chapters[i]);
+                                chapters_list_container.appendChild(document.createElement("br"));
+                            }
+                            tooltip.appendChild(chapters_list_container);
+                        }
+
+                        // And then to the body
                         document.getElementById("mmd-tooltip").appendChild(tooltip);
                     } else {
                         node.setAttribute("data-hover", true);
@@ -1140,24 +1171,39 @@ function follow_page() {
                         let promises = [];
 
                         for (let mangadex_id in imported_data) {
-                            if (mangadex_id == "options") {
+                            if (mangadex_id == "options" || mangadex_id == "version") {
                                 continue;
                             }
 
                             promises.push(
                                 storage_get(mangadex_id)
                                 .then((data) => {
-                                    let to_insert = imported_data[mangadex_id];
+                                    let to_insert = imported_data[mangadex_id + ""];
 
                                     // If there is an entry we set it to the highest last chapter and we mix all opened chapters
                                     if (data !== undefined) {
                                         to_insert.last = Math.max(data.last, to_insert.last);
 
                                         // Merge chapters
-                                        for (let chapter of data.chapters) {
-                                            if (to_insert.chapters.indexOf(chapter) === -1) {
-                                                to_insert.chapters.push(chapter);
+                                        if (to_insert.chapters !== undefined) {
+                                            for (let chapter of data.chapters) {
+                                                if (to_insert.chapters.indexOf(chapter) === -1) {
+                                                    // Chapters are ordered
+                                                    let i = 0;
+                                                    let max = to_insert.chapters.length;
+                                                    let higher = true;
+                                                    while (i < max && higher) {
+                                                        if (to_insert.chapters[i] < chapter) {
+                                                            higher = false;
+                                                        } else {
+                                                            i++;
+                                                        }
+                                                    }
+                                                    to_insert.chapters.splice(i, 0, chapter);
+                                                }
                                             }
+                                        } else {
+                                            to_insert.chapters = data.chapters || [];
                                         }
                                     }
 
@@ -1384,6 +1430,9 @@ function follow_page() {
                     });
                 });
 
+                // Set the options
+                storage_set("options", MMD_options);
+
                 // Hide menu
                 event.target.parentElement.classList.toggle("active");
                 manage_container.style.display = "none";
@@ -1606,7 +1655,18 @@ function chapter_page() {
 
             // We add the current chapter to the list of opened chapters if the option is on
             if (MMD_options.save_all_opened && manga.chapters.indexOf(manga.current.chapter) === -1) {
-                manga.chapters.push(manga.current.chapter);
+                let i = 0;
+                let max = manga.chapters.length;
+                let higher = true;
+                // Chapters are ordered
+                while (i < max && higher) {
+                    if (manga.chapters[i] < manga.current.chapter) {
+                        higher = false;
+                    } else {
+                        i++;
+                    }
+                }
+                manga.chapters.splice(i, 0, manga.current.chapter);
             }
 
             // If there is a MAL, we update the last read

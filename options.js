@@ -210,7 +210,8 @@ let default_opt = {
 	hide_lower: true,
 	follow_button: false,
 	last_only_higher: true,
-	save_all_opened: true
+	save_all_opened: true,
+	version: 1.2
 };
 
 // Last open colors
