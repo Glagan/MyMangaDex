@@ -858,7 +858,7 @@ function create_nav_button(parent_node, title, icon, callback) {
     new_button_link.appendChild(document.createTextNode(" " + title));
     new_button_link.addEventListener("click", callback);
     new_button.appendChild(new_button_link);
-    parent_node.insertBefore(parent_node.lastElementChild, new_button);
+    parent_node.insertBefore(new_button, parent_node.lastElementChild);
 }
 
 /**
