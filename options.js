@@ -39,16 +39,17 @@ function saveOptions(event) {
 	browser.storage.local.set({
 		options: {
 			colors: {
-				last_read: document.querySelector("#last_read").value,
-				lower_chapter: document.querySelector("#lower_chapter").value,
+				last_read: document.getElementById("last_read").value,
+				lower_chapter: document.getElementById("lower_chapter").value,
 				last_open: last_open_colors,
-				opened_chapters: document.querySelector("#opened_chapters").value
+				opened_chapters: document.getElementById("opened_chapters").value
 			},
-			hide_lower: document.querySelector("#hide_lower").checked,
-			follow_button: document.querySelector("#follow_button").checked,
-			last_only_higher: document.querySelector("#last_only_higher").checked,
-			save_all_opened: document.querySelector("#save_all_opened").checked,
-			version: 1.2
+			hide_lower: document.getElementById("hide_lower").checked,
+			follow_button: document.getElementById("follow_button").checked,
+			last_only_higher: document.getElementById("last_only_higher").checked,
+			max_save_opened: parseInt(document.getElementById("max_save_opened").value),
+			save_all_opened: document.getElementById("save_all_opened").checked,
+			version: 1.3
 		}
 	}).then(() => {
 		console.log("Saved");
@@ -69,7 +70,23 @@ function restoreOptions() {
 	storageItem.then((res) => {
 		if (isEmpty(res)) {
 			res.options = default_opt;
+		} else {
+			res.options = {
+				colors: {
+					last_read: res.options.colors.last_read || default_opt.colors.last_read,
+					lower_chapter: res.options.colors.lower_chapter || default_opt.colors.lower_chapter,
+					last_open: res.options.colors.last_open || default_opt.colors.last_open,
+					opened_chapters: res.options.colors.opened_chapters || default_opt.colors.opened_chapters
+				},
+				hide_lower: res.options.hide_lower,
+				follow_button: res.options.follow_button,
+				last_only_higher: res.options.last_only_higher,
+				max_save_opened: res.options.max_save_opened,
+				save_all_opened: res.options.save_all_opened,
+				version: res.options.version || default_opt.version
+			};
 		}
+		console.log(res);
 
 		let opt = res.options;
 		document.querySelector("#last_read").value = opt.colors.last_read;
@@ -86,6 +103,7 @@ function restoreOptions() {
 		document.querySelector("#hide_lower").checked = opt.hide_lower;
 		document.querySelector("#follow_button").checked = opt.follow_button;
 		document.querySelector("#last_only_higher").checked = opt.last_only_higher;
+		document.querySelector("#max_save_opened").value = opt.max_save_opened;
 		document.querySelector("#save_all_opened").checked = opt.save_all_opened;
 
 		document.querySelector("#content").classList.add("background-transition");
@@ -115,12 +133,19 @@ function restoreDefault(event) {
 			document.querySelector("#last_open_" + id + "_color").style.backgroundColor = open_color;
 		}
 	// If it's an input
-	} else if (node.type == "text") {
-		node.value = default_opt.colors[node_name];
-		document.querySelector("#" + node_name + "_color").style.backgroundColor = default_opt[node_name];
+	} else if (node.type == "text" || node.type == "number") {
+		node.value = default_opt.colors[node_name] || default_opt[node_name];
+		let color_box = document.querySelector("#" + node_name + "_color");
+		if (color_box) {
+			color_box.style.backgroundColor = node.value;
+		}
 	// Or it's a checkbox, no other choice right now
 	} else {
-		node.checked = default_opt.colors[node_name];
+		if (default_opt.colors[node_name]) {
+			node.checked = default_opt.colors[node_name];
+		} else {
+			node.checked = default_opt[node_name];
+		}
 	}
 }
 
@@ -212,7 +237,8 @@ let default_opt = {
 	follow_button: false,
 	last_only_higher: true,
 	save_all_opened: true,
-	version: 1.2
+	max_save_opened: 100,
+	version: 1.3
 };
 
 // Last open colors
@@ -230,7 +256,8 @@ document.querySelector("#default_lower_chapter").addEventListener("click", resto
 document.querySelector("#default_opened_chapters").addEventListener("click", restoreDefault);
 document.querySelector("#default_hide_lower").addEventListener("click", restoreDefault);
 document.querySelector("#default_follow_button").addEventListener("click", restoreDefault);
-document.querySelector("#last_only_higher").addEventListener("click", restoreDefault);
+document.querySelector("#default_last_only_higher").addEventListener("click", restoreDefault);
+document.querySelector("#default_max_save_opened").addEventListener("click", restoreDefault);
 document.querySelector("#default_save_all_opened").addEventListener("click", restoreDefault);
 document.querySelector("#add-a-color").addEventListener("click", () => {
 	addColor();

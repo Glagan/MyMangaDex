@@ -1,8 +1,13 @@
+/**
+ * Author: Glagan <nicolas.colomer@protonmail.com>
+ * See <https://github.com/Glagan/MyMangaDex> for more informations
+ */
+
 // INIT
 
 // Object containing all options
 // Is initialized with the default options
-let MMD_options = {
+let default_options = {
     colors: {
         last_read: "rgba(95,158,160,0.6)", // cadetblue
         lower_chapter: "darkolivegreen",
@@ -14,11 +19,13 @@ let MMD_options = {
     },
     hide_lower: true,
     follow_button: false,
-    last_open_only_higher: true,
-    save_all_opened: true
+    last_only_higher: true,
+    save_all_opened: true,
+    max_save_opened: 100,
+    version: 1.3
 };
+let MMD_options = {};
 
-let version = 1.2;
 let URL = window.location.href;
 let logged_in_mal = true;
 let csrf_token = "";
@@ -71,51 +78,56 @@ function load_options() {
     .then((res) => {
         // If there is nothing in the storage, default options
         if (res === undefined) {
-            MMD_options.version = version;
+            MMD_options = default_options;
             return storage_set("options", MMD_options);
         } else {
-            MMD_options = res;
+            // Else load them, or with default if there is a missing option somehow
+            MMD_options = {
+				colors: {
+					last_read: res.colors.last_read || default_options.colors.last_read,
+					lower_chapter: res.colors.lower_chapter || default_options.colors.lower_chapter,
+					last_open: res.colors.last_open || default_options.colors.last_open,
+					opened_chapters: res.colors.opened_chapters || default_options.colors.opened_chapters
+				},
+				hide_lower: res.hide_lower,
+				follow_button: res.follow_button,
+				last_only_higher: res.last_only_higher,
+				max_save_opened: res.max_save_opened || default_options.max_save_opened,
+				save_all_opened: res.save_all_opened,
+				version: res.version || default_options.version
+            };
 
-            if (MMD_options.version === undefined) {
-                // Here we go
-                vNotify.info({
-                    title: "Old version.",
-                    text: "Converting the storage for the new version..."
-                });
+            let updates = [];
 
-                return storage_get(null)
-                .then((data) => {
-                    // Browse the whole local storage
-                    let promises = [];
-                    for (let index in data) {
-                        if (index == "options") {
-                            // Update the version number if it's the options
-                            MMD_options.version = version;
-                            // And the new color
-                            MMD_options.colors.opened_chapters = "darkslategray";
+            // If options < 1.3, and > 1.1, 1.1 is trash stop support
+            if (MMD_options.version < default_options.version) {
+                console.info("Updating to the 1.3 save format...");
+                MMD_options.max_save_opened = 100;
+                MMD_options.version = 1.3;
 
-                            promises.push(storage_set("options", MMD_options));
-                        } else {
-                            // Else Update for the new format if it's a manga
-                            promises.push(
-                                storage_set(index, {
-                                    mal: data[index].mal_id,
-                                    last: data[index].last_open,
-                                    chapters: [data[index].last_open]
-                                })
-                            );
+                updates.push(
+                    storage_get(null)
+                    .then((data) => {
+                        // Delete the list of chapters that was too long
+                        for (let entry in data) {
+                            if (entry == "options") {
+                                data.options.version = 1.3;
+                            } else {
+                                while (data[entry].chapters.length > MMD_options.max_save_opened) {
+                                    data[entry].chapters.pop();
+                                }
+                            }
                         }
-                    }
 
-                    // Wait for everything to finish
-                    return Promise.all(promises);
-                }).then(() => {
-                    vNotify.success({
-                        title: "Done",
-                        text: "Conversion done."
-                    });
-                });
-            }
+                        return storage_set(null, data)
+                        .then(() => {
+                            console.info("Done updating to the 1.3 save format.");
+                        });
+                    })
+                );
+            } // Easy to add updates here, on another if and push the promise in the updates array
+
+            return Promise.all(updates);
         }
     });
 }
@@ -278,10 +290,10 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, in
                     if (mal_manga.manga_id == manga.mal) {
                         manga.last = parseInt(mal_manga.num_read_chapters);
 
-                        // Add last 100 chapters since the current one in the opened array
-                        // 100 because more is just useless data honestly
+                        // Add last max_save_opened chapters since the current one in the opened array
+                        // 100 is good because more is just useless data honestly
                         if (MMD_options.save_all_opened) {
-                            let min = Math.max(manga.last - 100, 0);
+                            let min = Math.max(manga.last - MMD_options.max_save_opened, 0);
                             for (let i = manga.last; i > min; i--) {
                                 manga.chapters.push(i);
                             }
@@ -496,7 +508,7 @@ function update_manga_last_read(manga, set_status=1) {
                 // Use Math.floor on the current chapter to avoid updating even tough it's the same if this is a sub chapter
                 if (manga.last_mal == 0 || Math.floor(manga.current.chapter) > manga.last_mal) {
                     // Status is always set to reading, or we complet it if it's the last chapter, and so we fill the finish_date
-                    var status = (parseInt(manga.more_info.total_chapter) > 0 && manga.current.chapter >= parseInt(manga.more_info.total_chapter)) ? 2 : set_status;
+                    var status = (parseInt(manga.more_info.status) == 2 || (parseInt(manga.more_info.total_chapter) > 0 && manga.current.chapter >= parseInt(manga.more_info.total_chapter))) ? 2 : set_status;
                     var post_url = "https://myanimelist.net/ownlist/manga/" + manga.mal + "/edit?hideLayout";
 
                     // Set the start only if it's not already set and if we don't add it to PTR and if it was in ptr or not in the list
@@ -641,10 +653,12 @@ function update_manga_local_storage(manga, notification=true) {
         chapters: manga.chapters
     }).then(() => {
         // Show a notification for updated last opened if there is no MyAnimeList id
-        if (notification && manga.mal == 0 && (manga.current.chapter != manga.last)) {
+        if (notification &&
+            manga.mal == 0 &&
+            ((manga.current.chapter > manga.last && MMD_options.last_only_higher) || !MMD_options.last_only_higher)) {
             vNotify.success({
                 title: "Manga updated",
-                text: manga.name + " last open Chapter as been updated to " + ((manga.current.chapter > manga.last && MMD_options.last_only_higher) || !MMD_options.last_only_higher) ? manga.current.chapter : manga.last,
+                text: manga.name + " last open Chapter as been updated to " + (((manga.current.chapter > manga.last && MMD_options.last_only_higher) || !MMD_options.last_only_higher) ? manga.current.chapter : manga.last),
                 image: "https://s1.mangadex.org/images/manga/" + manga.id + ".thumb.jpg"
             });
         }
@@ -908,7 +922,7 @@ function append_text_with_icon(node, icon, text) {
     node.appendChild(document.createTextNode(text));
 }
 
-function tooltip(node, u_id, entry, data=undefined) {
+function tooltip(node, u_id, manga_id, data=undefined) {
     node.addEventListener("mouseenter", (event) => {
         event.preventDefault();
 
@@ -921,7 +935,7 @@ function tooltip(node, u_id, entry, data=undefined) {
 
             // Create the tooltip
             let tooltip_img = document.createElement("img");
-            tooltip_img.src = "https://s1.mangadex.org/images/manga/" + entry.id + ".thumb.jpg";
+            tooltip_img.src = "https://s1.mangadex.org/images/manga/" + manga_id + ".thumb.jpg";
 
             // Value to set the position of the element - get them before or they might change we image is loaded
             let row_rect = event.target.getBoundingClientRect();
@@ -1006,153 +1020,153 @@ function follow_page() {
     let chapters_list = document.querySelector("#chapters tbody").children;
 
     // Keep track of all entries in the follow table
-    var entries = [];
-    var entries_count = -1;
+    var entries = {};
 
     //var color = "rebeccapurple"; // "darkmagenta", "darkorchid"
     // Switch between colors of this array
     var max_color = MMD_options.colors.last_open.length;
     var current_color = 0;
 
-    // Check each rows of the main table
-    for (let element of chapters_list) {
-        // Get volume and chapter number
-        let volume_and_chapter = volume_and_chapter_from_node(element.children[2].firstElementChild);
-
-        // If it's a row with a name
-        if (element.firstElementChild.childElementCount > 0) {
-            // Push a serie entry with information to check if we delete it
-            entries.push({
-                id: parseInt(/\/manga\/(\d+)\//.exec(element.firstElementChild.firstElementChild.href)[1]),
-                dom_nodes: [element],
-                chapters: []
-            });
-            entries_count++;
-        } else {
-            // Else it's a empty name row, so we just add the dom_node to the current entry
-            entries[entries_count].dom_nodes.push(element);
-        }
-
-        // Add the current chapter to the serie entry
-        entries[entries_count].chapters.push(volume_and_chapter);
-    }
-
     // Create a tooltip holder to avoid spamming the document body
     let tooltip_container = document.createElement("div");
     tooltip_container.id = "mmd-tooltip";
     document.body.appendChild(tooltip_container);
 
-    // Once we have information on all the chapters in the current page we paint or delete them
-    let row_id = 0;
-    for (let entry of entries) {
-        let current_row_id = row_id;
-        row_id++;
+    // Save each data storage promises to avoid fetching the same data twice - huge speed boost when there is the same serie multiple times
+    let local_storage = {};
 
-        storage_get(entry.id)
-        .then((data) => {
-            // Paint or not
-            if (data !== undefined) {
-                // Switch colors between rows
-                let going_for_color = MMD_options.colors.last_open[current_color];
+    // Check each rows of the main table
+    let nbr_chapters = chapters_list.length - 1;
+    for (let row = nbr_chapters; row >= 0; --row) {
+        let element = chapters_list[row];
 
-                // If it's a single chapter
-                if (entry.chapters.length == 1) {
-                    let show_tooltip = true;
-                    let only_node = entry.dom_nodes[0];
+        // Get volume and chapter number
+        let volume_and_chapter = volume_and_chapter_from_node(element.children[2].firstElementChild);
 
-                    // If it's the last open chapter we paint it rebeccapurple
-                    if (entry.chapters[0].chapter == data.last) {
-                        only_node.style.backgroundColor = going_for_color;
-                        current_color = (current_color + 1) % max_color;
-                    // If it's a lower than last open we delete it
-                    } else if (entry.chapters[0].chapter < data.last) {
-                        show_tooltip = false;
-                        if (MMD_options.hide_lower) {
-                            only_node.parentElement.removeChild(only_node);
-                        } else {
-                            only_node.style.backgroundColor = MMD_options.colors.lower_chapter;
-                        }
-                    // Else it's a higher, we make it so clicking it paint it
-                    } else {
-                        only_node.children[2].firstElementChild.addEventListener("auxclick", () => {
-                            only_node.style.backgroundColor = going_for_color;
-                        });
-                    }
+        // If it's a row with a name
+        if (element.firstElementChild.childElementCount > 0) {
+            let id = parseInt(/\/manga\/(\d+)\//.exec(element.firstElementChild.firstElementChild.href)[1]);
+            let current_entries = {};
 
-                    if (show_tooltip) {
-                        // Show a tooltip with the thumbnail
-                        tooltip(only_node, current_row_id, entry, data);
-                    }
-                } else {
-                    // Or if it's a list of chapters
-                    let highest_on_list = -1;
+            // We copy the entries - necessary since storage_get is async we won't get the right data
+            if (!is_empty(entries)) {
+                // We push the last entry - the current one - if there is other entries
+                entries.dom_nodes.push(element);
+                entries.chapters.push(volume_and_chapter);
 
-                    // Check the highest chapter on the list
-                    for (let chapter of entry.chapters) {
-                        if (chapter.chapter > highest_on_list) {
-                            highest_on_list = chapter.chapter;
-                        }
-                    }
+                // Copy
+                current_entries = {
+                    dom_nodes: entries.dom_nodes,
+                    chapters: entries.chapters
+                };
+            }
 
-                    // If all chapters are lower, delete all of them
-                    if (highest_on_list < data.last) {
-                        for (let node of entry.dom_nodes) {
+            // Clear entries for next rows
+            entries = {};
+
+            // Check if the data for the current serie is already fetched
+            let storage_promise = local_storage[id];
+            if (local_storage[id] === undefined) {
+                // If there isn't, we fetch it and add it in the local_storage object
+                local_storage[id] = storage_get(id);
+                storage_promise = local_storage[id];
+            }
+
+            // Promise that come from the local_storage array or a new promise to fetch data
+            storage_promise
+            .then((data) => {
+                let show_tooltip = true;
+
+                // Paint or not
+                if (data !== undefined) {
+                    // Switch colors between rows
+                    let going_for_color = MMD_options.colors.last_open[current_color];
+
+                    // If it's a single chapter
+                    if (is_empty(current_entries)) {
+                        // If it's the last open chapter we paint it
+                        if (volume_and_chapter.chapter == data.last) {
+                            element.style.backgroundColor = going_for_color;
+                            current_color = (current_color + 1) % max_color;
+                            // If it's a lower than last open we delete it
+                        } else if (volume_and_chapter.chapter < data.last) {
+                            show_tooltip = false;
                             if (MMD_options.hide_lower) {
-                                node.parentElement.removeChild(node);
+                                element.parentElement.removeChild(element);
                             } else {
-                                node.style.backgroundColor = MMD_options.colors.lower_chapter;
+                                element.style.backgroundColor = MMD_options.colors.lower_chapter;
                             }
+                            // Else it's a higher, we make it so clicking it paint it
+                        } else {
+                            element.children[2].firstElementChild.addEventListener("auxclick", () => {
+                                element.style.backgroundColor = going_for_color;
+                            });
+                            current_color = (current_color + 1) % max_color;
                         }
-                    // Else we delete each lower rows except the first one
                     } else {
-                        let highlight_next = false;
+                        let build_tree = false;
+                        let has_higher = false;
 
-                        // Show a tooltip with the thumbnail
-                        tooltip(entry.dom_nodes[0], current_row_id, entry);
+                        // It's a multiple row list - we delete the old ones if needed
+                        let max_entry = current_entries.chapters.length - 1;
+                        for (let entry_index in current_entries.chapters) {
+                            let entry_chapter = current_entries.chapters[entry_index].chapter;
+                            let entry_node = current_entries.dom_nodes[entry_index];
+                            let still_exist = true;
 
-                        // Reverse order so we can paint the name column once we see the current chapter if there is one
-                        for (let chapter_index = entry.chapters.length - 1; chapter_index >= 0; chapter_index--) {
-                            let chapter = entry.chapters[chapter_index];
-                            let current_dom_node = entry.dom_nodes[chapter_index];
+                            // We delete the row if it's lower and one first - or first but all are lower
+                            if (entry_chapter < data.last &&
+                                (parseInt(entry_index) < max_entry || (parseInt(entry_index) == max_entry && (!build_tree && !has_higher)))) {
+                                still_exist = false;
 
-                            // Highlight if it's the current last open chapter, and start painting the name column from here
-                            if (chapter.chapter == data.last) {
-                                current_dom_node.style.backgroundColor = going_for_color;
-
-                                if (!highlight_next) {
-                                    current_color = (current_color + 1) % max_color;
-                                    highlight_next = true;
+                                if (parseInt(entry_index) == max_entry) {
+                                    show_tooltip = false;
                                 }
-                            // Delete if it's a lower chapter and not the first line (for the name)
-                            } else if (chapter.chapter < data.last && chapter_index > 0) {
+
                                 if (MMD_options.hide_lower) {
-                                    current_dom_node.parentElement.removeChild(current_dom_node);
+                                    entry_node.parentElement.removeChild(entry_node);
                                 } else {
-                                    current_dom_node.style.backgroundColor = MMD_options.colors.lower_chapter;
+                                    entry_node.style.backgroundColor = MMD_options.colors.lower_chapter;
                                 }
-                            // Highlight the name column to show which title is the chapter corresponding to
-                            } else if (highlight_next) {
-                                current_dom_node.firstElementChild.style.backgroundColor = going_for_color;
-
-                                // If it's the name of the manga when we paint the column, the row has rounded border
-                                if (chapter_index == 0) {
-                                    current_dom_node.firstElementChild.style.borderRadius = "12px 12px 0 0";
-                                }
-                                // If it's an higher chapter (last possibility), make it purple on click to mark it read without reload
+                            } else if (entry_chapter == data.last) {
+                                // If it's the current chapter we start painting the left column - that avoid deleting the first row
+                                build_tree = true;
+                                // And we also paint the row
+                                entry_node.style.backgroundColor = going_for_color;
+                                current_color = (current_color + 1) % max_color;
                             } else {
-                                // Only work when middle-clicking to open on another tab
-                                current_dom_node.children[2].firstElementChild.addEventListener("auxclick", (event) => {
-                                    event.target.parentElement.parentElement.style.backgroundColor = going_for_color;
+                                has_higher = true;
+
+                                if (build_tree) {
+                                    entry_node.firstElementChild.style.backgroundColor = going_for_color;
+                                }
+
+                                // Else we make the auxclick paint the row - it'a a higher
+                                entry_node.children[2].firstElementChild.addEventListener("auxclick", () => {
+                                    entry_node.style.backgroundColor = going_for_color;
                                 });
                             }
                         }
                     }
                 }
+
+                // Show a tooltip with the thumbnail if the row wasn't deleted
+                if (show_tooltip) {
+                    tooltip(element, row, id, data);
+                }
+            });
+        } else {
+            // Else it's a empty name row, so we just add the dom_node to the current entry
+            if (is_empty(entries)) {
+                entries = {
+                    dom_nodes: [element],
+                    chapters: [volume_and_chapter]
+                };
             } else {
-                // Show a tooltip with the thumbnail
-                tooltip(entry.dom_nodes[0], current_row_id, entry);
+                entries.dom_nodes.push(element);
+                entries.chapters.push(volume_and_chapter);
             }
-        });
+        }
     }
 
     // Display buttons that import, export and delete the storage
@@ -1261,6 +1275,10 @@ function follow_page() {
                                                             to_insert.chapters.splice(i, 0, chapter);
                                                         }
                                                     }
+                                                }
+
+                                                while (to_insert.chapters.length > MMD_options.max_save_opened) {
+                                                    to_insert.chapters.pop();
                                                 }
                                             } else {
                                                 to_insert.chapters = data.chapters || [];
@@ -1735,6 +1753,11 @@ function chapter_page() {
                         }
                     }
                     manga.chapters.splice(i, 0, manga.current.chapter);
+
+                    // Check the length
+                    while (manga.chapters.length > MMD_options.max_save_opened) {
+                        manga.chapters.pop();
+                    }
                 }
             }
 
