@@ -62,6 +62,11 @@ You can change them in the options.
 ---
 
 ## Change log
+### 1.3
+Bugs fixed again
+- [x] Better main loop on the follow page
+- [x] Removed support for 1.1 (1.2 and higher are fine)
+
 ### 1.2
 Lot of bugs fixed  
 - [x] Cleaner code (I hope)
