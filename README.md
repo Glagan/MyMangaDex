@@ -62,10 +62,19 @@ You can change them in the options.
 ---
 
 ## Change log
+### 1.4
+- [x] Modal to directly edit all informations from MyAnimeList
+- [x] Tooltip with thumbnail on pages with a list and without thumbnail
+- [x] "Reading" and "Plan to read" button on the pages with a list
+- [x] Detect if a MyAnimeList was added on MangaDex
+- [x] Bigger notifications - Modified the thumbnail URL to avoid s1.
+
 ### 1.3
 Bugs fixed again
 - [x] Better main loop on the follow page
 - [x] Removed support for 1.1 (1.2 and higher are fine)
+- [x] Save only a certain amount of chapters - Default 100, option to change it
+- [x] Better updates handling
 
 ### 1.2
 Lot of bugs fixed  
@@ -84,5 +93,5 @@ Lot of bugs fixed
 - [x] Some options
 
 ## TODO
-- [ ] Modal to directly edit all informations
 - [ ] Re-reading
+- [ ] Auto add to Reading and Completed lists on MangaDex

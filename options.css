@@ -22,18 +22,6 @@ html {
     color: rgb(153, 153, 153);
 }
 
-.background-transition {
-    transition: background-color 0.5s ease-in-out;
-}
-
-.saved {
-    background-color: darkgreen !important;
-}
-
-.not-saved {
-    background-color: firebrick !important;
-}
-
 a {
     color: #ffffff;
     text-decoration: none;

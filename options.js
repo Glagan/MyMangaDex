@@ -36,6 +36,7 @@ function saveOptions(event) {
 	}
 
 	// Update local storage
+	console.log(document.getElementById("follow_button").checked);
 	browser.storage.local.set({
 		options: {
 			colors: {
@@ -49,16 +50,16 @@ function saveOptions(event) {
 			last_only_higher: document.getElementById("last_only_higher").checked,
 			max_save_opened: parseInt(document.getElementById("max_save_opened").value),
 			save_all_opened: document.getElementById("save_all_opened").checked,
-			version: 1.3
+			version: default_opt.version
 		}
 	}).then(() => {
 		console.log("Saved");
 		// Flash green, saved with success
-		flash_background("saved");
+		flash_background("mmd-saved");
 	}).catch((error) => {
 		console.error(error);
 		// Flash red, save failed
-		flash_background("not-saved");
+		flash_background("mmd-not-saved");
 	});
 }
 
@@ -86,7 +87,6 @@ function restoreOptions() {
 				version: res.options.version || default_opt.version
 			};
 		}
-		console.log(res);
 
 		let opt = res.options;
 		document.querySelector("#last_read").value = opt.colors.last_read;
@@ -106,7 +106,7 @@ function restoreOptions() {
 		document.querySelector("#max_save_opened").value = opt.max_save_opened;
 		document.querySelector("#save_all_opened").checked = opt.save_all_opened;
 
-		document.querySelector("#content").classList.add("background-transition");
+		document.querySelector("#content").classList.add("mmd-background-transition");
 	});
 }
 
@@ -234,11 +234,11 @@ let default_opt = {
 		opened_chapters: "darkslategray"
 	},
 	hide_lower: true,
-	follow_button: false,
+	follow_button: true,
 	last_only_higher: true,
 	save_all_opened: true,
 	max_save_opened: 100,
-	version: 1.3
+	version: 1.4
 };
 
 // Last open colors
