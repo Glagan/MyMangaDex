@@ -1,5 +1,5 @@
 # MyMangaDex
-Extension inspired from [KissAnimeList](https://github.com/lolamtisch/KissAnimeList) that synchronyze what you read on MangaDex.org to your MyAnimeList.net manga list.
+Extension inspired from [KissAnimeList](https://github.com/lolamtisch/KissAnimeList) that synchronize what you read on MangaDex.org to your MyAnimeList.net manga list.
 
 * Why?  
 Updating your manga one by one, by hand, when you have hundreds of them and read a lot of them each day is a long, tiring task...

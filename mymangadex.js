@@ -806,7 +806,7 @@ function add_row(parent, title, input_type = "", default_value = "", input_data 
  * @param {Object} parent_node The node that will co ntain the MyAnimeList button
  * @param {Object} manga The manga informations
  */
-function insert_mal_button(parent_node, manga) {
+function insert_mal_button(parent_node, manga, insert_new_informations) {
     // Insert on the header
     var mal_button = document.createElement("button");
     mal_button.className = "btn btn-default";
@@ -857,6 +857,8 @@ function insert_mal_button(parent_node, manga) {
             save_button.appendChild(save_icon);
             save_button.appendChild(document.createTextNode(" Save"));
             save_button.addEventListener("click", (event) => {
+                event.target.disabled = true;
+
                 // Update the manga object with all the data in the form
                 for (let watched in watcher) {
                     if (watched == "start_date" || watched == "finish_date") {
@@ -871,10 +873,16 @@ function insert_mal_button(parent_node, manga) {
                 }
                 manga.current.volume = parseInt(watcher.last_volume.value);
                 manga.current.chapter = parseInt(watcher.last_mal.value);
+                manga.last_mal = parseInt(watcher.last_mal.value);
 
                 // Send it to MyAnimeList, without pepper because we already manage everything here
                 update_manga_last_read(manga, false)
                 .then(() => {
+                    if (insert_new_informations) {
+                        clear_dom_node(parent_node);
+                        insert_mal_informations(parent_node, manga);
+                    }
+
                     modal_container.style.display = "none";
                     vNotify.success({
                         title: "Manga Updated",
@@ -952,7 +960,7 @@ function insert_mal_button(parent_node, manga) {
 
     parent_node.insertBefore(mal_button, parent_node.firstElementChild);
     // Add a text node with only a space, to separate it on the right
-    parent_node.insertBefore(document.createTextNode(" "), parent_node.firstElementChild.nextElementSibling);
+    //parent_node.insertBefore(document.createTextNode(" "), parent_node.firstElementChild.nextElementSibling);
 }
 
 /**
@@ -1013,7 +1021,7 @@ function clear_dom_node(dom_node) {
 function insert_mal_informations(content_node, manga) {
     // Delete node before adding anything to it, it's surely old thin anyway
     clear_dom_node(content_node);
-    insert_mal_button(content_node, manga);
+    insert_mal_button(content_node, manga, true);
 
     // Add some informations on the page
     append_status(manga.more_info.status, content_node);
@@ -2046,7 +2054,7 @@ function chapter_page() {
                         update_manga_last_read(manga)
                         .then(() => {
                             if (manga.more_info.exist && manga.more_info.is_approved) {
-                                insert_mal_button(document.getElementById("report_button").parentElement, manga);
+                                insert_mal_button(document.getElementById("report_button").parentElement, manga, false);
                             }
                         });
                     }
@@ -2073,7 +2081,7 @@ function chapter_page() {
                 update_manga_last_read(manga)
                 .then(() => {
                     if (manga.more_info.exist && manga.more_info.is_approved) {
-                        insert_mal_button(document.getElementById("report_button").parentElement, manga);
+                        insert_mal_button(document.getElementById("report_button").parentElement, manga, false);
                     }
                 });
             }
