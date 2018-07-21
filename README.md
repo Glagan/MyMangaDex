@@ -1,4 +1,5 @@
 # MyMangaDex
+![Follows page Screenshot](screenshot.png)  
 Extension inspired from [KissAnimeList](https://github.com/lolamtisch/KissAnimeList) that synchronize what you read on MangaDex.org to your MyAnimeList.net manga list.
 
 * Why?  
@@ -30,8 +31,10 @@ Start reading manga and the add-on will track them automatically.
 But if you have a lot of manga, or if you're coming from another site and want to set your follow page up-to-date, you can use the "Import (MAL)" button on the follow page that will update the last open of all followed manga if they have a MyAnimeList entry.
 
 ## Features
-MyMangaDex improve 3 pages:
+MyMangaDex improve 3 pages and a type of pages:
+
 ### Follow page
+Any page with a chapters list have the following improvments:  
 * Display the thumbnail of the manga when hovering
 * Highlight last read chapters
 * Remove old chapters from the list.
@@ -48,6 +51,11 @@ You can also import your data from MyAnimeList here (The last read of every mang
 * If it's the first chapter, the start date is set to today and the status is set to "Reading"
 * If it's the last chapter, the finish date is set to today and the status is set to "Completed"
 
+### "List" pages
+The search pages, featured, titles, and manga published by groups or users, the page with a list of titles is improved:  
+* A thumbnail of the manga is shown when hovering the row of a title on simple view, when one isn't shown by default
+* A Plan to read and Reading button is added to quickly add the manga to your MangaDex list
+
 ## Useful links
 * Import favorites from KissManga to MangaDex https://old.reddit.com/r/manga/comments/8qebu4/import_kissmanga_bookmarks_to_mangadex/
 
@@ -62,6 +70,13 @@ You can change them in the options.
 ---
 
 ## Change log
+### 1.5
+- Bug fixed
+  - An empty chapter page (for when a group WILL publish a chapter, but isn't due to group delay) wasn't working
+- Updating a MyAnimeList entry trough the Edit button now edit informations if they are displayed (Manga page)
+- Added the /group and /user page to highlight chapters like in the /follows page
+- Added the /group and /user page to the list of pages that contains a list of titles (to display the Follow/Read buttons)
+
 ### 1.4
 - [x] Modal to directly edit all informations from MyAnimeList
 - [x] Tooltip with thumbnail on pages with a list and without thumbnail

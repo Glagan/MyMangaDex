@@ -38,7 +38,9 @@
 			"https://mangadex.org/?page=search*",
 			"https://mangadex.org/?page=titles*",
 			"https://mangadex.org/featured",
-			"https://mangadex.org/titles*"
+			"https://mangadex.org/titles*",
+			"https://mangadex.org/group*",
+			"https://mangadex.org/user*"
 		],
 		"js": ["dist/vanilla-notify.min.js", "mymangadex.js"],
 		"css": ["dist/vanilla-notify.css", "mymangadex.css"]
