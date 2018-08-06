@@ -453,11 +453,11 @@ function fetch_mal_for_manga_data(manga) {
                 manga.more_info.comments = /add_manga_comments.+>(.*)</.exec(text)[1];
                 // Finish date
                 manga.more_info.finish_date = {};
-                manga.more_info.finish_date.month = (parseInt(/add_manga_finish_date_month.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1]) || "");
-                manga.more_info.finish_date.day = (parseInt(/add_manga_finish_date_day.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1]) || "");
-                manga.more_info.finish_date.year = (parseInt(/add_manga_finish_date_year.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1]) || "");
+                manga.more_info.finish_date.month = (parseInt(/add_manga_finish_date_month.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text)[1]) || "");
+                manga.more_info.finish_date.day = (parseInt(/add_manga_finish_date_day.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text)[1]) || "");
+                manga.more_info.finish_date.year = (parseInt(/add_manga_finish_date_year.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text)[1]) || "");
                 // Ask to discuss
-                manga.more_info.ask_to_discuss = /add_manga_is_asked_to_discuss.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
+                manga.more_info.ask_to_discuss = /add_manga_is_asked_to_discuss.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text);
                 manga.more_info.ask_to_discuss = (manga.more_info.ask_to_discuss === null) ? 0 : parseInt(manga.more_info.ask_to_discuss[1]);
                 // Last read chapter
                 manga.last_mal = /add_manga_num_read_chapters.+value="(\d+)?"/.exec(text);
@@ -472,27 +472,27 @@ function fetch_mal_for_manga_data(manga) {
                 manga.more_info.retail_volumes = /add_manga_num_retail_volumes.+value="(\d+)?"/.exec(text);
                 manga.more_info.retail_volumes = (manga.more_info.retail_volumes === null) ? 0 : parseInt(manga.more_info.retail_volumes[1]);
                 // Priority
-                manga.more_info.priority = /add_manga_priority.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
+                manga.more_info.priority = /add_manga_priority.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text);
                 manga.more_info.priority = (manga.more_info.priority === null) ? 0 : parseInt(manga.more_info.priority[1]);
                 // Re-read value
-                manga.more_info.reread_value = /add_manga_reread_value.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
+                manga.more_info.reread_value = /add_manga_reread_value.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text);
                 manga.more_info.reread_value = (manga.more_info.reread_value === null) ? "" : manga.more_info.reread_value[1];
                 // Score
-                manga.more_info.score = /add_manga_score.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
+                manga.more_info.score = /add_manga_score.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text);
                 manga.more_info.score = (manga.more_info.score === null) ? "" : parseInt(manga.more_info.score[1]);
                 // SNS Post type
-                manga.more_info.sns_post_type = /add_manga_sns_post_type.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
+                manga.more_info.sns_post_type = /add_manga_sns_post_type.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text);
                 manga.more_info.sns_post_type = (manga.more_info.sns_post_type === null) ? 0 : parseInt(manga.more_info.sns_post_type[1]);
                 // Start date
                 manga.more_info.start_date = {};
-                manga.more_info.start_date.month = (parseInt(/add_manga_start_date_month.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1]) || "");
-                manga.more_info.start_date.day = (parseInt(/add_manga_start_date_day.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1]) || "");
-                manga.more_info.start_date.year = (parseInt(/add_manga_start_date_year.+\s.+value="(\d+)?"\sselected="selected"/.exec(text)[1]) || "");
+                manga.more_info.start_date.month = (parseInt(/add_manga_start_date_month.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text)[1]) || "");
+                manga.more_info.start_date.day = (parseInt(/add_manga_start_date_day.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text)[1]) || "");
+                manga.more_info.start_date.year = (parseInt(/add_manga_start_date_year.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text)[1]) || "");
                 // Status
-                manga.more_info.status = /add_manga_status.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
+                manga.more_info.status = /add_manga_status.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text);
                 manga.more_info.status = (manga.more_info.status === null) ? 0 : parseInt(manga.more_info.status[1]);
                 // Storage type
-                manga.more_info.storage_type = /add_manga_storage_type.+\s.+value="(\d+)?"\sselected="selected"/.exec(text);
+                manga.more_info.storage_type = /add_manga_storage_type.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text);
                 manga.more_info.storage_type = (manga.more_info.storage_type === null) ? "" : manga.more_info.storage_type[1];
                 // Tags
                 manga.more_info.tags = /add_manga_tags.+>(.*)*</.exec(text)[1] || "";
@@ -976,35 +976,15 @@ function insert_mal_button(parent_node, manga, insert_new_informations) {
 function append_status(status, node) {
     let color = "";
     let text = "";
-    switch (parseInt(status)) {
-        case 0:
-            color = "blueviolet";
-            text = "Not on the list";
-            break;
-        case 1:
-            color = "cornflowerblue";
-            text = "Reading";
-            break;
-        case 2:
-            color = "darkseagreen";
-            text = "Completed";
-            break;
-        case 3:
-            color = "orange";
-            text = "On-Hold";
-            break;
-        case 4:
-            color = "firebrick";
-            text = "Dropped";
-            break;
-        case 6:
-            color = "violet";
-            text = "Plan to Read";
-            break;
-    }
+    let status_states = [{color:"blueviolet", text:"Not on the list"},
+                        {color:"cornflowerblue", text:"Reading"},
+                        {color:"darkseagreen", text:"Completed"},
+                        {color:"orange", text:"On-Hold"},
+                        {color:"firebrick", text:"Dropped"}, null, // 5 doesn't exist
+                        {color:"violet", text:"Plan to Read"}];
     let color_span = document.createElement("span");
-    color_span.style.color = color;
-    color_span.textContent = text;
+    color_span.style.color = status_states[status].color;
+    color_span.textContent = status_states[status].text;
     node.appendChild(color_span);
 }
 
@@ -1216,8 +1196,7 @@ function tooltip(node, u_id, manga_id, data=undefined) {
         let node = document.getElementById("tooltip-" + u_id);
         if (node === null) {
             let tooltip = document.createElement("div");
-            tooltip.setAttribute("data-hover", true);
-            tooltip.className = "mmd-tooltip mmd-loading";
+            tooltip.className = "mmd-tooltip mmd-active";
             tooltip.id = "tooltip-" + u_id;
 
             // Create the tooltip
@@ -1228,20 +1207,17 @@ function tooltip(node, u_id, manga_id, data=undefined) {
             let row_rect = event.target.getBoundingClientRect();
             let scroll_value = window.scrollY;
 
+            tooltip.style.width = "100px";
+            tooltip.style.left = (row_rect.x - 105) + "px";
+            tooltip.style.top = row_rect.y + (row_rect.height / 2) + scroll_value - (143 / 2) + "px";
+
             // When the ressource loaded we can adjust it's position
             tooltip_img.addEventListener("load", () => {
-                tooltip.classList.remove("mmd-loading");
-
-                // Set it's position
+                // Set it's final position
                 let img_rect = tooltip_img.getBoundingClientRect();
                 tooltip.style.left = row_rect.x - img_rect.width - 5 + "px";
                 tooltip.style.top = row_rect.y + (row_rect.height / 2) + scroll_value - (img_rect.height / 2) + "px";
                 tooltip.style.maxWidth = img_rect.width + 2 + "px";
-
-                // if the element is still hovered, we active it
-                if (tooltip.getAttribute("data-hover") === "true") {
-                    tooltip.classList.add("mmd-active");
-                }
             });
 
             // Append the tooltip
@@ -1266,7 +1242,6 @@ function tooltip(node, u_id, manga_id, data=undefined) {
             // And then to the body
             document.getElementById("mmd-tooltip").appendChild(tooltip);
         } else {
-            node.setAttribute("data-hover", true);
             node.classList.add("mmd-active");
         }
     });
@@ -1277,7 +1252,6 @@ function tooltip(node, u_id, manga_id, data=undefined) {
 
         let node = document.getElementById("tooltip-" + u_id);
         if (node !== null) {
-            node.setAttribute("data-hover", false);
             node.classList.remove("mmd-active");
         }
     });
@@ -1345,8 +1319,6 @@ function insert_chapter(chapters, chapter) {
  */
 function start() {
     // URL so we can start the right function
-    console.log(URL);
-    try {
     if (URL.indexOf("org/follows") > -1 ||
         (URL.indexOf("org/group") > -1 && (URL.indexOf("/chapters/") > -1 || (URL.indexOf("/manga/") == -1 && URL.indexOf("/comments/") == -1))) ||
         (URL.indexOf("org/user") > -1 && (URL.indexOf("/chapters/") > -1 || URL.indexOf("/manga/") == -1))) {
@@ -1365,10 +1337,6 @@ function start() {
                 (URL.indexOf("org/user") > -1 && URL.indexOf("/manga/") > -1)) {
         search_and_list_page();
     }
-
-    } catch (error) {
-        console.error(error);
-    }
 }
 
 /**
@@ -1376,8 +1344,6 @@ function start() {
  * Highlight all last open chapters, hide lower ones depending on the option and show the mangagement buttons
  */
 function follow_page(append_top_bar) {
-    console.log("here");
-    console.log(append_top_bar);
     let chapters_list = document.querySelector("table.table-striped.table-hover.table-condensed tbody").children;
 
     // Keep track of all entries in the follow table
@@ -2047,8 +2013,6 @@ function chapter_page() {
             }
         }
     }
-
-    console.log(manga);
 
     // Get MAL Url from the database
     storage_get(manga.id)

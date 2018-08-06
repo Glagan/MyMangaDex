@@ -7,10 +7,11 @@ Updating your manga one by one, by hand, when you have hundreds of them and read
 * Why no KissAnimeList fork?  
 I find the current script too "full". It's complicated, and there is a lot of useless features (for myself).  
 It was easier to just build a new script from scratch with only what was needed.  
-Also, MangaDex offer MyAnimeList links on each manga page (Thanks to the community), unlike KissManga, so there is no need for an additionnal database to check, so the script would have been very different only for MangaDex.
+Also, MangaDex offer MyAnimeList links on each manga page (Thanks to the community), unlike KissManga, so there is no need for an additionnal database to check, so the script would have been very different only for MangaDex.  
+Update: KissAnimeList added a support for MyMangaDex if you wish to stick with it.
 * What you need buddy  
 I only store the least possible data:  
-An entry for each MangaDex manga that hold the last open chapter, the MyAnimeList id, the MangaDex image of the manga (as a filename) and the list of all opened chapters for each manga (can be disabled)
+An entry for each MangaDex manga that hold the last open chapter, the MyAnimeList id and the list of all opened chapters for each manga (can be disabled)
 
 ## How to Install
 You can install it from the [Firefox add-ons site](https://addons.mozilla.org/fr/firefox/addon/mymangadex/).
@@ -20,8 +21,8 @@ If you want to have some kind of experimentale experience, you can install it di
 2. Clone the repo
 3. Go to [about:debugging](about:debugging)
 4. Click "Load a temporary module"
-5. Select any file of the cloned repo, and it's working.
-6. Open an issue to tell me how bad it is.
+5. Select any file of the cloned repo.
+6. Done !
 
 Works best with the MangaDex dark theme !
 
@@ -70,6 +71,11 @@ You can change them in the options.
 ---
 
 ## Change log
+### 1.5.2
+- Fixed the AddOn
+  - Recent MyAnimeList broke it somehow :(
+- Tooltips now appear faster and don't wait for the thumbnail to load fully
+
 ### 1.5
 - Bug fixed
   - An empty chapter page (for when a group WILL publish a chapter, but isn't due to group delay) wasn't working
