@@ -18,7 +18,6 @@ let default_options = {
         opened_chapters: "darkslategray"
     },
     hide_lower: true,
-    follow_button: true,
     last_only_higher: true,
     save_all_opened: true,
     max_save_opened: 100,
@@ -348,12 +347,15 @@ function update_all_manga_with_mal_data(mal_list, mangadex_list, output_node, in
  * @param {Object} chapters The chapters displayed on the page
  */
 function insert_mal_link_form(manga, chapters) {
-    var parent_node = document.getElementsByClassName("table table-condensed")[0].firstElementChild;
-    var add_mal_link_row = document.createElement("tr");
+    var parent_node = document.querySelector(".col-xl-9.col-lg-8.col-md-7");
+    var add_mal_link_row = document.createElement("div");
+    add_mal_link_row.className = "row m-0 py-1 px-0 border-top";
     add_mal_link_row.id = "add_mal_link_row";
-    var add_mal_link_column_header = document.createElement("th");
+    var add_mal_link_column_header = document.createElement("div");
+    add_mal_link_column_header.className = "col-lg-3 col-xl-2 strong";
     add_mal_link_column_header.textContent = "MAL link:";
-    var add_mal_link_column_content = document.createElement("td");
+    var add_mal_link_column_content = document.createElement("div");
+    add_mal_link_column_content.className = "col-lg-9 col-xl-10";
     var add_mal_link_column_content_edit = document.createElement("input");
     add_mal_link_column_content_edit.id = "mymangadex-mal-link-input";
     add_mal_link_column_content_edit.className = "form-control";
@@ -531,7 +533,6 @@ function update_manga_last_read(manga, use_pepper=true, set_status=1) {
     return fetched.then(() => {
         if (logged_in_mal) {
             if (manga.more_info.is_approved) {
-                try{
                 let post_url = "https://myanimelist.net/ownlist/manga/" + manga.mal + "/edit?hideLayout";
                 let status = parseInt(manga.more_info.status);
 
@@ -664,10 +665,6 @@ function update_manga_last_read(manga, use_pepper=true, set_status=1) {
                         }
                     }
                 }).catch(console.error);
-                }
-                catch (error) {
-                    console.error(error);
-                }
             } else {
                 vNotify.info({
                     title: "Not updated",
@@ -705,8 +702,6 @@ function update_manga_local_storage(manga, notification=true) {
         }
     });
 }
-
-
 
 /**
  * Create a simple input with a name before and append it to a parent node, with a space after
@@ -813,14 +808,17 @@ function add_row(parent, title, input_type = "", default_value = "", input_data 
  */
 function insert_mal_button(parent_node, manga, insert_new_informations) {
     // Insert on the header
-    var mal_button = document.createElement("button");
-    mal_button.className = "btn btn-default";
-    mal_button.title = "Edit";
-    mal_button.style.float = "right";
+    var mal_button = document.createElement("a");
+    mal_button.title = "Edit on MyAnimeList";
 
     // Add icon and text
-    append_text_with_icon(mal_button, "edit", "");
-    mal_button.appendChild(document.createTextNode(" Edit"));
+    if (insert_new_informations) {
+        mal_button.className = "btn btn-secondary float-right mr-1";
+        append_text_with_icon(mal_button, "edit", "Edit on MyAnimeList");
+    } else {
+        mal_button.className = "btn btn-secondary col m-1";
+        append_text_with_icon(mal_button, "edit", "");
+    }
 
     // On click we hide or create the modal
     mal_button.addEventListener("click", (event) => {
@@ -963,7 +961,7 @@ function insert_mal_button(parent_node, manga, insert_new_informations) {
         }
     });
 
-    parent_node.insertBefore(mal_button, parent_node.firstElementChild);
+    parent_node.appendChild(mal_button);
     // Add a text node with only a space, to separate it on the right
     //parent_node.insertBefore(document.createTextNode(" "), parent_node.firstElementChild.nextElementSibling);
 }
@@ -1081,16 +1079,16 @@ function add_to_mal_list(manga, status, container_node) {
  * @param {Object} node The node that have data-* attributes
  */
 function volume_and_chapter_from_node(node) {
-    let chapter = node.getAttribute("data-chapter-num");
+    let chapter = node.getAttribute("data-chapter");
 
     // If it's a Oneshot or just attributes are empty, we use a regex on the title
     if (chapter == "") {
         // If the chapter isn't available in the attributes we get it with a good ol' regex
-        return volume_and_chapter_from_string(node.textContent);
+        return volume_and_chapter_from_string(node.children[1].textContent);
     }
 
     return {
-        volume: parseInt(node.getAttribute("data-volume-num")) || 0,
+        volume: parseInt(node.getAttribute("data-volume")) || 0,
         chapter: parseFloat(chapter) || 1
     };
 }
@@ -1126,9 +1124,12 @@ function volume_and_chapter_from_string(string) {
  */
 function create_nav_button(parent_node, title, icon, callback) {
     var new_button = document.createElement("li");
+    new_button.className = "nav-item";
     new_button.setAttribute("is-a-mmd-button", true);
     var new_button_link = document.createElement("a");
     append_text_with_icon(new_button_link, icon, "");
+    new_button_link.href = "#";
+    new_button_link.className = "nav-link";
     new_button_link.appendChild(document.createTextNode(" " + title));
     new_button_link.addEventListener("click", callback);
     new_button.appendChild(new_button_link);
@@ -1258,30 +1259,6 @@ function tooltip(node, u_id, manga_id, data=undefined) {
 }
 
 /**
- * Update the manga "id" on MangaDex and put on the list "type"
- * 1 Reading 4 Plan to read
- * @param {Object} row The row of the element
- * @param {number} id The id on MangaDex of the manga
- * @param {number} type The type of the list to add the manga
- */
-function update_mangadex_list(row, id, type) {
-    fetch("https://mangadex.org/ajax/actions.ajax.php?function=manga_follow&id=" + id + "&type=" + type, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-            "X-Requested-With": "XMLHttpRequest"
-        }
-    })
-    .then(() => {
-        // Flash background
-        row.classList.add((type == 4) ? "mmd-ptr" : "mmd-saved");
-        setTimeout(() => {
-            row.classList.remove((type == 4) ? "mmd-ptr" : "mmd-saved");
-        }, 500);
-    });
-}
-
-/**
  * Insert the chapter in the chapters list, ordered highest to lowest and check the length to be lesser or equal to the option
  * @param {Array} chapters The list of chapters
  * @param {Object} chapter A chapter and volume object
@@ -1327,12 +1304,12 @@ function start() {
         manga_page();
     } else if (URL.indexOf("org/chapter") > -1) {
         chapter_page();
-    } else if (URL.indexOf("org/quick_search") > -1 ||
-                URL.indexOf("org/search") > -1 ||
+    } else if (URL.indexOf("org/search") > -1 ||
                 URL.indexOf("org/?page=search") > -1 ||
                 URL.indexOf("org/?page=titles") > -1 ||
                 URL.indexOf("org/featured") > -1 ||
                 URL.indexOf("org/titles") > -1 ||
+                URL.indexOf("org/list") > -1 ||
                 (URL.indexOf("org/group") > -1 && URL.indexOf("/manga/") > -1) ||
                 (URL.indexOf("org/user") > -1 && URL.indexOf("/manga/") > -1)) {
         search_and_list_page();
@@ -1344,7 +1321,7 @@ function start() {
  * Highlight all last open chapters, hide lower ones depending on the option and show the mangagement buttons
  */
 function follow_page(append_top_bar) {
-    let chapters_list = document.querySelector("table.table-striped.table-hover.table-condensed tbody").children;
+    let chapters_list = document.querySelector(".chapter-container").children;
 
     // Keep track of all entries in the follow table
     var entries = {};
@@ -1362,13 +1339,13 @@ function follow_page(append_top_bar) {
     // Save each data storage promises to avoid fetching the same data twice - huge speed boost when there is the same serie multiple times
     let local_storage = {};
 
-    // Check each rows of the main table
+    // Check each rows of the main table - Stop at 1 because first row is the header
     let nbr_chapters = chapters_list.length - 1;
-    for (let row = nbr_chapters; row >= 0; --row) {
+    for (let row = nbr_chapters; row > 0; --row) {
         let element = chapters_list[row];
 
         // Get volume and chapter number
-        let volume_and_chapter = volume_and_chapter_from_node(element.children[2].firstElementChild);
+        let volume_and_chapter = volume_and_chapter_from_node(element.lastElementChild.firstElementChild);
 
         // If it's a row with a name
         if (element.firstElementChild.childElementCount > 0) {
@@ -1509,7 +1486,7 @@ function follow_page(append_top_bar) {
         chapters_node.parentElement.insertBefore(manage_container, chapters_node);
 
         // The nav bar where we will put all the buttons in
-        let nav_bar = document.querySelector("ul[role='tablist']");
+        let nav_bar = document.querySelector(".nav.nav-tabs");
         var last_active = 0;
         var is_clickable = true;
 
@@ -1530,7 +1507,6 @@ function follow_page(append_top_bar) {
                 import_label.textContent = "JSON Data: ";
 
                 let import_text_container = document.createElement("div");
-                import_text_container.className = "col-sm-9";
                 let import_textarea = document.createElement("textarea");
                 import_textarea.className = "form-control";
 
@@ -1839,7 +1815,7 @@ function follow_page(append_top_bar) {
  */
 function manga_page() {
     let manga = {
-        name: document.getElementsByClassName("panel-title")[0].textContent.trim(),
+        name: document.querySelector("h6[class='card-header']").textContent.trim(),
         id: parseInt(/.+manga\/(\d+)/.exec(URL)[1]),
         mal: 0,
         last: 0,
@@ -1851,16 +1827,18 @@ function manga_page() {
     let chapters = [];
 
     // Chapters list displayed
-    var chapters_list = document.querySelector(".table-responsive tbody").children;
+    var chapters_list = document.querySelector(".chapter-container").children;
+    let max = chapters_list.length;
 
-    // Get the name of each "chapters" in the list
-    for (var element of chapters_list) {
-        var volume_and_chapter = volume_and_chapter_from_node(element.children[1].firstElementChild);
+    // Get the name of each "chapters" in the list - ignore first line
+    for (let i = 1; i < max; i++) {
+        let element = chapters_list[i];
+        var volume_and_chapter = volume_and_chapter_from_node(element.firstElementChild.firstElementChild);
 
         chapters.push({
             node: element,
-            volume: volume_and_chapter.volume,
-            chapter: volume_and_chapter.chapter
+            chapter: volume_and_chapter.chapter,
+            volume: volume_and_chapter.volume
         });
     }
 
@@ -1912,11 +1890,14 @@ function manga_page() {
             // Overkill until api come to life
             fetch_mal_for_manga_data(manga).then((data) => {
                 if (logged_in_mal) {
-                    var parent_node = document.getElementsByClassName("table table-condensed")[0].firstElementChild;
-                    var chapters_row = document.createElement("tr");
-                    var chapters_column_header = document.createElement("th");
+                    var parent_node = document.querySelector(".col-xl-9.col-lg-8.col-md-7");
+                    var chapters_row = document.createElement("div");
+                    chapters_row.className = "row m-0 py-1 px-0 border-top";
+                    var chapters_column_header = document.createElement("div");
+                    chapters_column_header.className = "col-lg-3 col-xl-2 strong";
                     chapters_column_header.textContent = "Status:";
-                    var chapters_column_content = document.createElement("td");
+                    var chapters_column_content = document.createElement("div");
+                    chapters_column_content.className = "col-lg-9 col-xl-10";
 
                     if (manga.more_info.is_approved) {
                         // Check if the manga is already in the reading list
@@ -1990,29 +1971,12 @@ function chapter_page() {
         chapters: []
     };
 
-    var chapter_list_node = document.querySelector("script[data-type='chapter']");
-    // Fix for chapter without content, when the chapter WILL be published according to group delay
-    if (chapter_list_node == null) {
-        chapter_list_node = document.querySelector("meta[property='og:title']");
-        manga.current = volume_and_chapter_from_string(chapter_list_node.content);
-        manga.name = document.getElementsByClassName("panel-title")[0].children[1].title;
+    chapter_info = document.querySelector("meta[property='og:title']").content;
+    manga.current = volume_and_chapter_from_string(chapter_info);
+    manga.name = /.*\((.+)\)/.exec(chapter_info)[1];
 
-        chapter_list_node = document.querySelector("meta[property='og:image']");
-        manga.id = parseInt(/manga\/(\d+)\.thumb.+/.exec(chapter_list_node.content)[1]);
-    } else {
-        // Parse the script tag with the info of the chapters and manga inside
-        var manga_info = JSON.parse(chapter_list_node.textContent);
-
-        manga.name = manga_info.manga_title;
-        manga.id = manga_info.manga_id;
-        // Fetch current chapter
-        for (var other_chapter of manga_info.other_chapters) {
-            if (other_chapter.id == manga_info.chapter_id) {
-                manga.current = volume_and_chapter_from_string(other_chapter.name);
-                break;
-            }
-        }
-    }
+    chapter_info = document.querySelector("meta[property='og:image']").content;
+    manga.id = parseInt(/manga\/(\d+)\.thumb.+/.exec(chapter_info)[1]);
 
     // Get MAL Url from the database
     storage_get(manga.id)
@@ -2054,7 +2018,7 @@ function chapter_page() {
                         update_manga_last_read(manga)
                         .then(() => {
                             if (manga.more_info.exist && manga.more_info.is_approved) {
-                                insert_mal_button(document.getElementById("report_button").parentElement, manga, false);
+                                insert_mal_button(document.querySelector(".reader-controls-actions.col-auto.row.no-gutters.p-1").lastElementChild, manga, false);
                             }
                         });
                     }
@@ -2081,7 +2045,7 @@ function chapter_page() {
                 update_manga_last_read(manga)
                 .then(() => {
                     if (manga.more_info.exist && manga.more_info.is_approved) {
-                        insert_mal_button(document.getElementById("report_button").parentElement, manga, false);
+                        insert_mal_button(document.querySelector(".reader-controls-actions.col-auto.row.no-gutters.p-1").lastElementChild, manga, false);
                     }
                 });
             }
@@ -2098,61 +2062,24 @@ function chapter_page() {
  * Insert a "Reading" and "Plan to read" button that add the manga in the corresponding list on MangaDex
  */
 function search_and_list_page() {
-    // https://mangadex.org/ajax/actions.ajax.php?function=manga_follow&id=3409&type=4
-    let founds_table = document.querySelector("table.table-striped.table-condensed tbody");
+    let founds = document.querySelectorAll(".row.m-0.border-bottom");
+    let max = founds.length;
 
     // if there is no table the list is not expanded or simple
-    if (founds_table === null) {
+    if (max == 0) {
         return;
     }
-    let founds = founds_table.children;
 
-    let manga_height = 2;
-    if (founds_table.parentElement.classList.contains('table-hover')) {
-        manga_height = 1;
+    // Create the tooltip holder because there will be one
+    let tooltip_container = document.createElement("div");
+    tooltip_container.id = "mmd-tooltip";
+    document.body.appendChild(tooltip_container);
 
-        // Create the tooltip holder because there will be one
-        let tooltip_container = document.createElement("div");
-        tooltip_container.id = "mmd-tooltip";
-        document.body.appendChild(tooltip_container);
-    }
+    // Create the tooltips
+    for (let i = 1; i < max; i++) {
+        let id = /manga\/(\d+)\/?.*/.exec(founds[i].firstElementChild.firstElementChild.firstElementChild.children[1].href)[1];
 
-    for (let row in founds) {
-        // Every 2 rows
-        if (row % manga_height == 0) {
-            let node = founds[row].children[manga_height];
-            let id = /manga\/(\d+)\/?.*/.exec(node.firstElementChild.href)[1];
-
-            if (manga_height == 1) {
-                tooltip(founds[row], row, id);
-            }
-
-            if (MMD_options.follow_button) {
-                founds[row].classList.add("mmd-background-transition");
-                let button_read = document.createElement("button");
-                button_read.style.float = "right";
-                button_read.className = "btn btn-default";
-                button_read.textContent = "Reading";
-                button_read.addEventListener("click", (event) => {
-                    event.preventDefault();
-                    update_mangadex_list(founds[row], id, 1);
-                });
-
-                node.appendChild(button_read);
-                node.appendChild(document.createTextNode(" "));
-
-                let button_ptr = document.createElement("button");
-                button_ptr.style.float = "right";
-                button_ptr.className = "btn btn-default";
-                button_ptr.textContent = "Plan to read";
-                button_ptr.addEventListener("click", (event) => {
-                    event.preventDefault();
-                    update_mangadex_list(founds[row], id, 4);
-                });
-
-                node.appendChild(button_ptr);
-            }
-        }
+        tooltip(founds[i], i, id);
     }
 }
 

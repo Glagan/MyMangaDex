@@ -46,7 +46,6 @@ function saveOptions(event) {
 				opened_chapters: document.getElementById("opened_chapters").value
 			},
 			hide_lower: document.getElementById("hide_lower").checked,
-			follow_button: document.getElementById("follow_button").checked,
 			last_only_higher: document.getElementById("last_only_higher").checked,
 			max_save_opened: parseInt(document.getElementById("max_save_opened").value),
 			save_all_opened: document.getElementById("save_all_opened").checked,
@@ -80,7 +79,6 @@ function restoreOptions() {
 					opened_chapters: res.options.colors.opened_chapters || default_opt.colors.opened_chapters
 				},
 				hide_lower: res.options.hide_lower,
-				follow_button: res.options.follow_button,
 				last_only_higher: res.options.last_only_higher,
 				max_save_opened: res.options.max_save_opened,
 				save_all_opened: res.options.save_all_opened,
@@ -101,7 +99,6 @@ function restoreOptions() {
 			document.querySelector("#last_open_" + id + "_color").style.backgroundColor = open_color;
 		}
 		document.querySelector("#hide_lower").checked = opt.hide_lower;
-		document.querySelector("#follow_button").checked = opt.follow_button;
 		document.querySelector("#last_only_higher").checked = opt.last_only_higher;
 		document.querySelector("#max_save_opened").value = opt.max_save_opened;
 		document.querySelector("#save_all_opened").checked = opt.save_all_opened;
@@ -234,7 +231,6 @@ let default_opt = {
 		opened_chapters: "darkslategray"
 	},
 	hide_lower: true,
-	follow_button: true,
 	last_only_higher: true,
 	save_all_opened: true,
 	max_save_opened: 100,
@@ -255,7 +251,6 @@ document.querySelector("#default_last_open").addEventListener("click", restoreDe
 document.querySelector("#default_lower_chapter").addEventListener("click", restoreDefault);
 document.querySelector("#default_opened_chapters").addEventListener("click", restoreDefault);
 document.querySelector("#default_hide_lower").addEventListener("click", restoreDefault);
-document.querySelector("#default_follow_button").addEventListener("click", restoreDefault);
 document.querySelector("#default_last_only_higher").addEventListener("click", restoreDefault);
 document.querySelector("#default_max_save_opened").addEventListener("click", restoreDefault);
 document.querySelector("#default_save_all_opened").addEventListener("click", restoreDefault);

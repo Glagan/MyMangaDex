@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
 	"name": "MyMangaDex",
-	"version": "1.5.2",
+	"version": "1.5.3",
 
 	"applications": {
 		"gecko": {
@@ -33,16 +33,16 @@
 			"https://mangadex.org/follows/chapters/*",
 			"https://mangadex.org/manga/*",
 			"https://mangadex.org/chapter/*",
-			"https://mangadex.org/quick_search/*",
 			"https://mangadex.org/search",
 			"https://mangadex.org/?page=search*",
 			"https://mangadex.org/?page=titles*",
 			"https://mangadex.org/featured",
 			"https://mangadex.org/titles*",
 			"https://mangadex.org/group*",
-			"https://mangadex.org/user*"
+			"https://mangadex.org/user*",
+			"https://mangadex.org/list*"
 		],
-		"js": ["dist/vanilla-notify.min.js", "mymangadex.js"],
+		"js": ["dist/vanilla-notify.min.js", "mymangadex.min.js"],
 		"css": ["dist/vanilla-notify.css", "mymangadex.css"]
 	}]
 }

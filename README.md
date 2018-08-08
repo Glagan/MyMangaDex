@@ -71,6 +71,15 @@ You can change them in the options.
 ---
 
 ## Change log
+### 1.5.3
+- Fixed the Addon .. Again !
+  - This time it was MangaDex that updated
+- Removed the "Follow Button" on lists page, and the corresponding option
+  - MangaDex added them
+- Minified vanilla-notify and mymangadex
+- Moved the notification to the left, since the reader menu is now on the right
+- Added the the MDList page to the list of pages containing lists of titles
+
 ### 1.5.2
 - Fixed the AddOn
   - Recent MyAnimeList broke it somehow :(
