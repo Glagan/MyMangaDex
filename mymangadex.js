@@ -1,5 +1,5 @@
 /**
- * Author: Glagan <nicolas.colomer@protonmail.com>
+ * Author: Glagan
  * See <https://github.com/Glagan/MyMangaDex> for more informations
  */
 
@@ -215,7 +215,7 @@ function fetch_mangadex_manga(mangadex_list, output_node, page=1, max_page=1) {
         credentials: 'include'
     }).then((data) => {
         return data.text().then((text) => {
-            let regex = /<a\sclass=''\stitle='.+'\shref='\/manga\/(\d+)\/.+'>.+<\/a>/g;
+            let regex = /<a\s*class='manga_title\s*'\s*title='.+'\s*href='\/manga\/(\d+)\/.+'>.+<\/a>/g;
             let m;
 
             // Get all manga ids
@@ -1965,23 +1965,69 @@ function chapter_page() {
     let manga = {
         name: "",
         id: 0,
+        chapter_id: 0,
         mal: 0,
         last: 0,
         current: 0,
-        chapters: []
+        chapters: [],
+        mal_checked: false
     };
 
+    // We can use the info on the page if we don't change chapter while reading
     chapter_info = document.querySelector("meta[property='og:title']").content;
     manga.current = volume_and_chapter_from_string(chapter_info);
     manga.name = /.*\((.+)\)/.exec(chapter_info)[1];
 
     chapter_info = document.querySelector("meta[property='og:image']").content;
     manga.id = parseInt(/manga\/(\d+)\.thumb.+/.exec(chapter_info)[1]);
+    manga.chapter_id = parseInt(document.querySelector("meta[name='app']").dataset.chapterId);
+
+    // Detect which reader we're using - if we're not legacy we have to check when changing chapter
+    if (document.getElementsByClassName("card-header").length == 0) {
+        var observer = new MutationObserver((mutationsList) => {
+            for (var mutation of mutationsList) {
+                if (mutation.type == 'attributes') {
+                    // If the new id is different - check for the first load
+                    let new_id = parseInt(document.querySelector(".chapter-title").dataset.chapterId);
+                    if (manga.chapter_id != new_id) {
+                        // Fetch the chapter info from the MangaDex API
+                        manga.chapter_id = new_id;
+                        fetch("https://mangadex.org/api/chapter/" + manga.chapter_id + "?")
+                        .then(data => data.json())
+                        .then((data) => {
+                            manga.current.chapter = parseInt(data.chapter);
+                            manga.current.volume = parseInt(data.volume) || 0;
+                        });
+
+                        // Update the Database and maybe MyAnimeList
+                        if (manga.mal_checked && manga.mal > 0) {
+                            update_manga_last_read(manga);
+                        }
+
+                        // We add the current chapter to the list of opened chapters if the option is on
+                        if (MMD_options.save_all_opened) {
+                            insert_chapter(manga.chapters, manga.current.chapter);
+                        }
+
+                        // Update local storage - after, it doesn't really matter
+                        update_manga_local_storage(manga);
+                    }
+                }
+            }
+        });
+        let config = { attributes: true };
+        observer.observe(document.querySelector('.chapter-title'), config);
+    }
 
     // Get MAL Url from the database
-    storage_get(manga.id)
+    check_manga_for_mal_id(manga);
+}
+
+function check_manga_for_mal_id(manga) {
+    return storage_get(manga.id)
     .then((data) => {
         // If there is no entry for mal link
+        let promises = [];
         if (data === undefined) {
             vNotify.info({
                 title: "No MyAnimeList id in storage",
@@ -1995,40 +2041,31 @@ function chapter_page() {
             }
 
             // Fetch it from mangadex manga page
-            fetch("https://mangadex.org/manga/" + manga.id, {
-                method: 'GET',
-                cache: 'no-cache'
-            }).then((data) => {
-                data.text().then((text) => {
-                    // Scan the manga page for the mal icon and mal url
-                    let mal_url = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(text);
+            promises.push(
+                fetch("https://mangadex.org/manga/" + manga.id, {
+                    method: 'GET',
+                    cache: 'no-cache'
+                }).then((data) => {
+                    data.text().then((text) => {
+                        // Scan the manga page for the mal icon and mal url
+                        let mal_url = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(text);
 
-                    // If regex is empty, there is no mal link, can't do anything
-                    if (mal_url === null) {
-                        vNotify.error({
-                            title: "No MyAnimeList id found",
-                            text: "You can add one using the form.\nLast open chapter is still saved.",
-                            sticky: true
-                        });
-                    } else {
-                        // If there is a mal link, add it and save it in local storage
-                        manga.mal = parseInt(/.+\/(\d+)/.exec(mal_url[1])[1]);
-
-                        // And finally add the chapter read and display the edit button
-                        update_manga_last_read(manga)
-                        .then(() => {
-                            if (manga.more_info.exist && manga.more_info.is_approved) {
-                                insert_mal_button(document.querySelector(".reader-controls-actions.col-auto.row.no-gutters.p-1").lastElementChild, manga, false);
-                            }
-                        });
-                    }
-
-                    // Update local storage - after, it doesn't really matter
-                    update_manga_local_storage(manga);
-                });
-            }, (error) => {
-                console.error(error);
-            });
+                        // If regex is empty, there is no mal link, can't do anything
+                        if (mal_url === null) {
+                            vNotify.error({
+                                title: "No MyAnimeList id found",
+                                text: "You can add one using the form.\nLast open chapter is still saved.",
+                                sticky: true
+                            });
+                        } else {
+                            // If there is a mal link, add it and save it in local storage
+                            manga.mal = parseInt(/.+\/(\d+)/.exec(mal_url[1])[1]);
+                        }
+                    });
+                }, (error) => {
+                    console.error(error);
+                })
+            );
         } else {
             // Get the mal id from the local storage
             manga.mal = data.mal;
@@ -2039,8 +2076,11 @@ function chapter_page() {
             if (MMD_options.save_all_opened) {
                 insert_chapter(manga.chapters, manga.current.chapter);
             }
+        }
 
-            // If there is a MAL, we update the last read
+        // When we know everything
+        Promise.all(promises)
+        .then(() => {
             if (manga.mal > 0) {
                 update_manga_last_read(manga)
                 .then(() => {
@@ -2050,9 +2090,12 @@ function chapter_page() {
                 });
             }
 
-            // Update local storage
+            // Set the flag
+            manga.mal_checked = true;
+
+            // Update local storage - after, it doesn't really matter
             update_manga_local_storage(manga);
-        }
+        });
     }, (error) => {
         console.error("Error fetching data from local storage.", error);
     });

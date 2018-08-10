@@ -7,7 +7,7 @@ Updating your manga one by one, by hand, when you have hundreds of them and read
 * Why no KissAnimeList fork?  
 I find the current script too "full". It's complicated, and there is a lot of useless features (for myself).  
 It was easier to just build a new script from scratch with only what was needed.  
-Also, MangaDex offer MyAnimeList links on each manga page (Thanks to the community), unlike KissManga, so there is no need for an additionnal database to check, so the script would have been very different only for MangaDex.  
+Also, MangaDex offer MyAnimeList links on each manga page (Thanks to the community), unlike KissManga, so there is no need for an additionnal database to check.  
 Update: KissAnimeList added a support for MyMangaDex if you wish to stick with it.
 * What you need buddy  
 I only store the least possible data:  
@@ -55,22 +55,18 @@ You can also import your data from MyAnimeList here (The last read of every mang
 ### "List" pages
 The search pages, featured, titles, and manga published by groups or users, the page with a list of titles is improved:  
 * A thumbnail of the manga is shown when hovering the row of a title on simple view, when one isn't shown by default
-* A Plan to read and Reading button is added to quickly add the manga to your MangaDex list
 
 ## Useful links
 * Import favorites from KissManga to MangaDex https://old.reddit.com/r/manga/comments/8qebu4/import_kissmanga_bookmarks_to_mangadex/
 
-## Colors used
-* Last opened chapters in the follow page : rebeccapurple and indigo
-* Lower than last opened chapter in the follow page : darkolivegreen
-* Actual last read chapter on MyAnimeList: cadetblue
-* Opened chapter: darkslategrey
-
-You can change them in the options.
-
 ---
 
 ## Change log
+### 1.5.4
+- Update to support chapter change with the new reader
+- Fix for Import (MAL)
+- Fixed the modal header height
+
 ### 1.5.3
 - Fixed the Addon .. Again !
   - This time it was MangaDex that updated
