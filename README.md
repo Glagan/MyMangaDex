@@ -62,6 +62,7 @@ The search pages, featured, titles, and manga published by groups or users, the 
 ---
 
 ## Change log
+### 1.5.7
 ### 1.5.6
 - Fix not updating the last read
 

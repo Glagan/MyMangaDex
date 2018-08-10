@@ -1998,20 +1998,20 @@ function chapter_page() {
                         .then((data) => {
                             manga.current.chapter = parseInt(data.chapter);
                             manga.current.volume = parseInt(data.volume) || 0;
+
+                            // Update the Database and maybe MyAnimeList
+                            if (manga.mal_checked && manga.mal > 0) {
+                                update_manga_last_read(manga);
+                            }
+
+                            // We add the current chapter to the list of opened chapters if the option is on
+                            if (MMD_options.save_all_opened) {
+                                insert_chapter(manga.chapters, manga.current.chapter);
+                            }
+
+                            // Update local storage - after, it doesn't really matter
+                            update_manga_local_storage(manga);
                         });
-
-                        // Update the Database and maybe MyAnimeList
-                        if (manga.mal_checked && manga.mal > 0) {
-                            update_manga_last_read(manga);
-                        }
-
-                        // We add the current chapter to the list of opened chapters if the option is on
-                        if (MMD_options.save_all_opened) {
-                            insert_chapter(manga.chapters, manga.current.chapter);
-                        }
-
-                        // Update local storage - after, it doesn't really matter
-                        update_manga_local_storage(manga);
                     }
                 }
             }
