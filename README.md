@@ -62,6 +62,7 @@ The search pages, featured, titles, and manga published by groups or users, the 
 ---
 
 ## Change log
+### 1.5.5
 ### 1.5.4
 - Update to support chapter change with the new reader
 - Fix for Import (MAL)
