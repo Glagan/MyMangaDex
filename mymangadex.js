@@ -685,9 +685,10 @@ function update_manga_last_read(manga, use_pepper=true, set_status=1) {
  * @param {boolean} notification The function is able to display a notification if it is set to true
  */
 function update_manga_local_storage(manga, notification=true) {
+    manga.last = ((manga.current.chapter > manga.last && MMD_options.last_only_higher) || !MMD_options.last_only_higher) ? manga.current.chapter : manga.last;
     return storage_set(manga.id, {
         mal: manga.mal,
-        last: ((manga.current.chapter > manga.last && MMD_options.last_only_higher) || !MMD_options.last_only_higher) ? manga.current.chapter : manga.last,
+        last: manga.last,
         chapters: manga.chapters
     }).then(() => {
         // Show a notification for updated last opened if there is no MyAnimeList id
