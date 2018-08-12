@@ -62,6 +62,12 @@ The search pages, featured, titles, and manga published by groups or users, the 
 ---
 
 ## Change log
+### 1.6
+- Rereading
+  - Can edit the "is_rereading" value in the edit modal
+  - Added a "Re-read" button on the manga page when a manga is completed
+- Avoid updating if the chapter is delayed
+
 ### 1.5.7
 ### 1.5.6
 - Fix not updating the last read
@@ -94,35 +100,34 @@ The search pages, featured, titles, and manga published by groups or users, the 
 - Added the /group and /user page to the list of pages that contains a list of titles (to display the Follow/Read buttons)
 
 ### 1.4
-- [x] Modal to directly edit all informations from MyAnimeList
-- [x] Tooltip with thumbnail on pages with a list and without thumbnail
-- [x] "Reading" and "Plan to read" button on the pages with a list
-- [x] Detect if a MyAnimeList was added on MangaDex
-- [x] Bigger notifications - Modified the thumbnail URL to avoid s1.
+- Modal to directly edit all informations from MyAnimeList
+- Tooltip with thumbnail on pages with a list and without thumbnail
+- "Reading" and "Plan to read" button on the pages with a list
+- Detect if a MyAnimeList was added on MangaDex
+- Bigger notifications - Modified the thumbnail URL to avoid s1.
 
 ### 1.3
 Bugs fixed again
-- [x] Better main loop on the follow page
-- [x] Removed support for 1.1 (1.2 and higher are fine)
-- [x] Save only a certain amount of chapters - Default 100, option to change it
-- [x] Better updates handling
+- Better main loop on the follow page
+- Removed support for 1.1 (1.2 and higher are fine)
+- Save only a certain amount of chapters - Default 100, option to change it
+- Better updates handling
 
 ### 1.2
 Lot of bugs fixed  
-- [x] Cleaner code (I hope)
-- [x] Keep track of any opened chapters and highlight them
-- [x] Show manga image and last 5 highest opened chapters when hovering the title
+- Cleaner code (I hope)
+- Keep track of any opened chapters and highlight them
+- Show manga image and last 5 highest opened chapters when hovering the title
 
 ### 1.1 (1.0)
-- [x] Keep track of last open chapter for each manga
-- [x] Update manga info on MyAnimeList
-- [x] Import data from MyAnimeList
-- [x] Better follow page
-- [x] Display some informations and highlight last open on the manga page
-- [x] Export, import and delete MyMangaDex local storage
-- [x] Add a MyAnimeList link if there isn't one for a manga
-- [x] Some options
+- Keep track of last open chapter for each manga
+- Update manga info on MyAnimeList
+- Import data from MyAnimeList
+- Better follow page
+- Display some informations and highlight last open on the manga page
+- Export, import and delete MyMangaDex local storage
+- Add a MyAnimeList link if there isn't one for a manga
+- Some options
 
 ## TODO
-- [ ] Re-reading
-- [ ] Auto add to Reading and Completed lists on MangaDex
+- Auto add to Reading and Completed lists on MangaDex
