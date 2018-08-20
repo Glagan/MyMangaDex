@@ -1358,7 +1358,7 @@ function start() {
         (URL.indexOf("org/group") > -1 && (URL.indexOf("/chapters/") > -1 || (URL.indexOf("/manga/") == -1 && URL.indexOf("/comments/") == -1))) ||
         (URL.indexOf("org/user") > -1 && (URL.indexOf("/chapters/") > -1 || URL.indexOf("/manga/") == -1))) {
         follow_page(!(URL.indexOf("org/group") > -1 || URL.indexOf("org/user") > -1));
-    } else if (URL.indexOf("org/manga") > -1) {
+    } else if (URL.indexOf("org/title") > -1 || URL.indexOf("org/manga") > -1) {
         manga_page();
     } else if (URL.indexOf("org/chapter") > -1) {
         chapter_page();
@@ -1407,7 +1407,7 @@ function follow_page(append_top_bar) {
 
         // If it's a row with a name
         if (element.firstElementChild.childElementCount > 0) {
-            let id = parseInt(/\/manga\/(\d+)\//.exec(element.firstElementChild.firstElementChild.href)[1]);
+            let id = parseInt(/\/title\/(\d+)\//.exec(element.firstElementChild.firstElementChild.href)[1]);
             let current_entries = {};
 
             // We copy the entries - necessary since storage_get is async we won't get the right data
@@ -1874,7 +1874,7 @@ function follow_page(append_top_bar) {
 function manga_page() {
     let manga = {
         name: document.querySelector("h6[class='card-header']").textContent.trim(),
-        id: parseInt(/.+manga\/(\d+)/.exec(URL)[1]),
+        id: parseInt(/.+title\/(\d+)/.exec(URL)[1]),
         mal: 0,
         last: 0,
         current: {volume: 0, chapter: 0},
@@ -2037,7 +2037,7 @@ function chapter_page() {
     manga.name = /.*\((.+)\)/.exec(chapter_info)[1];
 
     chapter_info = document.querySelector("meta[property='og:image']").content;
-    manga.id = parseInt(/manga\/(\d+)\.thumb.+/.exec(chapter_info)[1]);
+    manga.id = parseInt(/title\/(\d+)\.thumb.+/.exec(chapter_info)[1]);
     manga.chapter_id = parseInt(document.querySelector("meta[name='app']").dataset.chapterId);
 
     // Detect which reader we're using - if we're not legacy we have to check when changing chapter
@@ -2133,7 +2133,7 @@ function check_manga_for_mal_id(manga) {
 
             // Fetch it from mangadex manga page
             promises.push(
-                fetch("https://mangadex.org/manga/" + manga.id, {
+                fetch("https://mangadex.org/title/" + manga.id, {
                     method: 'GET',
                     cache: 'no-cache'
                 }).then((data) => {
@@ -2192,7 +2192,7 @@ function search_and_list_page() {
 
     // Create the tooltips
     for (let i = 1; i < max; i++) {
-        let id = /manga\/(\d+)\/?.*/.exec(founds[i].firstElementChild.firstElementChild.firstElementChild.children[1].href)[1];
+        let id = /title\/(\d+)\/?.*/.exec(founds[i].firstElementChild.firstElementChild.firstElementChild.children[1].href)[1];
 
         tooltip(founds[i], i, id);
     }

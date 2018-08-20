@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
 	"name": "MyMangaDex",
-	"version": "1.6",
+	"version": "1.6.1",
 
 	"applications": {
 		"gecko": {
@@ -32,6 +32,7 @@
 			"https://mangadex.org/follows",
 			"https://mangadex.org/follows/chapters/*",
 			"https://mangadex.org/manga/*",
+			"https://mangadex.org/title/*",
 			"https://mangadex.org/chapter/*",
 			"https://mangadex.org/search",
 			"https://mangadex.org/?page=search*",
