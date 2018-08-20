@@ -79,7 +79,7 @@ The search pages, featured, titles, and manga published by groups or users, the 
 
 ## Change log
 
-### 1.6.1
+### 1.6.1 (+ 1.6.2)
 
 * Fix for the MangaDex update (/manga is now /title)
 

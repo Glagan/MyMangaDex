@@ -2037,7 +2037,7 @@ function chapter_page() {
     manga.name = /.*\((.+)\)/.exec(chapter_info)[1];
 
     chapter_info = document.querySelector("meta[property='og:image']").content;
-    manga.id = parseInt(/title\/(\d+)\.thumb.+/.exec(chapter_info)[1]);
+    manga.id = parseInt(/manga\/(\d+)\.thumb.+/.exec(chapter_info)[1]);
     manga.chapter_id = parseInt(document.querySelector("meta[name='app']").dataset.chapterId);
 
     // Detect which reader we're using - if we're not legacy we have to check when changing chapter
@@ -2136,26 +2136,25 @@ function check_manga_for_mal_id(manga) {
                 fetch("https://mangadex.org/title/" + manga.id, {
                     method: 'GET',
                     cache: 'no-cache'
-                }).then((data) => {
-                    data.text().then((text) => {
-                        // Scan the manga page for the mal icon and mal url
-                        let mal_url = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(text);
-
-                        // If regex is empty, there is no mal link, can't do anything
-                        if (mal_url === null) {
-                            vNotify.error({
-                                title: "No MyAnimeList id found",
-                                text: "You can add one using the form.\nLast open chapter is still saved.",
-                                sticky: true
-                            });
-                        } else {
-                            // If there is a mal link, add it and save it in local storage
-                            manga.mal = parseInt(/.+\/(\d+)/.exec(mal_url[1])[1]);
-                        }
-                    });
-                }, (error) => {
-                    console.error(error);
                 })
+                .then((data) => data.text())
+                .then((text) => {
+                    // Scan the manga page for the mal icon and mal url
+                    let mal_url = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(text);
+
+                    // If regex is empty, there is no mal link, can't do anything
+                    if (mal_url === null) {
+                        vNotify.error({
+                            title: "No MyAnimeList id found",
+                            text: "You can add one using the form.\nLast open chapter is still saved.",
+                            sticky: true
+                        });
+                    } else {
+                        // If there is a mal link, add it and save it in local storage
+                        manga.mal = parseInt(/.+\/(\d+)/.exec(mal_url[1])[1]);
+                    }
+                })
+                .catch((error) => console.error(error))
             );
         } else {
             // Get the mal id from the local storage
@@ -2168,7 +2167,8 @@ function check_manga_for_mal_id(manga) {
         return Promise.all(promises).then(() => {
             manga.mal_checked = true;
         });
-    }, (error) => {
+    })
+    .catch((error) => {
         console.error("Error fetching data from local storage.", error);
     });
 }
