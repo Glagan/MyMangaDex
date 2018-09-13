@@ -1,29 +1,17 @@
 # MyMangaDex
 
-![Follows page Screenshot](screenshot.png)  
-Extension inspired from [KissAnimeList](https://github.com/lolamtisch/KissAnimeList) that synchronize what you read on MangaDex.org to your MyAnimeList.net manga list.
+![Follow page Screenshot](screenshot.png)  
+Firefox WebExtension that synchronize what you read on MangaDex.org to your MyAnimeList.net manga list.
 
-* Why?
+## Why
 
 Updating your manga one by one, by hand, when you have hundreds of them and read a lot of them each day is a long, tiring task...
-
-* Why no KissAnimeList fork?
-
-I find the current script too "full". It's complicated, and there is a lot of useless features (for myself).  
-It was easier to just build a new script from scratch with only what was needed.  
-Also, MangaDex offer MyAnimeList links on each manga page (Thanks to the community), unlike KissManga, so there is no need for an additionnal database to check.  
-Update: KissAnimeList added a support for MyMangaDex if you wish to stick with it.
-
-* What you need buddy
-
-I only store the least possible data:  
-An entry for each MangaDex manga that hold the last open chapter, the MyAnimeList id and the list of all opened chapters for each manga (can be disabled)
 
 ## How to Install
 
 You can install it from the [Firefox add-ons site](https://addons.mozilla.org/fr/firefox/addon/mymangadex/).
 
-If you want to have some kind of experimentale experience, you can install it directly from this repo:
+You can also install the extension from this repository, but the extension **will** be uninstalled when Firefox is closed and the data **could** be deleted at the same time.
 
 1. Be sure that the version from the Firefox add-ons site is not installed (don't know what it would do, maybe just won't work)
 2. Clone the repo
@@ -36,29 +24,46 @@ Works best with the MangaDex dark theme !
 
 ## How to use
 
+You have to be logged on MyAnimeList or your list won't be updated, since the extension load pages and send requests like **you** would do, and no credentials is stored in the extension.  
+You don't have to be logged on MangaDex but you can't access some really useful pages of MangaDex without an account.
+
 Once you have it installed, you have nothing to do!  
-Start reading manga and the add-on will track them automatically.  
-But if you have a lot of manga, or if you're coming from another site and want to set your follow page up-to-date, you can use the "Import (MAL)" button on the follow page that will update the last open of all followed manga if they have a MyAnimeList entry.
+Start reading manga and the add-on will track them automatically.
+
+If you have a lot of manga, or if you're coming from another site and want to set your follow page up-to-date, you can use the **Import (MAL)** button on the **Follow Page** that will update the last open of all followed manga if they have a MyAnimeList entry.  
+The import *could* be long if you have a lot of manga in your list, don't leave the page until it ends.
+
+## Data Stored
+
+I only store the least possible data:
+
+* The last open chapter for each manga
+* The MyAnimeList id for each manga
+* A list of all opened chapters for each manga
+* The list of options used to customize colors and other parameters
+
+You can disable the option to save all opened chapters, and all of the data can be easily exported using the **Export (MMD)** on the **Follow page**.
 
 ## Features
 
-MyMangaDex improve 3 pages and a type of pages:
+MyMangaDex improve the following pages:
 
-### Follow page
+### "List" pages
 
-Any page with a chapters list have the following improvments:
+Any page with a chapters list have the following improvements:
 
 * Display the thumbnail of the manga when hovering
+  * Only when one isn't available natively (so only when the list is in *simple-mode* display)
 * Highlight last read chapters
-* Remove old chapters from the list.
+* Remove or paint old chapters from the list.
 
-You can also import your data from MyAnimeList here (The last read of every manga you follow on MangaDex)
+You can also *import* your data from MyAnimeList on the **Follow** page (*import:* set the last read of every manga you follow on MangaDex using your MyAnimeList data)
 
 ### Manga page
 
-* Show some information about the manga entry on MyAnimeList if it exists
-* Highlight your last read chapter and all opened chapters if you want
-* Start reading the manga or add it to your Plan to Read list
+* Show some informations about the manga entry on MyAnimeList if it exists
+* Highlight your last read chapter and all opened chapters
+* Start Reading the manga or add it to your Plan to Read list
 * Add a MyAnimeList id if there isn't one
 
 ### Chapter page
@@ -66,18 +71,20 @@ You can also import your data from MyAnimeList here (The last read of every mang
 * Automatically update the MyAnimeList manga entry to the current chapter number if it's the highest
 * If it's the first chapter, the start date is set to today and the status is set to "Reading"
 * If it's the last chapter, the finish date is set to today and the status is set to "Completed"
-
-### "List" pages
-
-The search pages, featured, titles, and manga published by groups or users, the page with a list of titles is improved:
-
-* A thumbnail of the manga is shown when hovering the row of a title on simple view, when one isn't shown by default
+  * If the manga was in re-read mode, it is set as completed again and the re-read amount is incremented
+* Avoid updating the chapter on MyAnimeList if the chapter is delayed by the group
 
 ## Useful links
 
-[Import favorites from KissManga to MangaDex](https://old.reddit.com/r/manga/comments/8qebu4/import_kissmanga_bookmarks_to_mangadex/)
+* Extension inspired from [KissAnimeList](https://github.com/lolamtisch/KissAnimeList).
+* [Import favorites from KissManga to MangaDex](https://old.reddit.com/r/manga/comments/8qebu4/import_kissmanga_bookmarks_to_mangadex/)
 
 ## Change log
+
+### 1.6.3
+
+* Fix options, oops.
+* Updated Readme
 
 ### 1.6.1 (+ 1.6.2)
 

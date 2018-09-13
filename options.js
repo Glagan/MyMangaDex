@@ -36,7 +36,6 @@ function saveOptions(event) {
 	}
 
 	// Update local storage
-	console.log(document.getElementById("follow_button").checked);
 	browser.storage.local.set({
 		options: {
 			colors: {
