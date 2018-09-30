@@ -22,7 +22,7 @@ let default_options = {
 	version: 1.7
 };
 // Deep clone doesn't work for .colors.last_open
-let current_options = JSON.parse(JSON.stringify(default_options))
+let current_options = JSON.parse(JSON.stringify(default_options));
 
 let options_fields = {
 	colors: {
@@ -104,11 +104,13 @@ function restoreOptions() {
 	return storage_get("options")
 	.then(res => {
 		if (res == undefined) {
-			res = default_options;
+			current_options = JSON.parse(JSON.stringify(default_options));
+		} else {
+			current_options = JSON.parse(JSON.stringify(res));
 		}
 
 		// Update current options, no last_open yet
-		let colors = res.colors.last_open;
+		let colors = current_options.colors.last_open;
 		deleteLastOpenColors();
 
 
@@ -122,21 +124,21 @@ function restoreOptions() {
 			if (field == 'colors') {
 				Object.keys(options_fields.colors).forEach(color => {
 					if (color != 'last_open') {
-						document.getElementById(color).value = res.colors[color];
+						document.getElementById(color).value = current_options.colors[color];
 					}
 				});
 			} else {
 				if (options_fields[field].type == 'input') {
-					document.getElementById(field).value = res[field];
+					document.getElementById(field).value = current_options[field];
 				} else {
-					document.getElementById(field).checked = res[field];
+					document.getElementById(field).checked = current_options[field];
 				}
 			}
 		});
 
-		changeColorBox(document.getElementById('box_last_read'), res.colors.last_read);
-		changeColorBox(document.getElementById('box_lower_chapter'), res.colors.lower_chapter);
-		changeColorBox(document.getElementById('box_opened_chapters'), res.colors.opened_chapters);
+		changeColorBox(document.getElementById('box_last_read'), current_options.colors.last_read);
+		changeColorBox(document.getElementById('box_lower_chapter'), current_options.colors.lower_chapter);
+		changeColorBox(document.getElementById('box_opened_chapters'), current_options.colors.opened_chapters);
 	});
 }
 
@@ -336,7 +338,7 @@ function importMMD() {
 			for (let mangadex_id in imported_data) {
 				if (mangadex_id == "options") {
 					promises.push(
-						storage_set("options", imported_data)
+						storage_set("options", imported_data[mangadex_id])
 					);
 				} else {
 					promises.push(
