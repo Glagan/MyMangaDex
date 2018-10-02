@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.2
+
+* Fix the Random page of MangaDex
+  * There is no id in the URL and the extension was using only the URL to find one
+
+## 1.7.1
+
+* Fix MMD import
+
 ## 1.7
 
 * Moved the Import, Export and Delete buttons to the options

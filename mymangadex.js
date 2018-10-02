@@ -26,7 +26,7 @@ let default_options = {
 };
 let MMD_options = {};
 
-let URL = window.location.href;
+let MMD_URL = window.location.href;
 let logged_in_mal = true;
 let csrf_token = "";
 
@@ -1038,23 +1038,23 @@ function tooltip(node, u_id, manga_id, data=undefined) {
  * Start
  */
 function start() {
-    // URL so we can start the right function
-    if (URL.indexOf("org/follows") > -1 ||
-        (URL.indexOf("org/group") > -1 && (URL.indexOf("/chapters/") > -1 || (URL.indexOf("/manga/") == -1 && URL.indexOf("/comments/") == -1))) ||
-        (URL.indexOf("org/user") > -1 && (URL.indexOf("/chapters/") > -1 || URL.indexOf("/manga/") == -1))) {
-        follow_page(!(URL.indexOf("org/group") > -1 || URL.indexOf("org/user") > -1));
-    } else if (URL.indexOf("org/title") > -1 || URL.indexOf("org/manga") > -1) {
+    // URL of the page so we can start the right function
+    if (MMD_URL.indexOf("org/follows") > -1 ||
+        (MMD_URL.indexOf("org/group") > -1 && (MMD_URL.indexOf("/chapters/") > -1 || (MMD_URL.indexOf("/manga/") == -1 && MMD_URL.indexOf("/comments/") == -1))) ||
+        (MMD_URL.indexOf("org/user") > -1 && (MMD_URL.indexOf("/chapters/") > -1 || MMD_URL.indexOf("/manga/") == -1))) {
+        follow_page(!(MMD_URL.indexOf("org/group") > -1 || MMD_URL.indexOf("org/user") > -1));
+    } else if (MMD_URL.indexOf("org/title") > -1 || MMD_URL.indexOf("org/manga") > -1) {
         manga_page();
-    } else if (URL.indexOf("org/chapter") > -1) {
+    } else if (MMD_URL.indexOf("org/chapter") > -1) {
         chapter_page();
-    } else if (URL.indexOf("org/search") > -1 ||
-                URL.indexOf("org/?page=search") > -1 ||
-                URL.indexOf("org/?page=titles") > -1 ||
-                URL.indexOf("org/featured") > -1 ||
-                URL.indexOf("org/titles") > -1 ||
-                URL.indexOf("org/list") > -1 ||
-                (URL.indexOf("org/group") > -1 && URL.indexOf("/manga/") > -1) ||
-                (URL.indexOf("org/user") > -1 && URL.indexOf("/manga/") > -1)) {
+    } else if (MMD_URL.indexOf("org/search") > -1 ||
+                MMD_URL.indexOf("org/?page=search") > -1 ||
+                MMD_URL.indexOf("org/?page=titles") > -1 ||
+                MMD_URL.indexOf("org/featured") > -1 ||
+                MMD_URL.indexOf("org/titles") > -1 ||
+                MMD_URL.indexOf("org/list") > -1 ||
+                (MMD_URL.indexOf("org/group") > -1 && MMD_URL.indexOf("/manga/") > -1) ||
+                (MMD_URL.indexOf("org/user") > -1 && MMD_URL.indexOf("/manga/") > -1)) {
         search_and_list_page();
     }
 }
@@ -1224,12 +1224,29 @@ function follow_page(append_top_bar) {
 function manga_page() {
     let manga = {
         name: document.querySelector("h6[class='card-header']").textContent.trim(),
-        id: parseInt(/.+title\/(\d+)/.exec(URL)[1]),
+        id: 0,
         mal: 0,
         last: 0,
         current: {volume: 0, chapter: 0},
         chapters: []
     };
+
+    let id = /.+title\/(\d+)/.exec(MMD_URL);
+    if (id === null) {
+        let dropdown = document.getElementById('1');
+        if (dropdown !== null) {
+            manga.id = parseInt(dropdown.dataset.mangaId);
+        }
+    } else {
+        manga.id = parseInt(id[1]);
+    }
+
+    if (manga.id == 0) {
+        vNotify.error({
+            title: 'No MangaDex id found'
+        });
+        return;
+    }
 
     // Chapters with more informations to highlight
     let chapters = [];
@@ -1365,7 +1382,7 @@ function manga_page() {
 /**
  * Chapter page
  * The volume and chapter number is located on the selector
- * The MAL URL is fetched from the local database, if there isn't an entry, we look at the manga page, and if there isn't, no more option
+ * The MAL MMD_URL is fetched from the local database, if there isn't an entry, we look at the manga page, and if there isn't, no more option
  * All of this is done in the background when the page ended loading, we're not in a hurry anyway
  */
 function chapter_page() {
