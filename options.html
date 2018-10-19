@@ -2,133 +2,185 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" media="all" href="css/mymangadex.css">
-    <link rel="stylesheet" type="text/css" media="all" href="css/options.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/solid.css" integrity="sha384-Rw5qeepMFvJVEZdSo1nDQD5B6wX0m7c5Z/pLNvjkB14W6Yki1hKbSEQaX9ffUbWe" crossorigin="anonymous">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/brands.css" integrity="sha384-VGCZwiSnlHXYDojsRqeMn3IVvdzTx5JEuHgqZ3bYLCLUBV8rvihHApoA1Aso2TZA" crossorigin="anonymous">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/fontawesome.css" integrity="sha384-GVa9GOgVQgOk+TNYXu7S/InPTfSDTtBalSgkgqQ7sCik56N9ztlkoTr2f/T44oKV" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://code.cdn.mozilla.net/fonts/fira.css">
+    <link rel="stylesheet" type="text/css" media="all" href="css/mymangadex.css">
+    <link rel="stylesheet" type="text/css" media="all" href="css/options.css">
+    <link rel="stylesheet" type="text/css" media="all" href="dist/vanilla-notify.css">
 </head>
 <body>
-    <div id="content">
-        <p>
-            <a id="save" class="btn btn-save"><i class="fas fa-save"></i> Save</a>
+    <div id="content" class="container-fluid main-options py-2">
+        <a id="save" class="btn btn-success float-right font-2 sticky-top"><i class="fas fa-save"></i> Save</a>
+        <div>
             Github page <i class="fab fa-github"></i> <a href="https://github.com/Glagan/MyMangaDex" target="blank">https://github.com/Glagan/MyMangaDex</a><br>
             Open an issue if you have any problem.
-        </p>
-        <h1><i class="fas fa-cog"></i> Data</h1>
-        <p>Here you can import, export or delete your data.</p>
-        <p>
-            <a id="open-export" data-panel="export-panel" class="btn btn-default r-20"><i class="fas fa-download"></i> Export</a>
-            <a id="open-import" data-panel="import-panel" class="btn btn-default r-20"><i class="fas fa-upload"></i> Import</a>
-            <a id="open-delete" data-panel="delete-panel" class="btn btn-default r-20"><i class="fas fa-trash"></i> Delete</a>
-        </p>
-        <div id="export-panel" class="panel h-200">
-            <h1><i class="fas fa-download"></i> Export</h1>
-            <p>Click the area to select your save, then use <kbd>CTRL + C</kbd> or right-click and then copy.</p>
-            <p>
-                <textarea id="save-content"></textarea>
-            </p>
         </div>
-        <div id="import-panel" class="panel h-480">
-            <h1><i class="fas fa-upload"></i> Import (MMD)</h1>
-            <p>You can import your <strong>MyMangaDex</strong> data that you exported, paste your save and click <strong>Import</strong>. Options <strong>are</strong> override.</p>
-            <p>
-                <textarea id="save-import-content" placeholder="Exported Save (JSON)"></textarea>
-            </p>
-            <p class="text-right">
-                <label><input type="checkbox" id="save-merge" /> Merge</label>
-                <button id="save-import" class="btn btn-primary">Import</button>
-            </p>
-            <h1><i class="fas fa-upload"></i> Import (MAL)</h1>
-            <p>Importing from MAL does the following:
-                <ol>
-                    <li>Your list of followed manga on MangaDex is retrieved.</li>
-                    <li>Your MyAnimeList manga list is retrieved.</li>
-                    <li>For every followed manga on MangaDex:
-                        <ol>
-                            <li>Set the last read chapter as your current chapter on MyAnimeList</li>
-                            <li>Your chapter list is filled with chapters from 1 to your current chapter (if the option is enabled)</li>
-                        </ol>
-                    </li>
-                </ol>
-            </p>
-            <p class="text-center">
-                <input type="text" id="mal-username" />
-                <button id="mal-import" class="btn btn-primary">Import</button>
-            </p>
-            <p>
-                <textarea id="mal-import-status" readonly="readonly"></textarea>
-            </p>
-        </div>
-        <div id="delete-panel" class="panel h-150">
-            <h1><i class="fas fa-trash"></i> Delete</h1>
-            <p>Click the delete button to delete all of your data. A new save will be created with default parameters. <strong>Not reversible.</strong></p>
-            <p><button id="delete-save" class="btn btn-danger">Delete</button></p>
-        </div>
-        <h1><i class="fas fa-palette"></i> Colors</h1>
+        <!-- Colors -->
+        <h1 class="header-separator py-2 px-2"><i class="fas fa-palette"></i> Colors</h1>
         <p>Colors that exist in <a href="http://www.color-hex.com/color-names.html" target="blank">HTML</a> are accepted but you can also use a value like <b>#RRGGBB</b>, <b>rgb(r,g,b)</b> or with alpha channel <b>rgba(r,g,b,a)</b>.</p>
-        <p>
-            <a id="default_last_read" class="btn btn-default r-20"><i class="fas fa-trash"></i> Restore default</a>
-            Last read color <input type="text" id="last_read" class="color-input" /><span id="box_last_read" class="color-box default-last-read"></span>
+        <div class="row form-group px-2">
+            <div class="col-sm-1"><a data-default="lastReadColor" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
+            <label class="col-sm-2 col-form-label">Last read color</label>
+            <div class="col px-0 my-auto input-group">
+                <input type="text" data-option="lastReadColor" data-type="text" data-color="true" class="form-control" />
+                <div class="input-group-append">
+                    <span class="input-group-text" data-color="lastReadColor"></span>
+                </div>
+            </div>
+        </div>
+        <div class="row form-group px-2">
+            <div class="col-sm-1"><a id="defaultLastOpenColors" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
+            <label class="col-sm-2 col-form-label">Last open colors</label>
+            <div id="lastOpenColors" class="col px-0 my-auto">
+                <div id="addColorRow" class="col px-0 pb-2 my-auto">
+                    <a id="addColor" class="btn btn-success"><i class="fas fa-plus-circle"></i> Add a color</a>
+                </div>
+            </div>
+        </div>
+        <div class="row form-group px-2">
+            <div class="col-sm-1"><a data-default="lowerChaptersColor" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
+            <label class="col-sm-2 col-form-label">Lower chapters color</label>
+            <div class="col px-0 my-auto input-group">
+                <input type="text" data-option="lowerChaptersColor" data-type="text" data-color="true" class="form-control" />
+                <div class="input-group-append">
+                    <span class="input-group-text" data-color="lowerChaptersColor"></span>
+                </div>
+            </div>
+        </div>
+        <div class="row form-group px-2">
+            <div class="col-sm-1"><a data-default="openedChaptersColor" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
+            <label class="col-sm-2 col-form-label">Opened chapters color</label>
+            <div class="col px-0 my-auto input-group">
+                <input type="text" data-option="openedChaptersColor" data-type="text" data-color="true" class="form-control" />
+                <div class="input-group-append">
+                    <span class="input-group-text" data-color="openedChaptersColor"></span>
+                </div>
+            </div>
+        </div>
+        <!-- Follow Page -->
+        <h1 class="header-separator py-2 px-2"><i class="fas fa-bookmark"></i> Follow page</h1>
+        <div class="row form-group px-2">
+            <div class="col-sm-1"><a data-default="hideLowerChapters" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
+            <label class="col-sm-2 col-form-label">Hide lower chapters</label>
+            <div data-option="hideLowerChapters" data-type="checkbox" class="col px-0 my-auto input-group">
+                <div class="input-group-prepend">
+                    <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+                </div>
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
+                </div>
+            </div>
+        </div>
+        <div class="row form-group px-2">
+            <div class="col-sm-1"><a data-default="showTooltips" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
+            <label class="col-sm-2 col-form-label">Show tooltips (Thumbnails)</label>
+            <div data-option="showTooltips" data-type="checkbox" class="col px-0 my-auto input-group">
+                <div class="input-group-prepend">
+                    <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+                </div>
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
+                </div>
+            </div>
+        </div>
+        <!-- Chapter Page -->
+        <h1 class="header-separator py-2 px-2"><i class="fas fa-file"></i> Chapter page</h1>
+        <div class="row form-group px-2">
+            <div class="col-sm-1"><a data-default="saveOnlyHigher" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
+            <label class="col-sm-2 col-form-label">Save only if it's higher</label>
+            <div data-option="saveOnlyHigher" data-type="checkbox" class="col px-0 my-auto input-group">
+                <div class="input-group-prepend">
+                    <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+                </div>
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
+                </div>
+            </div>
+        </div>
+        <div class="row form-group px-2">
+            <div class="col-sm-1"><a data-default="saveAllOpened" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
+            <label class="col-sm-2 col-form-label">Save all opened chapters</label>
+            <div data-option="saveAllOpened" data-type="checkbox" class="col px-0 my-auto input-group">
+                <div class="input-group-prepend">
+                    <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+                </div>
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
+                </div>
+            </div>
+        </div>
+        <div class="row form-group px-2">
+            <div class="col-sm-1"><a data-default="maxChapterSaved" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
+            <label class="col-sm-2 col-form-label">Number of Chapters saved</label>
+            <div class="col px-0 my-auto">
+                <input data-option="maxChapterSaved" data-type="number" type="number" min="1" max="500" class="form-control" />
+            </div>
+        </div>
+        <div class="row form-group px-2">
+            <div class="col-sm-1"><a data-default="updateMDList" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
+            <label class="col-sm-2 col-form-label">Update MangaDex list</label>
+            <div data-option="updateMDList" data-type="checkbox" class="col px-0 my-auto input-group">
+                <div class="input-group-prepend">
+                    <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+                </div>
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
+                </div>
+            </div>
+        </div>
+        <!-- Export -->
+        <h1 class="header-separator py-2 px-2"><i class="fas fa-download"></i> Export</h1>
+        <div class="form-group">
+            <p>Click the area to select your save, then use <kbd>CTRL + C</kbd> or right-click and then copy.</p>
+            <textarea class="form-control" id="save-content" placeholder="Press Refresh to display your save file"></textarea>
+            <div class="text-right mt-2">
+                <button id="refresh-save" class="btn btn-primary">Refresh</button>
+            </div>
+        </div>
+        <!-- Import -->
+        <h1 class="header-separator py-2 px-2"><i class="fas fa-upload"></i> Import (MMD)</h1>
+        <p>You can import your <strong>MyMangaDex</strong> data that you exported, paste your save and click <strong>Import</strong>. Options <strong>are</strong> override.<br>
+        Merging your data will <i>merge</i> the saved opened chapters, and pick the highest last opened chapter for each manga.</p>
+        <form id="save-import">
+            <textarea class="form-control" name="save" placeholder="Exported Save (JSON)"></textarea>
+            <div id="importInformations"></div>
+            <div class="text-right mt-2">
+                <button id="importSubmitButton" type="submit" class="btn btn-primary">Import</button>
+            </div>
+        </form>
+        <h1 class="header-separator py-2 px-2"><i class="fas fa-upload"></i> Import (MAL)</h1>
+        <p>Importing from MAL does the following:
+            <ol>
+                <li>Your list of followed manga on MangaDex is retrieved.</li>
+                <li>Your MyAnimeList manga list is retrieved.</li>
+                <li>For every followed manga on MangaDex:
+                    <ol>
+                        <li>Set the last read chapter as your current chapter on MyAnimeList</li>
+                        <li>Your chapter list is filled with chapters from 1 to your current chapter (if the option is enabled)</li>
+                    </ol>
+                </li>
+            </ol>
         </p>
-        <p>
-            <a id="default_last_open" class="btn btn-default r-20"><i class="fas fa-trash"></i> Restore default</a>
-            Last open colors, highlighted chapters will cycle trough them
-        </p>
-        <ul id="last_open" class="indented">
-            <li id="add_color_row"><i class="fas fa-plus-circle"></i> <span id="add-a-color">Add a color</span>
-            </li>
+        <form id="mal-import" class="text-center form-inline justify-content-md-center mx-auto">
+            <div class="form-group mx-sm-3 mb-2">
+                <input type="text" class="form-control" name="username" placeholder="MyAnimeList username">
+            </div>
+            <button type="submit" class="btn btn-primary mb-2">Import</button>
+        </form>
+        <ul id="malImportStatus" class="list-group">
         </ul>
-        <p>
-            <a id="default_lower_chapter" class="btn btn-default r-20"><i class="fas fa-trash"></i> Restore default</a>
-            Lower chapters color <input type="text" id="lower_chapter" class="color-input" /><span id="box_lower_chapter" class="color-box default-lower-chapter"></span>
-        </p>
-        <p>
-            <a id="default_opened_chapters" class="btn btn-default r-20"><i class="fas fa-trash"></i> Restore default</a>
-            Opened chapters color <input type="text" id="opened_chapters" class="color-input" /><span id="box_opened_chapters" class="color-box default-opened-chapters"></span>
-        </p>
-        <h1><i class="fas fa-bookmark"></i> Follow page</h1>
-        <p>
-            <a id="default_hide_lower" class="btn btn-default r-20"><i class="fas fa-trash"></i> Restore default</a>
-            <label class="switch switch-flat">
-                <input id="hide_lower" class="switch-input" type="checkbox" />
-                <span class="switch-label" data-on="On" data-off="Off"></span>
-                <span class="switch-handle"></span>
-            </label> Hide lower chapters
-        </p>
-        <h1><i class="fas fa-file"></i> Chapter page</h1>
-        <p>
-            <a id="default_last_only_higher" class="btn btn-default r-20"><i class="fas fa-trash"></i> Restore default</a>
-            <label class="switch switch-flat">
-                <input id="last_only_higher" class="switch-input" type="checkbox" />
-                <span class="switch-label" data-on="On" data-off="Off"></span>
-                <span class="switch-handle"></span>
-            </label> Set last open chapter only if it's higher
-        </p>
-        <p>
-            <a id="default_save_all_opened" class="btn btn-default r-20"><i class="fas fa-trash"></i> Restore default</a>
-            <label class="switch switch-flat">
-                <input id="save_all_opened" class="switch-input" type="checkbox" />
-                <span class="switch-label" data-on="On" data-off="Off"></span>
-                <span class="switch-handle"></span>
-            </label> Save all opened chapters</span>
-        </p>
-        <p>
-            <a id="default_max_save_opened" class="btn btn-default r-20"><i class="fas fa-trash"></i> Restore default</a>
-            Maximum number of chapters saved for each manga <input id="max_save_opened" type="number" min="1" max="500" />
-        </p>
-        <p>
-            <a id="default_auto_md_list" class="btn btn-default r-20"><i class="fas fa-trash"></i> Restore default</a>
-            <label class="switch switch-flat">
-                <input id="auto_md_list" class="switch-input" type="checkbox" />
-                <span class="switch-label" data-on="On" data-off="Off"></span>
-                <span class="switch-handle"></span>
-            </label> Update MangaDex list when starting or completing a manga</span>
-        </p>
+        <!-- Delete -->
+        <h1 class="header-separator py-2 px-2"><i class="fas fa-trash"></i> Delete</h1>
+        <p>Click the delete button to delete all of your data. A new save will be created with default parameters. <strong>Not reversible.</strong></p>
+        <p><button id="delete-save" class="btn btn-danger font-2 d-block mx-auto">Delete</button></p>
     </div>
 
-    <script src="functions.min.js"></script>
-    <script src="options.min.js"></script>
+    <script src="dist/vanilla-notify.min.js"></script>
+    <script src="defaultOptions.js"></script>
+    <script src="dist/chrome-extension-async.js"></script>
+    <script src="minified/sharedFunctions.js"></script>
+    <script src="minified/optionsManager.js"></script>
 </body>
 </html>

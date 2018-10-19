@@ -1,32 +1,9 @@
 # ---> VisualStudioCode
 .settings
-
-
-# ---> SublimeText
-# cache files for sublime text
-*.tmlanguage.cache
-*.tmPreferences.cache
-*.stTheme.cache
-
-# workspace files are user-specific
-*.sublime-workspace
-
-# project files should be checked into the repository, unless a significant
-# proportion of contributors will probably not be using SublimeText
-# *.sublime-project
-
-# sftp configuration file
-sftp-config.json
-
-node_modules
-.eslintrc.js
-package.json
-.old
-.jshintrc
 .vscode
-web-ext-artifacts
-export.json
-legacy_code.md
 
-.docs
-mini_doc.md
+# Firefox extension
+web-ext-artifacts
+
+# File save
+export.json

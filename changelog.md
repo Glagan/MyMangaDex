@@ -1,5 +1,29 @@
 # Changelog
 
+<<<<<<< HEAD
+## 1.8
+
+* Chrome version
+* Added more MangaDex list status update
+  * When Re-reading, Adding to Plan to Read, Adding on hold or dropping
+* Minify bash script
+* Updated MyAnimeList Modal
+  * Follow the MangaDex style and use bootstrap classes
+  * Now update all displayed values when updating them
+* Tooltips are now correctly displayed when resizing the window
+* Chapters with floating point are correctly saved in chapters list
+* Converted Promise to async/await
+  * Minimum required version is now Firefox 61
+* Option page once again reworked
+* Updated default colors
+* Updated README and better screenshots
+* Converted to camelCase
+* Linebreak is now LF
+* Removed the form to add a MyAnimeList ID
+* Removed the merge option when importing MyMangaDex save
+
+=======
+>>>>>>> 1d9450e071e764e037f5fa5fdf315de729db087c
 ## 1.7.2
 
 * Fix the Random page of MangaDex
