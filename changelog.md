@@ -1,6 +1,5 @@
 # Changelog
 
-<<<<<<< HEAD
 ## 1.8
 
 * Chrome version
@@ -22,8 +21,6 @@
 * Removed the form to add a MyAnimeList ID
 * Removed the merge option when importing MyMangaDex save
 
-=======
->>>>>>> 1d9450e071e764e037f5fa5fdf315de729db087c
 ## 1.7.2
 
 * Fix the Random page of MangaDex

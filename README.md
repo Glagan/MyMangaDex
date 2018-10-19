@@ -9,7 +9,7 @@ Updating your manga one by one, by hand, when you have hundreds of them and read
 
 ## How to Install
 
-You can install it from the [Google Chrome Web Store](https://google.com) or the [Firefox add-ons site](https://addons.mozilla.org/fr/firefox/addon/mymangadex/).  
+You can install it from the [Google Chrome Web Store](https://chrome.google.com/webstore/detail/mymangadex/ihejddjcdmdppiimegmknbcaiebklajl) or the [Firefox add-ons site](https://addons.mozilla.org/fr/firefox/addon/mymangadex/).  
 
 ## Requirements
 
@@ -63,7 +63,8 @@ The import from MAL feature set the last read chapter of every manga you follow 
 
 ## Debug installation
 
-You can also install the extension from this repository, but the extension **will** be uninstalled when Firefox is closed and the data **could** be deleted at the same time, Chrome will keep the extension installed.
+You can also install the extension from this repository, but the extension **will** be uninstalled when Firefox is closed and the data **could** be deleted at the same time, Chrome will keep the extension installed.  
+Before you actually install it, you have to manually edit the ``manifest.json`` file to remove what you don't use, either the Firefox or Chrome lines.
 
 ### Firefox
 
