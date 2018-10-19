@@ -72,6 +72,11 @@ async function loadOptions() {
     } else {
         // If options < last
         if (data.version < defaultOptions.version) {
+            // I saw people using using 1.6.3 ??? So just in case...
+            if (data.version < 1.7) {
+                data.auto_md_list = false;
+            }
+
             if (data.version < 1.8) {
                 // Options object rework
                 data = {
@@ -84,14 +89,8 @@ async function loadOptions() {
                     saveAllOpened: data.save_all_opened,
                     maxChapterSaved: data.max_save_opened,
                     updateMDList: data.auto_md_list,
-                    showTooltips: true, // New options to default
-                    version: 1.8
+                    showTooltips: true // New options to default
                 };
-
-                vNotify.info({
-                    title: "MyMangaDex as been updated to 1.8",
-                    text: "You can see the changelog on https://github.com/Glagan/MyMangaDex, new Options have been added, you should check them out !"
-                });
             }
 
             if (data.version < 1.9) {
@@ -126,7 +125,7 @@ async function updateLocalStorage(manga, options) {
         chapters: manga.chapters
     });
     // Show a notification for updated last opened if there is no MyAnimeList id
-    if (manga.myAnimeListId == 0 && manga.currentChapter.chapter > manga.lastMangaDexChapter) {
+    if (options.showNotifications && manga.myAnimeListId == 0 && manga.currentChapter.chapter > manga.lastMangaDexChapter) {
         vNotify.success({
             title: "Manga updated",
             text: manga.name + " last open Chapter as been updated to " + manga.lastMangaDexChapter,

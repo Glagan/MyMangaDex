@@ -3,7 +3,9 @@
 ## 1.9
 
 * Added more options to disable things:
-  * Disable Highlights
+  * Disable highlights
+  * Disable notifications
+* Removed a console.log
 
 ## 1.8
 
@@ -22,7 +24,6 @@
 * Updated default colors
 * Updated README and better screenshots
 * Converted to camelCase
-* Linebreak is now LF
 * Removed the form to add a MyAnimeList ID
 * Removed the merge option when importing MyMangaDex save
 
