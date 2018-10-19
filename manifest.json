@@ -1,12 +1,8 @@
 {
 	"manifest_version": 2,
 	"name": "MyMangaDex",
-<<<<<<< HEAD
-	"version": "1.8",
+	"version": "1.8.1",
 	"author": "Glagan",
-=======
-	"version": "1.7.3",
->>>>>>> 1d9450e071e764e037f5fa5fdf315de729db087c
 
 	"description": "Automatically update your MyAnimeList manga list when reading on MangaDex.",
 
