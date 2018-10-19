@@ -94,6 +94,19 @@ async function loadOptions() {
                 });
             }
 
+            if (data.version < 1.9) {
+                data = {
+                    highlightChapters: defaultOptions.highlightChapters,
+                    showNotifications: defaultOptions.showNotifications,
+                    version: 1.9
+                };
+
+                vNotify.info({
+                    title: "MyMangaDex as been updated to 1.9",
+                    text: "You can see the changelog on https://github.com/Glagan/MyMangaDex, new Options have been added, you should check them out !"
+                });
+            }
+
             await storageSet("options", data);
         } // Easy to add updates here, on another if and push the promise in the updates array
 

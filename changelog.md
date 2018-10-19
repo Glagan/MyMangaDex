@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9
+
+* Added more options to disable things:
+  * Disable Highlights
+
 ## 1.8
 
 * Chrome version

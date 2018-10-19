@@ -825,35 +825,8 @@ class MyMangaDex {
             this.manga.chapters = data.chapters || [];
         }
 
-<<<<<<< HEAD
         // When we know everything
         this.myAnimeListChecked = true;
-=======
-// PAGES
-
-/**
- * Start
- */
-function start() {
-    // URL of the page so we can start the right function
-    if (MMD_URL.indexOf("org/follows") > -1 ||
-        (MMD_URL.indexOf("org/group") > -1 && (MMD_URL.indexOf("/chapters/") > -1 || (MMD_URL.indexOf("/manga/") == -1 && MMD_URL.indexOf("/comments/") == -1))) ||
-        (MMD_URL.indexOf("org/user") > -1 && (MMD_URL.indexOf("/chapters/") > -1 || MMD_URL.indexOf("/manga/") == -1))) {
-        follow_page(!(MMD_URL.indexOf("org/group") > -1 || MMD_URL.indexOf("org/user") > -1));
-    } else if (MMD_URL.indexOf("org/title") > -1 || MMD_URL.indexOf("org/manga") > -1) {
-        manga_page();
-    } else if (MMD_URL.indexOf("org/chapter") > -1) {
-        chapter_page();
-    } else if (MMD_URL.indexOf("org/search") > -1 ||
-                MMD_URL.indexOf("org/?page=search") > -1 ||
-                MMD_URL.indexOf("org/?page=titles") > -1 ||
-                MMD_URL.indexOf("org/featured") > -1 ||
-                MMD_URL.indexOf("org/titles") > -1 ||
-                MMD_URL.indexOf("org/list") > -1 ||
-                (MMD_URL.indexOf("org/group") > -1 && MMD_URL.indexOf("/manga/") > -1) ||
-                (MMD_URL.indexOf("org/user") > -1 && MMD_URL.indexOf("/manga/") > -1)) {
-        search_and_list_page();
->>>>>>> 1d9450e071e764e037f5fa5fdf315de729db087c
     }
 
     insertChapter(chapter) {
@@ -1029,63 +1002,11 @@ function start() {
         }
     }
 
-<<<<<<< HEAD
     async mangaPage() {
         this.manga.name = document.querySelector("h6[class='card-header']").textContent.trim();
         this.manga.mangaDexId = /.+title\/(\d+)/.exec(this.pageUrl);
         // We always try to find the link, in case it was updated
         let myAnimeListUrl = document.querySelector("img[src='/images/misc/mal.png'");
-=======
-/**
- * Manga page where there is the description and a list of the last 100 chapters of a manga
- * Optionnal MAL url with a mal icon
- */
-function manga_page() {
-    let manga = {
-        name: document.querySelector("h6[class='card-header']").textContent.trim(),
-        id: 0,
-        mal: 0,
-        last: 0,
-        current: {volume: 0, chapter: 0},
-        chapters: []
-    };
-
-    let id = /.+title\/(\d+)/.exec(MMD_URL);
-    if (id === null) {
-        let dropdown = document.getElementById('1');
-        if (dropdown !== null) {
-            manga.id = parseInt(dropdown.dataset.mangaId);
-        }
-    } else {
-        manga.id = parseInt(id[1]);
-    }
-
-    if (manga.id == 0) {
-        vNotify.error({
-            title: 'No MangaDex id found'
-        });
-        return;
-    }
-
-    // Chapters with more informations to highlight
-    let chapters = [];
-
-    // Chapters list displayed
-    var chapters_list = document.querySelector(".chapter-container").children;
-    let max = chapters_list.length;
-
-    // Get the name of each "chapters" in the list - ignore first line
-    for (let i = 1; i < max; i++) {
-        let element = chapters_list[i];
-        var volume_and_chapter = volume_and_chapter_from_node(element.firstElementChild.firstElementChild);
-
-        chapters.push({
-            node: element,
-            chapter: volume_and_chapter.chapter,
-            volume: volume_and_chapter.volume
-        });
-    }
->>>>>>> 1d9450e071e764e037f5fa5fdf315de729db087c
 
         if (this.manga.mangaDexId === null) {
             let dropdown = document.getElementById("1");
@@ -1192,7 +1113,6 @@ function manga_page() {
         this.highlightChapters();
     }
 
-<<<<<<< HEAD
     async chapterPage() {
         // We can use the info on the page if we don't change chapter while reading
         let chapter = document.querySelector("meta[property='og:title']").content;
@@ -1215,49 +1135,6 @@ function manga_page() {
                             this.manga.chapterId = newChapterId;
                             let data = await fetch("https://mangadex.org/api/chapter/" + this.manga.chapterId);
                             data = await data.json();
-=======
-/**
- * Chapter page
- * The volume and chapter number is located on the selector
- * The MAL MMD_URL is fetched from the local database, if there isn't an entry, we look at the manga page, and if there isn't, no more option
- * All of this is done in the background when the page ended loading, we're not in a hurry anyway
- */
-function chapter_page() {
-    // Manga Object
-    let manga = {
-        name: "",
-        id: 0,
-        chapter_id: 0,
-        mal: 0,
-        last: 0,
-        current: 0,
-        chapters: [],
-        mal_checked: false
-    };
-
-    // We can use the info on the page if we don't change chapter while reading
-    chapter_info = document.querySelector("meta[property='og:title']").content;
-    manga.current = volume_and_chapter_from_string(chapter_info);
-    manga.name = /.*\((.+)\)/.exec(chapter_info)[1];
-
-    chapter_info = document.querySelector("meta[property='og:image']").content;
-    manga.id = parseInt(/manga\/(\d+)\.thumb.+/.exec(chapter_info)[1]);
-    manga.chapter_id = parseInt(document.querySelector("meta[name='app']").dataset.chapterId);
-
-    // Detect which reader we're using - if we're not legacy we have to check when changing chapter
-    if (document.getElementsByClassName("card-header").length == 0) {
-        var observer = new MutationObserver((mutationsList) => {
-            for (var mutation of mutationsList) {
-                if (mutation.type == 'attributes') {
-                    // If the new id is different - check for the first load
-                    let new_id = parseInt(document.querySelector(".chapter-title").dataset.chapterId);
-                    if (manga.chapter_id != new_id) {
-                        // Fetch the chapter info from the MangaDex API
-                        manga.chapter_id = new_id;
-                        fetch("https://mangadex.org/api/chapter/" + manga.chapter_id + "?")
-                        .then(data => data.json())
-                        .then(data => {
->>>>>>> 1d9450e071e764e037f5fa5fdf315de729db087c
                             if (data.status !== "delayed") {
                                 this.manga.currentChapter.chapter = parseFloat(data.chapter);
                                 this.manga.currentChapter.volume = parseInt(data.volume) || 0;

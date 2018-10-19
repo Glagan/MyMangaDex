@@ -23,5 +23,7 @@ let defaultOptions = {
     maxChapterSaved: 100,
     updateMDList: false,
     showTooltips: true,
-    version: 1.8
+    highlightChapters: true,
+    showNotifications: true,
+    version: 1.9
 };
