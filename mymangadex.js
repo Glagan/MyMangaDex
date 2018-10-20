@@ -610,7 +610,9 @@ class MyMangaDex {
             this.notification(NOTIFY.SUCCESS, "Manga Updated", undefined, this.myAnimeListImage);
 
             if (CHROME) {
-                $("#modal-mal").modal("hide");
+                document.documentElement.setAttribute('onreset', "$('#modal-mal').modal('hide');");
+                document.documentElement.dispatchEvent(new CustomEvent('reset'));
+                document.documentElement.removeAttribute('onreset');
             } else {
                 // Same as for opening, unwrap and wrap jQuery
                 window.wrappedJSObject.jQuery("#modal-mal").modal("hide");
@@ -657,9 +659,15 @@ class MyMangaDex {
             document.querySelector("[data-mal='finish_date.year']").value = this.manga.finish_date.year;
             document.querySelector("[data-mal='total_reread']").value = this.manga.total_reread;
 
-            // We can't access jQuery, use "wrappedJSObject" and wrap it back after
-            window.wrappedJSObject.jQuery("#modal-mal").modal();
-            XPCNativeWrapper(window.wrappedJSObject.jQuery);
+            if (CHROME) { // Nasty
+                document.documentElement.setAttribute('onreset', "$('#modal-mal').modal();");
+                document.documentElement.dispatchEvent(new CustomEvent('reset'));
+                document.documentElement.removeAttribute('onreset');
+            } else {
+                // We can't access jQuery, use "wrappedJSObject" and wrap it back after
+                window.wrappedJSObject.jQuery("#modal-mal").modal();
+                XPCNativeWrapper(window.wrappedJSObject.jQuery);
+            }
         });
 
         if (parentNode !== undefined) {
@@ -672,11 +680,7 @@ class MyMangaDex {
     insertMyAnimeListInformations() {
         // Delete node before adding anything to it, it's surely old data anyway
         clearDomNode(this.informationsNode);
-
-        // No modal in Chrome...
-        if (!CHROME) {
-            this.insertMyAnimeListButton();
-        }
+        this.insertMyAnimeListButton();
 
         // Informations
         if (this.manga.status == 2 && !this.manga.is_rereading) {
@@ -1098,10 +1102,7 @@ class MyMangaDex {
                 await this.fetchMyAnimeList();
                 if (this.manga.exist && this.manga.is_approved) {
                     await this.updateMyAnimeList();
-                    // No modal in Chrome...
-                    if (!CHROME) {
-                        this.insertMyAnimeListButton(document.querySelector(".reader-controls-actions.col-auto.row.no-gutters.p-1").lastElementChild);
-                    }
+                    this.insertMyAnimeListButton(document.querySelector(".reader-controls-actions.col-auto.row.no-gutters.p-1").lastElementChild);
                 }
             }
 

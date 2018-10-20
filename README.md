@@ -39,8 +39,6 @@ Some useful informations about your status on MyAnimeList are displayed, a modal
 A set of buttons is also added, those buttons are shortcut to common actions, Starting a manga, adding it to your Plan to Read list or Re-reading it.  
 All chapters you opened and the last read chapter are also highlighted in the chapter list. You can change the color in the option.
 
-> The modal isn't available on Chrome for now.
-
 ### Chapter page
 
 Apart from the automatic MyAnimeList update, the same modal of the Manga page is added, to easily update all informations of an entry.  

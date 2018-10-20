@@ -23,7 +23,8 @@
 .vnotify-body {
   margin-left: 10px;
   padding: 20px;
-  max-width: 20em; }
+  max-width: 20em;
+  cursor: pointer; }
 .vnotify-item {
   display: flex;
   align-items: center;
