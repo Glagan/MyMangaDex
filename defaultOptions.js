@@ -25,5 +25,6 @@ let defaultOptions = {
     showTooltips: true,
     highlightChapters: true,
     showNotifications: true,
+    showErrors: true,
     version: 1.9
 };

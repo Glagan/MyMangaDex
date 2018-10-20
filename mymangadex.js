@@ -20,17 +20,13 @@ class MyMangaDex {
     }
 
     async start() {
-        this.options = await loadOptions(); // Deep clone
+        this.options = await loadOptions();
 
         // Choose page
         if (this.pageUrl.indexOf("org/follows") > -1 ||
             (this.pageUrl.indexOf("org/group") > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || (this.pageUrl.indexOf("/manga/") == -1 && this.pageUrl.indexOf("/comments/") == -1))) ||
             (this.pageUrl.indexOf("org/user") > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || this.pageUrl.indexOf("/manga/") == -1))) {
-            this.followPage();
-        } else if (this.pageUrl.indexOf("org/title") > -1 || this.pageUrl.indexOf("org/manga") > -1) {
-            this.mangaPage();
-        } else if (this.pageUrl.indexOf("org/chapter") > -1) {
-            this.chapterPage();
+            this.chaptersListPage();
         } else if (this.pageUrl.indexOf("org/search") > -1 ||
             this.pageUrl.indexOf("org/?page=search") > -1 ||
             this.pageUrl.indexOf("org/?page=titles") > -1 ||
@@ -39,7 +35,11 @@ class MyMangaDex {
             this.pageUrl.indexOf("org/list") > -1 ||
             (this.pageUrl.indexOf("org/group") > -1 && this.pageUrl.indexOf("/manga/") > -1) ||
             (this.pageUrl.indexOf("org/user") > -1 && this.pageUrl.indexOf("/manga/") > -1)) {
-            this.titleListPage();
+            this.titlesListPage();
+        } else if (this.pageUrl.indexOf("org/title") > -1 || this.pageUrl.indexOf("org/manga") > -1) {
+            this.titlePage();
+        } else if (this.pageUrl.indexOf("org/chapter") > -1) {
+            this.singleChapterPage();
         }
     }
 
@@ -290,7 +290,6 @@ class MyMangaDex {
             this.notification(NOTIFY.SUCCESS, "Status on MangaDex updated");
         } catch (error) {
             this.notification(NOTIFY.ERROR, "Error updating MDList");
-            console.error(error);
         }
     }
 
@@ -761,7 +760,7 @@ class MyMangaDex {
                     this.manga.myAnimeListId = parseInt(/.+\/(\d+)/.exec(myAnimeListURL[1])[1]);
                 }
             } catch (error) {
-                console.error(error);
+                this.notification(NOTIFY.ERROR, "Error fetching MangaDex title page");
             }
         } else {
             // Get the mal id from the local storage
@@ -801,7 +800,7 @@ class MyMangaDex {
     }
 
     notification(type, title, text=undefined, image=undefined, sticky=false) {
-        if (this.options.showNotifications) {
+        if (this.options.showNotifications || (type == NOTIFY.ERROR && this.options.showErrors)) {
             let data = {title: title};
             if (text !== undefined)     { data.text = text; }
             if (image !== undefined)    { data.image = image; }
@@ -810,15 +809,80 @@ class MyMangaDex {
         }
     }
 
+    paintOrHide(manga, mangaDexId, chapters, colors) {
+        let data = undefined;
+        if (manga !== undefined) {
+            data = {chapters: manga.chapters};
+            // Switch colors between rows
+            let paintColor = this.options.lastOpenColors;
+
+            // If it's a single chapter
+            if (chapters.length == 1) {
+                // If it's the last open chapter we paint it
+                if (chapters[0].currentChapter.chapter == manga.last && this.options.highlightChapters) {
+                    chapters[0].row.style.backgroundColor = paintColor[colors.current];
+                    colors.current = (colors.current + 1) % colors.max;
+                } else if (chapters[0].currentChapter.chapter < manga.last) {
+                    if (this.options.hideLowerChapters) {
+                        chapters[0].row.parentElement.removeChild(chapters[0].row);
+                    } else if (this.options.highlightChapters) {
+                        chapters[0].row.style.backgroundColor = this.options.lowerChaptersColor;
+                    }
+                }
+            } else {
+                let higherThanLast = false;
+
+                // It's a multiple row list - we delete the old ones if needed
+                for (let chapter in chapters) {
+                    let currentChapter = chapters[chapter].currentChapter.chapter;
+                    let currentRow = chapters[chapter].row;
+
+                    // We delete the row if it's lower and one first - or first but all are lower
+                    if (currentChapter > manga.last && higherThanLast && this.options.highlightChapters) {
+                        currentRow.firstElementChild.style.backgroundColor = paintColor[colors.current];
+                    } else if (currentChapter < manga.last) {
+                        if (higherThanLast && chapter == 0) {
+                            currentRow.firstElementChild.style.backgroundColor = paintColor[colors.current];
+                        } else {
+                            if (this.options.hideLowerChapters) {
+                                currentRow.parentElement.removeChild(currentRow);
+                            } else if (this.options.highlightChapters) {
+                                currentRow.style.backgroundColor = this.options.lowerChaptersColor;
+                            }
+                        }
+                    } else if (currentChapter == manga.last) {
+                        higherThanLast = true;
+                        if (this.options.highlightChapters) {
+                            currentRow.style.backgroundColor = paintColor[colors.current];
+                        }
+                    }
+                }
+            }
+            colors.current = (colors.current + 1) % colors.max;
+        }
+
+        // Show a tooltip with the thumbnail if the row wasn't deleted
+        if (this.options.showTooltips && chapters.length > 0) {
+            this.tooltip(chapters[chapters.length-1].row, mangaDexId, data);
+        }
+    }
+
     // END HELP / START PAGE
 
-    async followPage() {
-        let chaptersList = document.querySelector(".chapter-container").children;
+    async chaptersListPage() {
+        if (!this.options.highlightChapters && !this.options.hideLowerChapters && !this.options.showTooltips) {
+            return;
+        } // Abort early if useless
 
-        // Keep track of all entries in the follow table
-        var entries = {};
-        var maxColor = this.options.lastOpenColors.length;
-        var currentColor = 0;
+        let chaptersList = document.querySelector(".chapter-container").children;
+        // Keep track of the current entries in the follow table
+        var chapters = [];
+        var colors = {
+            current: 0,
+            max: this.options.lastOpenColors.length
+        };
+        // Save each data storage promises to avoid fetching the same data twice - huge speed boost when there is the same serie multiple times
+        var localStorage = {};
 
         // Create a tooltip holder to avoid spamming the document body
         if (this.options.showTooltips) {
@@ -827,126 +891,41 @@ class MyMangaDex {
             document.body.appendChild(this.tooltipContainer);
         }
 
-        // Save each data storage promises to avoid fetching the same data twice - huge speed boost when there is the same serie multiple times
-        let localStorage = {};
-
         // Check each rows of the main table - Stop at 1 because first row is the header
         let lastChapter = chaptersList.length - 1;
         for (let row = lastChapter; row > 0; --row) {
             let chapter = chaptersList[row];
 
-            // Get volume and chapter number
-            let chapterVolume = this.getVolumeChapterFromNode(chapter.lastElementChild.firstElementChild);
+            // Add the row
+            chapters.push({
+                row: row,
+                currentChapter: this.getVolumeChapterFromNode(chapter.lastElementChild.firstElementChild)
+            });
 
             // If it's a row with a name
             if (chapter.firstElementChild.childElementCount > 0) {
-                let id = parseInt(/\/title\/(\d+)\//.exec(chapter.firstElementChild.firstElementChild.href)[1]);
-                let currentEntries = {};
-
-                // We copy the entries - necessary since storageGet is async we won't get the right data
-                if (!isEmpty(entries)) {
-                    // We push the last entry - the current one - if there is other entries
-                    entries.nodes.push(chapter);
-                    entries.chapters.push(chapterVolume);
-
-                    // Copy
-                    currentEntries = {
-                        nodes: entries.nodes,
-                        chapters: entries.chapters
-                    };
-                }
-
-                // Clear entries for next rows
-                entries = {};
+                let mangaDexId = parseInt(/\/title\/(\d+)\//.exec(chapter.firstElementChild.firstElementChild.href)[1]);
+                let chaptersCopy = JSON.parse(JSON.stringify(chapters));
+                chaptersCopy.forEach(element => {
+                    element.row = chaptersList[element.row];
+                }); // Copy DOM nodes
 
                 // Check if the data for the current serie is already fetched
-                if (!(id in localStorage)) {
-                    // If there isn't, we fetch it and add it in the localStorage object
-                    localStorage[id] = await storageGet(id);
-                }
-                let data = localStorage[id];
-
-                // Paint or not
-                let showTooltip = true;
-                if (data !== undefined) {
-                    // Switch colors between rows
-                    let paintColor = this.options.lastOpenColors[currentColor];
-
-                    // If it's a single chapter
-                    if (isEmpty(currentEntries)) {
-                        // If it's the last open chapter we paint it
-                        if (chapterVolume.chapter == data.last) {
-                            chapter.style.backgroundColor = paintColor;
-                            currentColor = (currentColor + 1) % maxColor;
-                            // If it's a lower than last open we delete it
-                        } else if (chapterVolume.chapter < data.last) {
-                            showTooltip = false;
-                            if (this.options.hideLowerChapters) {
-                                chapter.parentElement.removeChild(chapter);
-                            } else {
-                                chapter.style.backgroundColor = this.options.lowerChaptersColor;
-                            }
-                        }
-                    } else {
-                        let buildTree = false;
-                        let hasHigher = false;
-
-                        // It's a multiple row list - we delete the old ones if needed
-                        let maxEntry = currentEntries.chapters.length - 1;
-                        for (let entryIndex in currentEntries.chapters) {
-                            let entryChapter = currentEntries.chapters[entryIndex].chapter;
-                            let entryNode = currentEntries.nodes[entryIndex];
-
-                            // We delete the row if it's lower and one first - or first but all are lower
-                            if (entryChapter < data.last &&
-                                (parseInt(entryIndex) < maxEntry || (parseInt(entryIndex) == maxEntry && (!buildTree && !hasHigher)))) {
-
-                                if (parseInt(entryIndex) == maxEntry) {
-                                    showTooltip = false;
-                                }
-
-                                if (this.options.hideLowerChapters) {
-                                    entryNode.parentElement.removeChild(entryNode);
-                                } else {
-                                    entryNode.style.backgroundColor = this.options.lowerChaptersColor;
-                                }
-                            } else if (entryChapter == data.last) {
-                                // If it's the current chapter we start painting the left column - that avoid deleting the first row
-                                buildTree = true;
-                                // And we also paint the row
-                                entryNode.style.backgroundColor = paintColor;
-                                currentColor = (currentColor + 1) % maxColor;
-                            } else {
-                                hasHigher = true;
-
-                                if (buildTree) {
-                                    entryNode.firstElementChild.style.backgroundColor = paintColor;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Show a tooltip with the thumbnail if the row wasn't deleted
-                if (showTooltip && this.options.showTooltips) {
-                    this.tooltip(chapter, id, data);
-                }
-            } else {
-                // Else it's a empty name row, so we just add the dom_node to the current entry
-                if (isEmpty(entries)) {
-                    entries = {
-                        nodes: [chapter],
-                        chapters: [chapterVolume]
-                    };
+                if (localStorage[mangaDexId] === undefined) {
+                    // Use Promise, to do all rows async
+                    storageGet(mangaDexId).then(result => {
+                        localStorage[mangaDexId] = result;
+                        this.paintOrHide(result, mangaDexId, chaptersCopy, colors);
+                    });
                 } else {
-                    entries.nodes.push(chapter);
-                    entries.chapters.push(chapterVolume);
+                    this.paintOrHide(localStorage[mangaDexId], mangaDexId, chaptersCopy, colors);
                 }
+                chapters = [];
             }
         }
     }
 
-    async mangaPage() {
+    async titlePage() {
         this.manga.name = document.querySelector("h6[class='card-header']").textContent.trim();
         this.manga.mangaDexId = /.+title\/(\d+)/.exec(this.pageUrl);
         // We always try to find the link, in case it was updated
@@ -1056,7 +1035,7 @@ class MyMangaDex {
         this.highlightChapters();
     }
 
-    async chapterPage() {
+    async singleChapterPage() {
         // We can use the info on the page if we don't change chapter while reading
         let chapter = document.querySelector("meta[property='og:title']").content;
         this.manga.currentChapter = this.getVolumeChapterFromString(chapter);
@@ -1130,6 +1109,27 @@ class MyMangaDex {
             await updateLocalStorage(this.manga, this.options);
         } else {
             this.notification(NOTIFY.ERROR, "Chapter Delayed", "The chapter was not updated and saved since it is delayed on MangaDex.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+        }
+    }
+
+    titlesListPage() {
+        let founds = document.querySelectorAll(".row.m-0.border-bottom");
+        let max = founds.length;
+
+        // if there is no table the list is not expanded or simple
+        if (max == 0 || !this.options.showTooltips) {
+            return;
+        }
+
+        // Create the tooltip holder
+        this.tooltipContainer = document.createElement("div");
+        this.tooltipContainer.id = "mmd-tooltip";
+        document.body.appendChild(this.tooltipContainer);
+
+        // Create the tooltips
+        for (let i = 1; i < max; i++) {
+            let id = /title\/(\d+)\/?.*/.exec(founds[i].firstElementChild.firstElementChild.firstElementChild.children[1].href)[1];
+            this.tooltip(founds[i], id);
         }
     }
 

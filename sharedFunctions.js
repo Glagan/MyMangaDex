@@ -96,11 +96,12 @@ async function loadOptions() {
             if (data.version < 1.9) {
                 data.highlightChapters = defaultOptions.highlightChapters;
                 data.showNotifications = defaultOptions.showNotifications;
+                data.showErrors = defaultOptions.showErrors;
                 data.version = 1.9;
 
                 vNotify.info({
                     title: "MyMangaDex as been updated to 1.9",
-                    text: "You can see the changelog on https://github.com/Glagan/MyMangaDex, new Options have been added, you should check them out !"
+                    text: "You can see the changelog on https://github.com/Glagan/MyMangaDex, new options have been added, you should check them out !"
                 });
             }
 

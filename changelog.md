@@ -5,7 +5,15 @@
 * Added more options to disable things:
   * Disable highlights
   * Disable notifications
+  * Disable error notifications
+* Restored and fixed  pages with a list of titles
+  * The page was detected as a title page
+* Updated the highlight on chapters list
+  * More simple and to support the new option
+* Fix "Not logged in" notification on new unread manga
 * Removed a console.log
+* Replaced console.error with notifications
+* Removed "auxclick" (middle click) painting the background on chapters list
 
 ## 1.8
 

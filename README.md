@@ -24,22 +24,11 @@ Start reading manga and the extension will update them automatically.
 If you have a lot of manga, or if you're coming from another site and want to set your follow page up-to-date, you can use the **Import (MAL)** in the options that will update the last open of all followed manga on MangaDex if they have a MyAnimeList entry.  
 The import *could* be long if you have a lot of manga in your list, don't leave the page until it ends.
 
-## Data stored
-
-I only store the least possible data:
-
-* The last open chapter for each manga
-* The MyAnimeList id for each manga
-* A list of all opened chapters for each manga
-* The list of options used to customize colors and other parameters
-
-You can disable the option to save all opened chapters, and all of the data can be easily exported using the **Export (MMD)** in the options.
-
 ## Features
 
 MyMangaDex also improve some pages:
 
-### Follow page
+### Chapters list page
 
 Tooltips with a thumbnail of the manga and a list of the last 5 opened chapters are added to each title in the list.  
 Old chapter are also hidden, or highlighted, and your last opened chapters are highlighted. You can change the paint color for both of these.
@@ -60,6 +49,17 @@ The extension can also automatically update your MangaDexList when required, for
 ### MAL Import
 
 The import from MAL feature set the last read chapter of every manga you follow on MangaDex using your MyAnimeList data.
+
+## Data stored
+
+I only store the least possible data:
+
+* The last open chapter for each manga
+* The MyAnimeList id for each manga
+* A list of all opened chapters for each manga
+* The list of options used to customize colors and other parameters
+
+You can disable the option to save all opened chapters, and all of the data can be easily exported using the **Export (MMD)** in the options.
 
 ## Debug installation
 
