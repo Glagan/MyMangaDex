@@ -20,50 +20,88 @@
         <!-- Colors -->
         <h1 class="header-separator py-2 px-2"><i class="fas fa-palette"></i> Colors</h1>
         <p>Colors that exist in <a href="http://www.color-hex.com/color-names.html" target="blank">HTML</a> are accepted but you can also use a value like <b>#RRGGBB</b>, <b>rgb(r,g,b)</b> or with alpha channel <b>rgba(r,g,b,a)</b>.</p>
-        <div class="row form-group px-2">
-            <div class="col-sm-1"><a data-default="lastReadColor" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
-            <label class="col-sm-2 col-form-label">Last read color</label>
-            <div class="col px-0 my-auto input-group">
+        <div class="form-group px-2">
+            <label class="font-weight-bold">Last read color <a data-default="lastReadColor" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+            <p class="d-none d-xl-block">Color of the last read chapter on MyAnimeList.</p>
+            <div class="input-group">
                 <input type="text" data-option="lastReadColor" data-type="text" data-color="true" class="form-control" />
                 <div class="input-group-append">
                     <span class="input-group-text" data-color="lastReadColor"></span>
                 </div>
             </div>
         </div>
-        <div class="row form-group px-2">
-            <div class="col-sm-1"><a id="defaultLastOpenColors" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
-            <label class="col-sm-2 col-form-label">Last open colors</label>
-            <div id="lastOpenColors" class="col px-0 my-auto">
+        <div class="form-group px-2">
+            <label class="font-weight-bold">Last open colors <a id="defaultLastOpenColors" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+            <p class="d-none d-xl-block">List of colors used to highlight chapters in chapters lists.</p>
+            <div id="lastOpenColors" class="px-0 my-auto">
                 <div id="addColorRow" class="col px-0 pb-2 my-auto">
                     <a id="addColor" class="btn btn-success"><i class="fas fa-plus-circle"></i> Add a color</a>
                 </div>
             </div>
         </div>
-        <div class="row form-group px-2">
-            <div class="col-sm-1"><a data-default="lowerChaptersColor" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
-            <label class="col-sm-2 col-form-label">Lower chapters color</label>
-            <div class="col px-0 my-auto input-group">
+        <div class="form-group px-2">
+            <label class="font-weight-bold">Lower chapters color <a data-default="lowerChaptersColor" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+            <p class="d-none d-xl-block">Color used if <kbd>Hide lower chapters</kbd> is set to false.</p>
+            <div class="input-group">
                 <input type="text" data-option="lowerChaptersColor" data-type="text" data-color="true" class="form-control" />
                 <div class="input-group-append">
                     <span class="input-group-text" data-color="lowerChaptersColor"></span>
                 </div>
             </div>
         </div>
-        <div class="row form-group px-2">
-            <div class="col-sm-1"><a data-default="openedChaptersColor" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
-            <label class="col-sm-2 col-form-label">Opened chapters color</label>
-            <div class="col px-0 my-auto input-group">
+        <div class="form-group px-2">
+            <label class="font-weight-bold">Opened chapters color <a data-default="openedChaptersColor" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+            <p class="d-none d-xl-block">Color used to highlight all opened chapters in a title page.</p>
+            <div class="input-group">
                 <input type="text" data-option="openedChaptersColor" data-type="text" data-color="true" class="form-control" />
                 <div class="input-group-append">
                     <span class="input-group-text" data-color="openedChaptersColor"></span>
                 </div>
             </div>
         </div>
+        <!-- Global -->
+        <h1 class="header-separator py-2 px-2"><i class="fas fa-globe"></i> Global</h1>
+        <div class="form-group px-2">
+            <label class="font-weight-bold">Update MangaDex list <a data-default="updateMDList" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+            <p class="d-none d-xl-block">Automatically update your MangaDex list when needed. The list is updated when you start reading, add to plan to read, start re-reading and is set to the same status when you edit informations in the modal.</p>
+            <div data-option="updateMDList" data-type="checkbox" class="col px-0 my-auto input-group">
+                <div class="input-group-prepend">
+                    <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+                </div>
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
+                </div>
+            </div>
+        </div>
+        <div class="form-group px-2">
+            <label class="font-weight-bold">Show notifications <a data-default="showNotifications" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+            <p class="d-none d-xl-block">Display notifications in the bottom left corner. Do not disable error notifications, see below.</p>
+            <div data-option="showNotifications" data-type="checkbox" class="col px-0 my-auto input-group">
+                <div class="input-group-prepend">
+                    <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+                </div>
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
+                </div>
+            </div>
+        </div>
+        <div class="form-group px-2">
+            <label class="font-weight-bold">Show error notifications <a data-default="showErrors" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+            <p class="d-none d-xl-block">Display all error notifications.</p>
+            <div data-option="showErrors" data-type="checkbox" class="col px-0 my-auto input-group">
+                <div class="input-group-prepend">
+                    <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+                </div>
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
+                </div>
+            </div>
+        </div>
         <!-- Chapter List Page -->
-        <h1 class="header-separator py-2 px-2"><i class="fas fa-bookmark"></i> Chapter list pages</h1>
-        <div class="row form-group px-2">
-            <div class="col-sm-1"><a data-default="hideLowerChapters" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
-            <label class="col-sm-2 col-form-label">Hide lower chapters</label>
+        <h1 class="header-separator py-2 px-2"><i class="fas fa-bookmark"></i> Chapters list pages</h1>
+        <div class="form-group px-2">
+            <label class="font-weight-bold">Hide lower chapters <a data-default="hideLowerChapters" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+            <p class="d-none d-xl-block">Hide all chapters that are inferior to your last read chapter on MangaDex.</p>
             <div data-option="hideLowerChapters" data-type="checkbox" class="col px-0 my-auto input-group">
                 <div class="input-group-prepend">
                     <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
@@ -73,9 +111,9 @@
                 </div>
             </div>
         </div>
-        <div class="row form-group px-2">
-            <div class="col-sm-1"><a data-default="highlightChapters" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
-            <label class="col-sm-2 col-form-label">Highlight chapters</label>
+        <div class="form-group px-2">
+            <label class="font-weight-bold">Highlight chapters <a data-default="highlightChapters" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+            <p class="d-none d-xl-block">If this option is disabled, no colors will be used. Does not prevent the <kbd>Hide lower chapters</kbd> and <kbd>Show tooltips</kbd> options to be applied.</p>
             <div data-option="highlightChapters" data-type="checkbox" class="col px-0 my-auto input-group">
                 <div class="input-group-prepend">
                     <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
@@ -85,9 +123,9 @@
                 </div>
             </div>
         </div>
-        <div class="row form-group px-2">
-            <div class="col-sm-1"><a data-default="showTooltips" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
-            <label class="col-sm-2 col-form-label">Show tooltips (Thumbnails)</label>
+        <div class="form-group px-2">
+            <label class="font-weight-bold">Show tooltips (Thumbnails) <a data-default="showTooltips" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+            <p class="d-none d-xl-block">Display tooltips containing a thumbnail of the manga and the list of the last 5 read chapters on chapters and title lists. No tooltips are added if there is already one.</p>
             <div data-option="showTooltips" data-type="checkbox" class="col px-0 my-auto input-group">
                 <div class="input-group-prepend">
                     <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
@@ -99,9 +137,9 @@
         </div>
         <!-- Chapter Page -->
         <h1 class="header-separator py-2 px-2"><i class="fas fa-file"></i> Chapter page</h1>
-        <div class="row form-group px-2">
-            <div class="col-sm-1"><a data-default="saveOnlyHigher" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
-            <label class="col-sm-2 col-form-label">Save only if it's higher</label>
+        <div class="form-group px-2">
+            <label class="font-weight-bold">Save chapter only if it's higher <a data-default="saveOnlyHigher" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+            <p class="d-none d-xl-block">If this option is enabled, your MyAnimeList will be updated to the chapter you are reading, whether or not it is higher than your current last read chapter.</p>
             <div data-option="saveOnlyHigher" data-type="checkbox" class="col px-0 my-auto input-group">
                 <div class="input-group-prepend">
                     <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
@@ -111,9 +149,9 @@
                 </div>
             </div>
         </div>
-        <div class="row form-group px-2">
-            <div class="col-sm-1"><a data-default="saveAllOpened" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
-            <label class="col-sm-2 col-form-label">Save all opened chapters</label>
+        <div class="form-group px-2">
+            <label class="font-weight-bold">Save all opened chapters <a data-default="saveAllOpened" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+            <p class="d-none d-xl-block">Save a list of all opened chapters for each manga to highlight them in a title page and display them inside tooltips.</p>
             <div data-option="saveAllOpened" data-type="checkbox" class="col px-0 my-auto input-group">
                 <div class="input-group-prepend">
                     <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
@@ -123,47 +161,11 @@
                 </div>
             </div>
         </div>
-        <div class="row form-group px-2">
-            <div class="col-sm-1"><a data-default="maxChapterSaved" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
-            <label class="col-sm-2 col-form-label">Number of Chapters saved</label>
-            <div class="col px-0 my-auto">
-                <input data-option="maxChapterSaved" data-type="number" type="number" min="1" max="500" class="form-control" />
-            </div>
-        </div>
-        <div class="row form-group px-2">
-            <div class="col-sm-1"><a data-default="updateMDList" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
-            <label class="col-sm-2 col-form-label">Update MangaDex list</label>
-            <div data-option="updateMDList" data-type="checkbox" class="col px-0 my-auto input-group">
-                <div class="input-group-prepend">
-                    <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                </div>
-                <div class="input-group-append">
-                    <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                </div>
-            </div>
-        </div>
-        <div class="row form-group px-2">
-            <div class="col-sm-1"><a data-default="showNotifications" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
-            <label class="col-sm-2 col-form-label">Show notifications</label>
-            <div data-option="showNotifications" data-type="checkbox" class="col px-0 my-auto input-group">
-                <div class="input-group-prepend">
-                    <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                </div>
-                <div class="input-group-append">
-                    <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                </div>
-            </div>
-        </div>
-        <div class="row form-group px-2">
-            <div class="col-sm-1"><a data-default="showErrors" class="btn btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-sm-none d-md-none d-lg-none d-xl-inline"> Restore default</span></a></div>
-            <label class="col-sm-2 col-form-label">Show error notifications</label>
-            <div data-option="showErrors" data-type="checkbox" class="col px-0 my-auto input-group">
-                <div class="input-group-prepend">
-                    <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                </div>
-                <div class="input-group-append">
-                    <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                </div>
+        <div class="form-group px-2">
+            <label class="font-weight-bold">Number of saved chapters <a data-default="maxChapterSaved" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+            <p class="d-none d-xl-block">Limit to the list of saved chapters to avoid using a lot of storage (100 is already a good enough value).</p>
+            <div class="px-0">
+                <input data-option="maxChapterSaved" data-type="number" type="number" min="1" max="200" class="form-control" />
             </div>
         </div>
         <!-- Export -->

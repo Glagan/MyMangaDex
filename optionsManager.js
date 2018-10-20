@@ -72,11 +72,14 @@ class OptionsManager {
         // Default buttons
         document.querySelectorAll("[data-default]").forEach(element => {
             element.addEventListener("click", () => {
-                let inputField = document.querySelector("[data-option='" + element.dataset.default+"']");
+                let inputField = document.querySelector("[data-option='" + element.dataset.default +"']");
                 if ("type" in inputField.dataset && inputField.dataset.type == "checkbox") {
                     this.updateCheckbox(inputField, defaultOptions[element.dataset.default]);
                 } else {
                     inputField.value = defaultOptions[element.dataset.default];
+                    if (inputField.dataset.color !== undefined) {
+                        document.querySelector("[data-color='" + element.dataset.default + "']").style.backgroundColor = defaultOptions[element.dataset.default];
+                    }
                 }
             });
         });
