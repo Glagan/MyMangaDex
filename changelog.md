@@ -10,6 +10,8 @@
   * The page was detected as a title page
 * Updated the highlight on chapters list
   * More simple and to support the new option
+* Made notifications close by cliking on it
+  * To make it easier on Mobile devices
 * Fix "Not logged in" notification on new unread manga
 * Removed a console.log
 * Replaced console.error with notifications

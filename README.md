@@ -9,7 +9,7 @@ Updating your manga one by one, by hand, when you have hundreds of them and read
 
 ## How to Install
 
-You can install it from the [Google Chrome Web Store](https://chrome.google.com/webstore/detail/mymangadex/ihejddjcdmdppiimegmknbcaiebklajl) or the [Firefox add-ons site](https://addons.mozilla.org/fr/firefox/addon/mymangadex/).  
+You can install it from the [Google Chrome Web Store](https://chrome.google.com/webstore/detail/mymangadex/ihejddjcdmdppiimegmknbcaiebklajl) or the [Firefox add-ons site](https://addons.mozilla.org/fr/firefox/addon/mymangadex/) (Also working on Firefox for Android).  
 
 ## Requirements
 
