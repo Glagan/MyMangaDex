@@ -94,11 +94,9 @@ async function loadOptions() {
             }
 
             if (data.version < 1.9) {
-                data = {
-                    highlightChapters: defaultOptions.highlightChapters,
-                    showNotifications: defaultOptions.showNotifications,
-                    version: 1.9
-                };
+                data.highlightChapters = defaultOptions.highlightChapters;
+                data.showNotifications = defaultOptions.showNotifications;
+                data.version = 1.9;
 
                 vNotify.info({
                     title: "MyMangaDex as been updated to 1.9",

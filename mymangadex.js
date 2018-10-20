@@ -57,7 +57,7 @@ class MyMangaDex {
         // init and set if it was redirected - redirected often means not in list or not approved
         this.redirected = data.redirected;
 
-        if (text == "401 Unauthorized" || this.redirected) {
+        if (text == "401 Unauthorized") {
             this.notification(NOTIFY.ERROR, "Not logged in", "Log in on MyAnimeList!", this.myAnimeListImage);
             this.loggedMyAnimeList = false;
         } else {
@@ -886,12 +886,6 @@ class MyMangaDex {
                             } else {
                                 chapter.style.backgroundColor = this.options.lowerChaptersColor;
                             }
-                        // Else it's a higher, we make it so clicking it paint it
-                        } else {
-                            chapter.children[2].firstElementChild.addEventListener("auxclick", () => {
-                                chapter.style.backgroundColor = paintColor;
-                            });
-                            currentColor = (currentColor + 1) % maxColor;
                         }
                     } else {
                         let buildTree = false;
@@ -928,11 +922,6 @@ class MyMangaDex {
                                 if (buildTree) {
                                     entryNode.firstElementChild.style.backgroundColor = paintColor;
                                 }
-
-                                // Else we make the auxclick paint the row - it'a a higher
-                                entryNode.children[2].firstElementChild.addEventListener("auxclick", () => {
-                                    entryNode.style.backgroundColor = paintColor;
-                                });
                             }
                         }
                     }
