@@ -171,6 +171,8 @@ class MyMangaDex {
                         this.notification(NOTIFY.INFO, "Not updated", "Last read chapter on MyAnimelist is higher or equal to the current chapter and wasn't updated.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
                         return;
                     }
+                } else {
+                    this.manga.status = setStatus;
                 }
 
                 // Update
@@ -239,7 +241,7 @@ class MyMangaDex {
                     }
                 }
 
-                if (this.options.updateMDList && this.manga.status != oldStatus || this.manga.completed !== undefined) {
+                if (this.options.updateMDList && (this.manga.status != oldStatus || this.manga.completed !== undefined)) {
                     switch (this.manga.status) {
                     case 1:
                         await this.updateMangaDexList("manga_follow", MD_STATUS.READING);
@@ -556,21 +558,41 @@ class MyMangaDex {
         let days = [{value:""},{value:1},{value:2},{value:3},{value:4},{value:5},{value:6},{value:7},{value:8},{value:9},{value:10},{value:11},{value:12},{value:13},{value:14},{value:15},{value:16},{value:17},{value:18},{value:19},{value:20},{value:21},{value:22},{value:23},{value:24},{value:25},{value:26},{value:27},{value:28},{value:29},{value:30},{value:31}];
         let years = [{value:""},{value:2018},{value:2017},{value:2016},{value:2015},{value:2014},{value:2013},{value:2012},{value:2011},{value:2010},{value:2009},{value:2008},{value:2007},{value:2006},{value:2005},{value:2004},{value:2003},{value:2002},{value:2001},{value:2000}];
         let dateStart = this.addModalLabel(bodyContainer, "Start date");
-        dateStart.className = "col px-0 my-auto form-inline";
-        dateStart.appendChild(document.createTextNode("Day: "));
+        dateStart.className = "col px-0 my-auto form-inline input-group";
         this.addModalInput(dateStart, "select", "start_date.day", this.manga.start_date.day, {number: true, elements: days});
-        dateStart.appendChild(document.createTextNode(" Month: "));
         this.addModalInput(dateStart, "select", "start_date.month", this.manga.start_date.month, {number: true, elements: months});
-        dateStart.appendChild(document.createTextNode(" Year: "));
         this.addModalInput(dateStart, "select", "start_date.year", this.manga.start_date.year, {number: true, elements: years});
+        let appendStartToday = document.createElement("span");
+        appendStartToday.className = "input-group-append";
+        let startToday = document.createElement("button");
+        startToday.className = "btn btn-secondary";
+        startToday.textContent = "Today";
+        startToday.addEventListener("click", () => {
+            let today = new Date();
+            document.querySelector("[data-mal='start_date.day']").value = today.getDate();
+            document.querySelector("[data-mal='start_date.month']").value = today.getMonth();
+            document.querySelector("[data-mal='start_date.year']").value = today.getFullYear();
+        });
+        appendStartToday.appendChild(startToday);
+        dateStart.appendChild(appendStartToday);
         let dateEnd = this.addModalLabel(bodyContainer, "Finish date");
-        dateEnd.className = "col px-0 my-auto form-inline";
-        dateEnd.appendChild(document.createTextNode("Day: "));
+        dateEnd.className = "col px-0 my-auto form-inline input-group";
         this.addModalInput(dateEnd, "select", "finish_date.day", this.manga.finish_date.day, {number: true, elements: days});
-        dateEnd.appendChild(document.createTextNode(" Month: "));
         this.addModalInput(dateEnd, "select", "finish_date.month", this.manga.finish_date.month, {number: true, elements: months});
-        dateEnd.appendChild(document.createTextNode(" Year: "));
         this.addModalInput(dateEnd, "select", "finish_date.year", this.manga.finish_date.year, {number: true, elements: years});
+        let appendEndToday = document.createElement("span");
+        appendEndToday.className = "input-group-append";
+        let endToday = document.createElement("button");
+        endToday.className = "btn btn-secondary";
+        endToday.textContent = "Today";
+        endToday.addEventListener("click", () => {
+            let today = new Date();
+            document.querySelector("[data-mal='finish_date.day']").value = today.getDate();
+            document.querySelector("[data-mal='finish_date.month']").value = today.getMonth();
+            document.querySelector("[data-mal='finish_date.year']").value = today.getFullYear();
+        });
+        appendEndToday.appendChild(endToday);
+        dateEnd.appendChild(appendEndToday);
         // DATE END
         this.addModalRow(bodyContainer, "Tags", "textarea", "tags", this.manga.tags);
         this.addModalRow(bodyContainer, "Priority", "select", "priority", this.manga.priority, {number: true, elements: [{value:0,text:"Low"},{value:1,text:"Medium"},{value:2,text:"High"}]});
@@ -592,18 +614,21 @@ class MyMangaDex {
         this.appendTextWithIcon(modalSave, "save", "Save");
         modalSave.addEventListener("click", async () => {
             // Save each values
+            let status;
             bodyContainer.querySelectorAll("[data-mal]").forEach(option => {
                 let keys = option.dataset.mal.split(".");
                 if ("type" in option && option.type == "checkbox") {
                     this.manga[option.dataset.mal] = option.checked;
                 } else if (keys.length == 2) {
                     this.manga[keys[0]][keys[1]] = parseInt(option.value) || option.value;
+                } else if (keys == "status") {
+                    status = (option.value != "") ? parseInt(option.value) : option.value;
                 } else {
                     this.manga[option.dataset.mal] = ("number" in option.dataset && option.value != "") ? parseInt(option.value) : option.value;
                 }
             });
 
-            await this.updateMyAnimeList(false);
+            await this.updateMyAnimeList(false, status);
             if (this.informationsNode != undefined) {
                 this.insertMyAnimeListInformations();
             }
@@ -815,23 +840,26 @@ class MyMangaDex {
 
     paintOrHide(manga, mangaDexId, chapters, colors) {
         let data = undefined;
+        let paintColor = this.options.lastOpenColors[colors.current];
+
         if (manga !== undefined) {
             data = {chapters: manga.chapters};
-            // Switch colors between rows
-            let paintColor = this.options.lastOpenColors;
 
             // If it's a single chapter
             if (chapters.length == 1) {
                 // If it's the last open chapter we paint it
                 if (chapters[0].currentChapter.chapter == manga.last && this.options.highlightChapters) {
-                    chapters[0].row.style.backgroundColor = paintColor[colors.current];
-                    colors.current = (colors.current + 1) % colors.max;
+                    chapters[0].row.style.backgroundColor = paintColor;
                 } else if (chapters[0].currentChapter.chapter < manga.last) {
                     if (this.options.hideLowerChapters) {
                         chapters[0].row.parentElement.removeChild(chapters[0].row);
                     } else if (this.options.highlightChapters) {
                         chapters[0].row.style.backgroundColor = this.options.lowerChaptersColor;
                     }
+                } else if (this.options.highlightChapters) {
+                    chapters[0].row.lastElementChild.firstElementChild.addEventListener("auxclick", () => {
+                        chapters[0].row.style.backgroundColor = paintColor;
+                    });
                 }
             } else {
                 let higherThanLast = false;
@@ -842,11 +870,16 @@ class MyMangaDex {
                     let currentRow = chapters[chapter].row;
 
                     // We delete the row if it's lower and one first - or first but all are lower
-                    if (currentChapter > manga.last && higherThanLast && this.options.highlightChapters) {
-                        currentRow.firstElementChild.style.backgroundColor = paintColor[colors.current];
+                    if (currentChapter > manga.last && this.options.highlightChapters) {
+                        if (higherThanLast) {
+                            currentRow.firstElementChild.style.backgroundColor = paintColor;
+                        }
+                        currentRow.lastElementChild.firstElementChild.addEventListener("auxclick", () => {
+                            currentRow.style.backgroundColor = paintColor;
+                        });
                     } else if (currentChapter < manga.last) {
                         if (higherThanLast && chapter == 0) {
-                            currentRow.firstElementChild.style.backgroundColor = paintColor[colors.current];
+                            currentRow.firstElementChild.style.backgroundColor = paintColor;
                         } else {
                             if (this.options.hideLowerChapters) {
                                 currentRow.parentElement.removeChild(currentRow);
@@ -857,13 +890,19 @@ class MyMangaDex {
                     } else if (currentChapter == manga.last) {
                         higherThanLast = true;
                         if (this.options.highlightChapters) {
-                            currentRow.style.backgroundColor = paintColor[colors.current];
+                            currentRow.style.backgroundColor = paintColor;
                         }
                     }
                 }
             }
-            colors.current = (colors.current + 1) % colors.max;
+        } else {
+            chapters.forEach(chapter => {
+                chapter.row.lastElementChild.firstElementChild.addEventListener("auxclick", () => {
+                    chapter.row.style.backgroundColor = paintColor;
+                });
+            });
         }
+        colors.current = (colors.current + 1) % colors.max;
 
         // Show a tooltip with the thumbnail if the row wasn't deleted
         if (this.options.showTooltips && chapters.length > 0) {

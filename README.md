@@ -62,26 +62,28 @@ You can disable the option to save all opened chapters, and all of the data can 
 ## Debug installation
 
 You can also install the extension from this repository, but the extension **will** be uninstalled when Firefox is closed and the data **could** be deleted at the same time, Chrome will keep the extension installed.  
-Before you actually install it, you have to manually edit the ``manifest.json`` file to remove what you don't use, either the Firefox or Chrome lines.
+Before you actually install it, you have to build it, using ``node build.js <browser>``, ``rimraf``, ``web-ext`` and ``babel-minify`` are required.
 
 ### Firefox
 
 1. Be sure that the version from the Firefox add-ons site is not installed (don't know what it would do, maybe it just won't work)
 2. Clone the repo
-3. Go to [about:debugging](about:debugging)
-4. Click *Load a temporary module*
-5. Select any file of the cloned repo.
-6. Done !
+3. Build ``node build.js firefox``
+4. Go to [about:debugging](about:debugging)
+5. Click *Load a temporary module*
+6. Select any file of the cloned repo.
+7. Done !
 
 ### Chrome
 
 1. Make sure it isn't already installed
 2. Clone the repo
-3. Go to [chrome://extensions/](chrome://extensions/)
-4. Activate *Developper Mode* on the top right
-5. Click *Load Unpacked*
-6. Select the **MyMangaDex** folder
-7. Done !
+3. Build ``node build.js chrome``
+4. Go to [chrome://extensions/](chrome://extensions/)
+5. Activate *Developper Mode* on the top right
+6. Click *Load Unpacked*
+7. Select the **MyMangaDex** folder
+8. Done !
 
 ## Useful links
 

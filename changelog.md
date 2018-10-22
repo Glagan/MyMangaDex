@@ -1,12 +1,17 @@
 # Changelog
 
+## 1.9.1
+
+* Added "Today" button in the modal
+* Added back the event for painting a chapter in a chapters list on middle-click
+
 ## 1.9
 
 * Added more options to disable things:
   * Disable highlights
   * Disable notifications
   * Disable error notifications
-* Restored and fixed  pages with a list of titles
+* Restored and fixed pages with a list of titles
   * The page was detected as a title page
 * Updated the highlight on chapters list
   * More simple and to support the new option

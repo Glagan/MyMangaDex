@@ -1,3 +1,3 @@
-call babel-minify myMangaDex.js --mangle.keepClassName --outFile minified/myMangaDex.js
-call babel-minify optionsManager.js --mangle.keepClassName --outFile minified/optionsManager.js
-call babel-minify sharedFunctions.js --mangle.keepClassName --outFile minified/sharedFunctions.js
+call babel-minify scripts/myMangaDex.js --mangle.keepClassName --outFile scripts/minified/myMangaDex.js
+call babel-minify scripts/optionsManager.js --mangle.keepClassName --outFile scripts/minified/optionsManager.js
+call babel-minify scripts/sharedFunctions.js --mangle.keepClassName --outFile scripts/minified/sharedFunctions.js

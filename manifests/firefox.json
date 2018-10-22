@@ -1,0 +1,14 @@
+{
+	"options_ui": {
+		"page": "options.html"
+	},
+
+	"content_scripts": [{
+		"js": [
+			"third_party/vanilla-notify.min.js",
+			"scripts/defaultOptions.js",
+			"scripts/minified/sharedFunctions.js",
+			"scripts/minified/myMangaDex.js"
+		]
+	}]
+}

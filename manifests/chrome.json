@@ -1,0 +1,13 @@
+{
+    "options_page": "options.html",
+
+    "content_scripts": [{
+        "js": [
+            "third_party/vanilla-notify.min.js",
+            "scripts/defaultOptions.js",
+            "third_party/chrome-extension-async.js",
+            "scripts/minified/sharedFunctions.js",
+            "scripts/minified/myMangaDex.js"
+        ]
+    }]
+}

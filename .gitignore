@@ -3,6 +3,7 @@
 .vscode
 
 # Firefox extension
+builds
 web-ext-artifacts
 
 # File save
