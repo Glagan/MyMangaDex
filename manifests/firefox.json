@@ -1,4 +1,11 @@
 {
+	"applications": {
+		"gecko": {
+			"id": "mymangadex@glagan",
+			"strict_min_version": "59.0"
+		}
+	},
+
 	"options_ui": {
 		"page": "options.html"
 	},
