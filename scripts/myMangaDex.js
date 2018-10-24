@@ -862,7 +862,8 @@ class MyMangaDex {
                     });
                 }
             } else {
-                let higherThanLast = false;
+                let sawLastChapter = false;
+                let sawHigher = false;
 
                 // It's a multiple row list - we delete the old ones if needed
                 for (let chapter in chapters) {
@@ -871,16 +872,17 @@ class MyMangaDex {
 
                     // We delete the row if it's lower and one first - or first but all are lower
                     if (currentChapter > manga.last && this.options.highlightChapters) {
-                        if (higherThanLast) {
+                        if (sawLastChapter) {
                             currentRow.firstElementChild.style.backgroundColor = paintColor;
                         }
+                        sawHigher = true;
                         currentRow.lastElementChild.firstElementChild.addEventListener("auxclick", () => {
                             currentRow.style.backgroundColor = paintColor;
                         });
                     } else if (currentChapter < manga.last) {
-                        if (higherThanLast && chapter == 0) {
+                        if (sawLastChapter && this.options.highlightChapters) {
                             currentRow.firstElementChild.style.backgroundColor = paintColor;
-                        } else {
+                        } else if (!sawHigher || (sawHigher && chapter < chapters.length-1)) {
                             if (this.options.hideLowerChapters) {
                                 currentRow.parentElement.removeChild(currentRow);
                             } else if (this.options.highlightChapters) {
@@ -888,7 +890,7 @@ class MyMangaDex {
                             }
                         }
                     } else if (currentChapter == manga.last) {
-                        higherThanLast = true;
+                        sawLastChapter = true;
                         if (this.options.highlightChapters) {
                             currentRow.style.backgroundColor = paintColor;
                         }

@@ -77,7 +77,11 @@ function deepFileCopy(files, destFolder, baseFolder="") {
 if (["firefox", "chrome"].includes(browser)) {
     // Create temp folder for the bundle
     console.log("Creating temp directory");
-    fs.mkdirSync("makeBundle");
+    let makeFolder = browser + "Build";
+    if (fs.existsSync(makeFolder)) {
+        rimraf.sync(makeFolder);
+    }
+    fs.mkdirSync(makeFolder);
 
     // Merge manifests
     console.log("Merging manifests");
@@ -86,9 +90,10 @@ if (["firefox", "chrome"].includes(browser)) {
     let browserManifest = fs.readFileSync("manifests/" + browser + ".json");
     browserManifest = JSON.parse(browserManifest);
     deepMerge(mainManifest, browserManifest);
+    console.log("Building version %s", mainManifest.version);
 
     // Write new manifest
-    let bundleManifestStream = fs.createWriteStream("makeBundle/manifest.json", {flags: "w+"});
+    let bundleManifestStream = fs.createWriteStream(makeFolder + "/manifest.json", {flags: "w+"});
     bundleManifestStream.write(JSON.stringify(mainManifest));
     bundleManifestStream.cork();
     bundleManifestStream.end();
@@ -99,10 +104,9 @@ if (["firefox", "chrome"].includes(browser)) {
 
     // Copy files
     console.log("Copying files");
-    deepFileCopy(files, "makeBundle/", "");
+    deepFileCopy(files, makeFolder + "/", "");
 
-    console.log("Building version %s", mainManifest.version);
-    exec("web-ext build", {cwd: "makeBundle"}, (error, stdout, stderr) => {
+    exec("web-ext build", {cwd: makeFolder}, (error, stdout, stderr) => {
         if (error) {
             console.error(`Build error: ${error}`);
             return;
@@ -111,14 +115,8 @@ if (["firefox", "chrome"].includes(browser)) {
         if (!fs.existsSync("builds")) {
             fs.mkdirSync("builds");
         }
-        fs.renameSync("makeBundle/web-ext-artifacts/mymangadex-" + mainManifest.version + ".zip", "builds/mymangadex-" + mainManifest.version + "_" + browser + ".zip");
-
-        console.log("Deleting temp directory");
-        if (browser == "chrome") {
-            fs.renameSync("makeBundle", "ChromeTempBuild");
-        } else {
-            rimraf.sync("makeBundle");
-        }
+        console.log("Moving zip archive to 'builds'");
+        fs.renameSync(makeFolder + "/web-ext-artifacts/mymangadex-" + mainManifest.version + ".zip", "builds/mymangadex-" + mainManifest.version + "_" + browser + ".zip");
 
         console.log("Done");
     });

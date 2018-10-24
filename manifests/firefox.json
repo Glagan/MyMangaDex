@@ -2,7 +2,7 @@
 	"applications": {
 		"gecko": {
 			"id": "mymangadex@glagan",
-			"strict_min_version": "59.0"
+			"strict_min_version": "61.0"
 		}
 	},
 
