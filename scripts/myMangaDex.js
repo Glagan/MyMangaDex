@@ -55,10 +55,9 @@ class MyMangaDex {
         let text = await data.text();
         this.fetched = true;
         // init and set if it was redirected - redirected often means not in list or not approved
-        this.redirected = data.redirected;
 
-        if (text == "401 Unauthorized") {
-            this.notification(NOTIFY.ERROR, "Not logged in", "Log in on MyAnimeList!", this.myAnimeListImage);
+        if (data.url.indexOf("login.php") > -1) {
+            this.notification(NOTIFY.ERROR, "Not logged in", "Login on MyAnimeList!", this.myAnimeListImage);
             this.loggedMyAnimeList = false;
         } else {
             // CSRF Token
@@ -833,10 +832,12 @@ class MyMangaDex {
 
     notification(type, title, text=undefined, image=undefined, sticky=false) {
         if (this.options.showNotifications || (type == NOTIFY.ERROR && this.options.showErrors)) {
-            let data = {title: title};
-            if (text !== undefined)     { data.text = text; }
-            if (image !== undefined)    { data.image = image; }
-            if (sticky)                 { data.sticky = true; }
+            let data = {
+                title: title,
+                text: text,
+                image: image,
+                sticky: sticky
+            };
             vNotify[type].call(null, data);
         }
     }
@@ -848,59 +849,53 @@ class MyMangaDex {
         if (manga !== undefined) {
             data = {chapters: manga.chapters};
 
-            // If it's a single chapter
-            if (chapters.length == 1) {
-                // If it's the last open chapter we paint it
-                if (chapters[0].currentChapter.chapter == manga.last && this.options.highlightChapters) {
-                    chapters[0].row.style.backgroundColor = paintColor;
-                } else if (chapters[0].currentChapter.chapter < manga.last) {
-                    if (this.options.hideLowerChapters) {
-                        chapters[0].row.parentElement.removeChild(chapters[0].row);
-                    } else if (this.options.highlightChapters) {
-                        chapters[0].row.style.backgroundColor = this.options.lowerChaptersColor;
-                    }
-                } else if (this.options.highlightChapters) {
-                    chapters[0].row.lastElementChild.firstElementChild.addEventListener("auxclick", () => {
-                        chapters[0].row.style.backgroundColor = paintColor;
-                    });
+            let sawLastChapter = false;
+            let sawHigher = false;
+
+            // It's a multiple row list - we delete the old ones if needed
+            let lastRow = chapters.length-1;
+            for (let chapter in chapters) {
+                let currentChapter = chapters[chapter].currentChapter.chapter;
+                let currentRow = chapters[chapter].row;
+
+                if (chapter == lastRow && this.options.showTooltips && manga.mal == 0) {
+                    let flag = currentRow.querySelector(".chapter-list-flag.col-auto.text-center.order-lg-4");
+                    let noMal = flag.firstElementChild.cloneNode();
+                    noMal.classList.remove("flag");
+                    noMal.classList.remove("rounded");
+                    noMal.alt = "No MyAnimeList ID.";
+                    noMal.title = noMal.alt;
+                    noMal.src = "https://i.imgur.com/n5mQIuH.png";
+                    flag.appendChild(noMal);
                 }
-            } else {
-                let sawLastChapter = false;
-                let sawHigher = false;
 
-                // It's a multiple row list - we delete the old ones if needed
-                for (let chapter in chapters) {
-                    let currentChapter = chapters[chapter].currentChapter.chapter;
-                    let currentRow = chapters[chapter].row;
-
-                    // We delete the row if it's lower and one first - or first but all are lower
-                    if (currentChapter > manga.last && this.options.highlightChapters) {
-                        if (sawLastChapter) {
-                            currentRow.firstElementChild.style.backgroundColor = paintColor;
+                // We delete the row if it's lower and one first - or first but all are lower
+                if (currentChapter > manga.last && this.options.highlightChapters) {
+                    if (sawLastChapter) {
+                        currentRow.firstElementChild.style.backgroundColor = paintColor;
+                    }
+                    sawHigher = true;
+                    currentRow.lastElementChild.firstElementChild.addEventListener("auxclick", () => {
+                        currentRow.style.backgroundColor = paintColor;
+                    });
+                } else if (currentChapter < manga.last) {
+                    if (sawLastChapter && this.options.highlightChapters) {
+                        currentRow.firstElementChild.style.backgroundColor = paintColor;
+                    } else if (!sawHigher || lastRow == 0 || (sawHigher && chapter < lastRow)) {
+                        if (this.options.hideLowerChapters) {
+                            currentRow.parentElement.removeChild(currentRow);
+                        } else if (this.options.highlightChapters) {
+                            currentRow.style.backgroundColor = this.options.lowerChaptersColor;
                         }
-                        sawHigher = true;
-                        currentRow.lastElementChild.firstElementChild.addEventListener("auxclick", () => {
-                            currentRow.style.backgroundColor = paintColor;
-                        });
-                    } else if (currentChapter < manga.last) {
-                        if (sawLastChapter && this.options.highlightChapters) {
-                            currentRow.firstElementChild.style.backgroundColor = paintColor;
-                        } else if (!sawHigher || (sawHigher && chapter < chapters.length-1)) {
-                            if (this.options.hideLowerChapters) {
-                                currentRow.parentElement.removeChild(currentRow);
-                            } else if (this.options.highlightChapters) {
-                                currentRow.style.backgroundColor = this.options.lowerChaptersColor;
-                            }
-                        }
-                    } else if (currentChapter == manga.last) {
-                        sawLastChapter = true;
-                        if (this.options.highlightChapters) {
-                            currentRow.style.backgroundColor = paintColor;
-                        }
+                    }
+                } else if (currentChapter == manga.last) {
+                    sawLastChapter = true;
+                    if (this.options.highlightChapters) {
+                        currentRow.style.backgroundColor = paintColor;
                     }
                 }
             }
-        } else {
+        } else if (this.options.highlightChapters) {
             chapters.forEach(chapter => {
                 chapter.row.lastElementChild.firstElementChild.addEventListener("auxclick", () => {
                     chapter.row.style.backgroundColor = paintColor;
@@ -940,7 +935,7 @@ class MyMangaDex {
         }
 
         // Check each rows of the main table - Stop at 1 because first row is the header
-        let lastChapter = chaptersList.length - 1;
+        let lastChapter = chaptersList.length-1;
         for (let row = lastChapter; row > 0; --row) {
             let chapter = chaptersList[row];
 
@@ -1039,7 +1034,7 @@ class MyMangaDex {
             if (this.loggedMyAnimeList) {
                 if (this.manga.is_approved) {
                     // Check if the manga is already in the reading list
-                    if (this.redirected == false) {
+                    if (this.manga.in_list) {
                         this.insertMyAnimeListInformations();
 
                         if (firstFetch) {
@@ -1073,6 +1068,11 @@ class MyMangaDex {
                     pendingMessage.textContent = "The manga is still pending approval on MyAnimelist and can't be updated";
                     this.informationsNode.appendChild(pendingMessage);
                 }
+            } else {
+                let notLoggedMesage = document.createElement("span");
+                notLoggedMesage.className = "alert-info p-1 rounded";
+                notLoggedMesage.textContent = "Login on MyAnimeList to display informations";
+                this.informationsNode.appendChild(notLoggedMesage);
             }
         } else {
             let noIDMessage = document.createElement("span");

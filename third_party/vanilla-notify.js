@@ -9,27 +9,27 @@ var vNotify = (function () {
     };
 
     var info = function (params) {
-        params.notifyClass = 'vnotify-info';
+        params.notifyClass = "vnotify-info";
         return addNotify(params);
     };
 
     var success = function (params) {
-        params.notifyClass = 'vnotify-success';
+        params.notifyClass = "vnotify-success";
         return addNotify(params);
     };
 
     var error = function (params) {
-        params.notifyClass = 'vnotify-error';
+        params.notifyClass = "vnotify-error";
         return addNotify(params);
     };
 
     var warning = function (params) {
-        params.notifyClass = 'vnotify-warning';
+        params.notifyClass = "vnotify-warning";
         return addNotify(params);
     };
 
     var notify = function (params) {
-        params.notifyClass = 'vnotify-notify';
+        params.notifyClass = "vnotify-notify";
         return addNotify(params);
     };
 
@@ -44,17 +44,17 @@ var vNotify = (function () {
 
         var frag = document.createDocumentFragment();
 
-        var item = document.createElement('div');
-        item.classList.add('vnotify-item');
+        var item = document.createElement("div");
+        item.classList.add("vnotify-item");
         item.classList.add(params.notifyClass);
-        item.addEventListener('click', function () {
+        item.addEventListener("click", function () {
             remove(item);
         });
         item.style.opacity = 0;
 
         item.options = getOptions(params);
 
-        if (params.image) {
+        if (params.image !== undefined) {
             item.appendChild(addImage(params.image));
         }
 
@@ -63,7 +63,7 @@ var vNotify = (function () {
         if (params.title) {
             body.appendChild(addTitle(params.title));
         }
-        if (params.text) {
+        if (params.text !== undefined) {
             body.appendChild(addText(params.text));
         }
 
@@ -72,7 +72,7 @@ var vNotify = (function () {
         item.visibleDuration = item.options.visibleDuration; //option
 
         var hideNotify = function () {
-            item.fadeInterval = fade('out', item.options.fadeOutDuration, item);
+            item.fadeInterval = fade("out", item.options.fadeOutDuration, item);
         };
 
         var resetInterval = function () {
@@ -92,7 +92,7 @@ var vNotify = (function () {
 
         item.addEventListener("mouseover", resetInterval);
 
-        fade('in', item.options.fadeInDuration, item);
+        fade("in", item.options.fadeInDuration, item);
 
         if (!item.options.sticky) {
             item.addEventListener("mouseout", hideTimeout);
@@ -103,44 +103,44 @@ var vNotify = (function () {
     };
 
     var addImage = function (image_url) {
-        var item = document.createElement('img');
-        item.classList.add('vnotify-image');
+        var item = document.createElement("img");
+        item.classList.add("vnotify-image");
         item.src = image_url;
         return item;
     };
 
     var addBody = function () {
-        var item = document.createElement('div');
-        item.classList.add('vnotify-body');
+        var item = document.createElement("div");
+        item.classList.add("vnotify-body");
         return item;
     };
 
     var addText = function (text) {
-        var item = document.createElement('div');
-        item.classList.add('vnotify-text');
+        var item = document.createElement("div");
+        item.classList.add("vnotify-text");
         item.textContent = text;
         return item;
     };
 
     var addTitle = function (title) {
-        var item = document.createElement('div');
-        item.classList.add('vnotify-title');
+        var item = document.createElement("div");
+        item.classList.add("vnotify-title");
         item.textContent = title;
         return item;
     };
 
     var getNotifyContainer = function () {
         var positionClass = "vn-bottom-left";
-        var container = document.querySelector('.' + positionClass);
+        var container = document.querySelector("." + positionClass);
         return container ? container : createNotifyContainer(positionClass);
     };
 
     var createNotifyContainer = function (positionClass) {
         var frag = document.createDocumentFragment();
-        container = document.createElement('div');
-        container.classList.add('vnotify-container');
+        container = document.createElement("div");
+        container.classList.add("vnotify-container");
         container.classList.add(positionClass);
-        container.setAttribute('role', 'alert');
+        container.setAttribute("role", "alert");
 
         frag.appendChild(container);
         document.body.appendChild(frag);
@@ -160,20 +160,20 @@ var vNotify = (function () {
     };
 
     var remove = function (item) {
-        item.style.display = 'none';
-        item.outerHTML = '';
+        item.style.display = "none";
+        item.outerHTML = "";
         item = null;
     };
 
     //New fade - based on http://toddmotto.com/raw-javascript-jquery-style-fadein-fadeout-functions-hugo-giraudel/
     var fade = function (type, ms, el) {
-        var isIn = type === 'in',
+        var isIn = type === "in",
             opacity = isIn ? 0 : el.style.opacity || 1,
             goal = isIn ? 0.9 : 0,
             gap = options.fadeInterval / ms;
 
         if (isIn) {
-            el.style.display = 'flex';
+            el.style.display = "flex";
             el.style.opacity = opacity;
         }
 
@@ -195,11 +195,11 @@ var vNotify = (function () {
     };
 
     var checkRemoveContainer = function () {
-        var item = document.querySelector('.vnotify-item');
+        var item = document.querySelector(".vnotify-item");
         if (!item) {
-            var container = document.querySelectorAll('.vnotify-container');
+            var container = document.querySelectorAll(".vnotify-container");
             for (var i = 0; i < container.length; i++) {
-                container[i].outerHTML = '';
+                container[i].outerHTML = "";
                 container[i] = null;
             }
         }
