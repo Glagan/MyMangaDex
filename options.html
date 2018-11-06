@@ -135,6 +135,18 @@
                 </div>
             </div>
         </div>
+        <div class="form-group px-2">
+            <label class="font-weight-bold">Show no MAL flag <a data-default="showNoMal" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+            <p class="d-none d-xl-block">Display a tiny flag next to the language flag on a titles list, it indicate that the title has no MyAnimeList ID and you need to manually visit the title page to get the id if it is added.</p>
+            <div data-option="showNoMal" data-type="checkbox" class="col px-0 my-auto input-group">
+                <div class="input-group-prepend">
+                    <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+                </div>
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
+                </div>
+            </div>
+        </div>
         <!-- Chapter Page -->
         <h1 class="header-separator py-2 px-2"><i class="fas fa-file"></i> Chapter page</h1>
         <div class="form-group px-2">
@@ -169,12 +181,13 @@
             </div>
         </div>
         <!-- Export -->
-        <h1 class="header-separator py-2 px-2"><i class="fas fa-download"></i> Export</h1>
+        <h1 class="header-separator py-2 px-2"><i class="fas fa-download"></i> Export (MMD)</h1>
         <div class="form-group">
             <p>Click the area to select your save, then use <kbd>CTRL + C</kbd> or right-click and then copy.</p>
             <textarea class="form-control" id="save-content" placeholder="Press Refresh to display your save file"></textarea>
             <div class="text-right mt-2">
                 <button id="refresh-save" class="btn btn-primary">Refresh</button>
+                <button id="copy-save" class="btn btn-primary d-none">Copy</button>
             </div>
         </div>
         <!-- Import -->
@@ -189,25 +202,24 @@
             </div>
         </form>
         <h1 class="header-separator py-2 px-2"><i class="fas fa-upload"></i> Import (MAL)</h1>
-        <p>Importing from MAL does the following:
-            <ol>
-                <li>Your list of followed manga on MangaDex is retrieved.</li>
-                <li>Your MyAnimeList manga list is retrieved.</li>
-                <li>For every followed manga on MangaDex:
-                    <ol>
-                        <li>Set the last read chapter as your current chapter on MyAnimeList</li>
-                        <li>Your chapter list is filled with chapters from 1 to your current chapter (if the option is enabled)</li>
-                    </ol>
-                </li>
-            </ol>
-        </p>
+        <p>Update your <b>MangaDex</b> follow list with data from MyAnimeList. If <kbd>saveAllOpened</kbd> is enabled, a list of chapters is generated.</p>
         <form id="mal-import" class="text-center form-inline justify-content-md-center mx-auto">
-            <div class="form-group mx-sm-3 mb-2">
+            <div class="form-group mx-sm-3 mb-2 input-group">
                 <input type="text" class="form-control" name="username" placeholder="MyAnimeList username">
+                <div class="input-group-append">
+                    <button type="submit" class="btn btn-primary">Import</button>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary mb-2">Import</button>
         </form>
         <ul id="malImportStatus" class="list-group">
+        </ul>
+        <h1 class="header-separator py-2 px-2"><i class="fas fa-upload"></i> Export (MAL)</h1>
+        <p>Update your <b>MyAnimeList</b> manga list by updating or adding all titles on your MangaDex follow list that have a MyAnimeList id.</p>
+        <p>You can be extra careful and <a href="https://myanimelist.net/panel.php?go=export">export</a> your MyAnimeList before using this feature.</p>
+        <form id="mal-export" class="text-center form-inline justify-content-md-center mx-auto">
+            <button type="submit" class="btn btn-primary mb-2">Export</button>
+        </form>
+        <ul id="malExportStatus" class="list-group">
         </ul>
         <!-- Delete -->
         <h1 class="header-separator py-2 px-2"><i class="fas fa-trash"></i> Delete</h1>

@@ -108,6 +108,16 @@ async function loadOptions() {
             await storageSet("options", data);
         } // Easy to add updates here, on another if and push the promise in the updates array
 
+        // Sub version option fix
+        if (data.showNoMal === undefined) {
+            data.showNoMal = defaultOptions.showNoMal;
+            vNotify.info({
+                title: "MyMangaDex as been updated to 1.9.7",
+                text: "You can see the changelog on https://github.com/Glagan/MyMangaDex, new options have been added, you should check them out !"
+            });
+            await storageSet("options", data);
+        }
+
         return data;
     }
 }
@@ -141,4 +151,142 @@ function clearDomNode(node) {
 
 function uniqueGUID() {
     return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+}
+
+function processMyAnimeListResponse(manga, text) {
+    manga.is_approved = !/class="badresult"/.test(text);
+    manga.exist = !/id="queryTitle"/.test(text);
+    // Comments
+    manga.comments = /add_manga_comments.+>(.*)</.exec(text)[1];
+    // Ask to discuss
+    manga.ask_to_discuss = /add_manga_is_asked_to_discuss.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text);
+    manga.ask_to_discuss = (manga.ask_to_discuss === null) ? 0 : parseInt(manga.ask_to_discuss[1]);
+    // Last read chapter
+    manga.lastMyAnimeListChapter = /add_manga_num_read_chapters.+value="(\d+)?"/.exec(text);
+    manga.lastMyAnimeListChapter = (manga.lastMyAnimeListChapter === null) ? 0 : parseInt(manga.lastMyAnimeListChapter[1]);
+    // Total times re-read
+    manga.total_reread = /add_manga_num_read_times.+value="(\d+)?"/.exec(text);
+    manga.total_reread = (manga.total_reread === null) ? 0 : parseInt(manga.total_reread[1]);
+    // Last read volume
+    manga.last_volume = /add_manga_num_read_volumes.+value="(\d+)?"/.exec(text);
+    manga.last_volume = (manga.last_volume === null) ? 0 : parseInt(manga.last_volume[1]);
+    // Retail volumes
+    manga.retail_volumes = /add_manga_num_retail_volumes.+value="(\d+)?"/.exec(text);
+    manga.retail_volumes = (manga.retail_volumes === null) ? 0 : parseInt(manga.retail_volumes[1]);
+    // Priority
+    manga.priority = /add_manga_priority.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text);
+    manga.priority = (manga.priority === null) ? 0 : parseInt(manga.priority[1]);
+    // Re-read value
+    manga.reread_value = /add_manga_reread_value.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text);
+    manga.reread_value = (manga.reread_value === null) ? "" : manga.reread_value[1];
+    // Score
+    manga.score = /add_manga_score.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text);
+    manga.score = (manga.score === null) ? "" : parseInt(manga.score[1]);
+    // SNS Post type
+    manga.sns_post_type = /add_manga_sns_post_type.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text);
+    manga.sns_post_type = (manga.sns_post_type === null) ? 0 : parseInt(manga.sns_post_type[1]);
+    // Start date
+    manga.start_date = {};
+    manga.start_date.month = (parseInt(/add_manga_start_date_month.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text)[1]) || "");
+    manga.start_date.day = (parseInt(/add_manga_start_date_day.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text)[1]) || "");
+    manga.start_date.year = (parseInt(/add_manga_start_date_year.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text)[1]) || "");
+    // Finish date
+    manga.finish_date = {};
+    manga.finish_date.month = (parseInt(/add_manga_finish_date_month.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text)[1]) || "");
+    manga.finish_date.day = (parseInt(/add_manga_finish_date_day.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text)[1]) || "");
+    manga.finish_date.year = (parseInt(/add_manga_finish_date_year.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text)[1]) || "");
+    // Status
+    manga.status = /add_manga_status.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text);
+    manga.status = (manga.status === null) ? 0 : parseInt(manga.status[1]);
+    // Storage type
+    manga.storage_type = /add_manga_storage_type.+\s.+value="(\d+)?"\s*selected="selected"/.exec(text);
+    manga.storage_type = (manga.storage_type === null) ? "" : manga.storage_type[1];
+    // Tags
+    manga.tags = /add_manga_tags.+>(.*)*</.exec(text)[1] || "";
+    // Is re-reading ?
+    manga.is_rereading = /name="add_manga\[is_rereading\]"\s*value="\d*"\s*checked="checked"/.test(text);
+    // Bonus : total volume and chapter
+    manga.total_volume = parseInt(/id="totalVol">(.*)?<\//.exec(text)[1]) || 0;
+    manga.total_chapter = parseInt(/id="totalChap">(.*)?<\//.exec(text)[1]) || 0;
+    // Is in the list
+    manga.in_list = (manga.status > 0);
+}
+
+function buildMyAnimeListBody(usePepper, manga, csrf, status = 1) {
+    let requestURL = "https://myanimelist.net/ownlist/manga/" + manga.myAnimeListId + "/edit?hideLayout";
+    if (usePepper) {
+        // Status is always set to reading, or we complet it if it's the last chapter, and so we fill the finish_date
+        manga.status = (manga.status == 2 || (manga.total_chapter > 0 && manga.currentChapter.chapter >= manga.total_chapter)) ? 2 : status;
+
+        // Set the start only if it's not already set and if we don't add it to PTR and if it was in ptr or not in the list
+        if (!manga.in_list && manga.status != 6 && manga.start_date.year == "") {
+            let MyDate = new Date();
+            manga.start_date.year = MyDate.getFullYear();
+            manga.start_date.month = MyDate.getMonth() + 1;
+            manga.start_date.day = MyDate.getDate();
+            manga.start_today = true;
+        }
+
+        // Set the finish date if it's the last chapter and not set
+        if (manga.status == 2 && manga.finish_date.year == "") {
+            let MyDate = new Date();
+            manga.finish_date.year = MyDate.getFullYear();
+            manga.finish_date.month = MyDate.getMonth() + 1;
+            manga.finish_date.day = MyDate.getDate();
+            manga.end_today = true;
+        }
+
+        // Start reading manga if it's the first chapter
+        if (!manga.in_list) {
+            // We have to change the url if we're adding the manga to the list, not editing
+            requestURL = "https://myanimelist.net/ownlist/manga/add?selected_manga_id=" + manga.myAnimeListId + "&hideLayout";
+            manga.in_list = true;
+            manga.started = true;
+        }
+
+        if (manga.is_rereading && manga.total_chapter > 0 && manga.currentChapter.chapter >= manga.total_chapter) {
+            manga.completed = true;
+            manga.is_rereading = false;
+            manga.total_reread++;
+        }
+    } else {
+        manga.status = status;
+    }
+
+    // Update
+    manga.lastMyAnimeListChapter = Math.floor(manga.currentChapter.chapter);
+
+    // Prepare the body
+    let body = "entry_id=0&";
+    body += "manga_id=" + manga.myAnimeListId + "&";
+    body += encodeURIComponent("add_manga[status]") + "=" + manga.status + "&";
+    body += encodeURIComponent("add_manga[num_read_volumes]") + "=" + manga.currentChapter.volume + "&";
+    body += "last_completed_vol=&";
+    body += encodeURIComponent("add_manga[num_read_chapters]") + "=" + manga.lastMyAnimeListChapter + "&";
+    body += encodeURIComponent("add_manga[score]") + "=" + manga.score + "&";
+    body += encodeURIComponent("add_manga[start_date][day]") + "=" + manga.start_date.day + "&";
+    body += encodeURIComponent("add_manga[start_date][month]") + "=" + manga.start_date.month + "&";
+    body += encodeURIComponent("add_manga[start_date][year]") + "=" + manga.start_date.year + "&";
+    body += encodeURIComponent("add_manga[finish_date][day]") + "=" + manga.finish_date.day + "&";
+    body += encodeURIComponent("add_manga[finish_date][month]") + "=" + manga.finish_date.month + "&";
+    body += encodeURIComponent("add_manga[finish_date][year]") + "=" + manga.finish_date.year + "&";
+    body += encodeURIComponent("add_manga[tags]") + "=" + encodeURIComponent(manga.tags) + "&";
+    body += encodeURIComponent("add_manga[priority]") + "=" + manga.priority + "&";
+    body += encodeURIComponent("add_manga[storage_type]") + "=" + manga.storage_type + "&";
+    body += encodeURIComponent("add_manga[num_retail_volumes]") + "=" + manga.retail_volumes + "&";
+    body += encodeURIComponent("add_manga[num_read_times]") + "=" + manga.total_reread + "&";
+    body += encodeURIComponent("add_manga[reread_value]") + "=" + manga.reread_value + "&";
+    body += encodeURIComponent("add_manga[comments]") + "=" + encodeURIComponent(manga.comments) + "&";
+    body += encodeURIComponent("add_manga[is_asked_to_discuss]") + "=" + manga.ask_to_discuss + "&";
+    body += encodeURIComponent("add_manga[sns_post_type]") + "=" + manga.sns_post_type + "&";
+    if (manga.is_rereading) {
+        body += encodeURIComponent("add_manga[is_rereading]") + "=1&";
+    }
+    body += "submitIt=0&";
+    body += encodeURIComponent("csrf_token") + "=" + csrf;
+
+    return {
+        requestURL: requestURL,
+        body: body
+    };
 }

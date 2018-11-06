@@ -26,5 +26,7 @@ let defaultOptions = {
     highlightChapters: true,
     showNotifications: true,
     showErrors: true,
-    version: 1.9
+    showNoMal: true,
+    version: 1.9,
+    subVersion: 7
 };

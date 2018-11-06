@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.10
+
+* Added a "Copy" button when exporting a MyMangaDex save
+* Added a "Delete on MyAnimeList" button inside the MAL Modal
+* Added "Export (MAL)" option, thanks @Nvyous
+* Added an option to remove the "No MAL Flag" added in the previous version
+* Save MyAnimeList id directly on title page to avoid not saving it if there is a MyAnimeList error
+* Fix higher chapter detection to avoid updating on MyAnimeList for chapter with floating point
+
+## 1.9.6
+
+* Add a "No MAL" icon when there is no MyAnimeList id in chapters list
+* Removed useless code in the paintOrHide function
+* Fix logged in MyAnimeList detection
+* Added a message to fill the gap on title list when not logged in
+* Updated notification to check for undefined in vanilla notify rather than when calling the function
+* Fix add click to paint event only if the option is enabled
+
+## 1.9.4
+
+* Fix "start date set to today" notification when reading multiple chapters of a new title
+
+## 1.9.3
+
+* Fix hiding first row with a chapter lower than another
+
+## 1.9.2
+
+* Added the forgotten "Today" button in the MyAnimeList modal
+* Added back the "painting when opening a chapter in another tab" feature
+
 ## 1.9.1
 
 * Added "Today" button in the modal

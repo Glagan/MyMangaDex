@@ -26,7 +26,7 @@ The import *could* be long if you have a lot of manga in your list, don't leave 
 
 ## Features
 
-MyMangaDex also improve some pages:
+MyMangaDex also improve some pages and add useful features:
 
 ### Chapters list page
 
@@ -48,6 +48,12 @@ The extension can also automatically update your MangaDexList when required, for
 
 The import from MAL feature set the last read chapter of every manga you follow on MangaDex using your MyAnimeList data.
 
+### MAL Export
+
+The export to MAL feature add or update on MyAnimeList all your titles in your MangaDex follow list.
+
+> This is good if you wish to **start** using MyAnimeList with a full MangaDex follow list ;)
+
 ## Data stored
 
 I only store the least possible data:
@@ -62,27 +68,27 @@ You can disable the option to save all opened chapters, and all of the data can 
 ## Debug installation
 
 You can also install the extension from this repository, but the extension **will** be uninstalled when Firefox is closed and the data **could** be deleted at the same time, Chrome will keep the extension installed.  
-Before you actually install it, you have to build it, using ``node build.js <browser>``, ``rimraf``, ``web-ext`` and ``babel-minify`` are required.
+Before you actually install it, you have to build it, using ``node build <browser>``, ``rimraf``, ``web-ext`` and ``babel-minify`` are required.
 
 ### Firefox
 
 1. Be sure that the version from the Firefox add-ons site is not installed (don't know what it would do, maybe it just won't work)
 2. Clone the repo
-3. Build ``node build.js firefox``
+3. Build ``node build firefox``
 4. Go to [about:debugging](about:debugging)
 5. Click *Load a temporary module*
-6. Select any file of the cloned repo.
+6. Select any file of *firefoxBuild* folder
 7. Done !
 
 ### Chrome
 
 1. Make sure it isn't already installed
 2. Clone the repo
-3. Build ``node build.js chrome``
+3. Build ``node build chrome``
 4. Go to [chrome://extensions/](chrome://extensions/)
 5. Activate *Developper Mode* on the top right
 6. Click *Load Unpacked*
-7. Select the **MyMangaDex** folder
+7. Select the *chromeBuild* folder
 8. Done !
 
 ## Useful links

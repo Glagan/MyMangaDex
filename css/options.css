@@ -17,7 +17,7 @@ body {
     font-size: 1.5rem;
 }
 
-#malImportStatus {
+#malImportStatus, #malExportStatus {
     display: none;
     max-height: 18rem;
     overflow: auto;

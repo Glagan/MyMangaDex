@@ -11,13 +11,16 @@ class OptionsManager {
         this.lastOpenColorsList = document.getElementById("lastOpenColors");
         this.defaultLastOpenColors = document.getElementById("defaultLastOpenColors");
         this.refreshSaveButton = document.getElementById("refresh-save");
+        this.copySave = document.getElementById("copy-save");
         this.saveContent = document.getElementById("save-content");
         this.importMMDForm = document.getElementById("save-import");
         this.importMALForm = document.getElementById("mal-import");
+        this.exportMALForm = document.getElementById("mal-export");
         this.deleteSaveButton = document.getElementById("delete-save");
         this.contentNode = document.getElementById("content");
         this.lastOpenColorsNodes = {};
-        this.outputMyAnimeList = document.getElementById("malImportStatus");
+        this.importOutput = document.getElementById("malImportStatus");
+        this.exportOutput = document.getElementById("malExportStatus");
         this.importInformations = document.getElementById("importInformations");
         this.importSubmitButton = document.getElementById("importSubmitButton");
 
@@ -25,6 +28,10 @@ class OptionsManager {
         this.options = {};
         this.myAnimeListMangaList = {};
         this.mangaDexMangaList = [];
+        this.currentLog = "import";
+        this.malBusy = false;
+        this.loggedMyAnimeList = true;
+        this.HTMLParser = new DOMParser();
 
         // Start
         this.setEvents();
@@ -90,8 +97,16 @@ class OptionsManager {
         // Export
         this.refreshSaveButton.addEventListener("click", async () => {
             // Load save
+            this.copySave.classList.add("d-none");
             let data = await storageGet(null);
             this.saveContent.value = JSON.stringify(data);
+            this.copySave.classList.remove("d-none");
+        });
+        this.copySave.addEventListener("click", async () => {
+            this.copySave.classList.add("d-none");
+            this.saveContent.select();
+            document.execCommand("copy");
+            this.saveContent.value = "";
         });
         this.saveContent.addEventListener("click", event => {
             event.target.select();
@@ -105,6 +120,10 @@ class OptionsManager {
         this.importMALForm.addEventListener("submit", event => {
             event.preventDefault();
             this.importMAL();
+        });
+        this.exportMALForm.addEventListener("submit", event => {
+            event.preventDefault();
+            this.exportMAL();
         });
 
         // Delete
@@ -288,8 +307,8 @@ class OptionsManager {
         let row = document.createElement("li");
         row.className = "list-group-item list-group-item-" + logLevel;
         row.textContent = text;
-        this.outputMyAnimeList.appendChild(row);
-        this.outputMyAnimeList.scrollTop = this.outputMyAnimeList.scrollHeight;
+        this.logOutput.appendChild(row);
+        this.logOutput.scrollTop = this.logOutput.scrollHeight;
     }
 
     async importMMD() {
@@ -322,6 +341,9 @@ class OptionsManager {
     }
 
     async importMAL() {
+        if (this.malBusy)
+            return;
+
         let username = this.importMALForm.username.value;
         this.importMALForm.disabled = true;
 
@@ -331,9 +353,11 @@ class OptionsManager {
             this.mangaDexMangaList = [];
 
             // Show the status box
-            this.outputMyAnimeList.style.display = "block";
-            clearDomNode(this.outputMyAnimeList);
-            this.logAndScroll(LOG.INFO, "Starting... don't close this tab.");
+            this.malBusy = true;
+            this.logOutput = this.importOutput;
+            this.logOutput.style.display = "block";
+            clearDomNode(this.logOutput);
+            this.logAndScroll(LOG.INFO, "Starting... don't close the options page.");
 
             // Start a dummy request to MyAnimeList to see if we can fetch the data
             await this.listMyAnimeList(username, 0, true);
@@ -348,6 +372,9 @@ class OptionsManager {
 
                 this.flashBackground(true);
             }
+
+            // Done
+            this.malBusy = false;
         } else {
             this.flashBackground(false);
             console.error("Empty MAL username");
@@ -392,33 +419,31 @@ class OptionsManager {
         }
     }
 
-    async listMangaDex(page = 1, max_page = 1) {
+    async listMangaDex(page = 1, max_page = 1, type = 0) {
         this.logAndScroll(LOG.INFO, "Fetching MangaDex follow page manga " + page + ((max_page > 1) ? " of " + max_page : ""));
 
         try {
-            let response = await fetch("https://mangadex.org/follows/manga/0/0/" + page + "/", {
+            let response = await fetch("https://mangadex.org/follows/manga/" + type + "/0/" + page + "/", {
                 method: "GET",
                 redirect: "follow",
                 credentials: "include"
             });
-            let data = await response.text();
-            let regex = /href="\/title\/(\d+)\/.+"(?:\s*class)/g;
-            let m;
-
-            // Get all manga ids
-            while ((m = regex.exec(data)) !== null) {
-                // This is necessary to avoid infinite loops with zero-width matches
-                if (m.index === regex.lastIndex) {
-                    regex.lastIndex++;
-                }
-                this.mangaDexMangaList.push(parseInt(m[1]));
+            let text = await response.text();
+            let domContent = this.HTMLParser.parseFromString(text, "text/html");
+            let links = domContent.getElementsByClassName("manga_title");
+            for (let i = 0; i < links.length; i++) {
+                this.mangaDexMangaList.push(parseInt(/\/title\/(\d+)\//.exec(links[i].href)[1]));
             }
 
             // Check the number of pages
             if (page == 1) {
-                let regex = /Showing\s\d+\sto\s\d+\sof\s(\d+)\stitles/.exec(data);
-                if (regex !== null) {
-                    max_page = Math.ceil(regex[1] / 100);
+                try {
+                    let regex = /Showing\s\d+\sto\s\d+\sof\s(\d+)\stitles/.exec(document.querySelector(".mt-3.text-center").textContent);
+                    if (regex !== null) {
+                        max_page = Math.ceil(regex[1] / 100);
+                    }
+                } catch (error) {
+                    max_page = 1;
                 }
             }
 
@@ -449,13 +474,10 @@ class OptionsManager {
                 method: "GET",
                 cache: "no-cache"
             });
-            let data = await response.text();
-            // Scan the manga page for the mal icon and mal url
-            let mangaName = /<title>(.+)\s*\(Title\)\s*-\s*MangaDex<\/title>/.exec(data)[1];
-            let myAnimeListURL = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(data);
-
+            let text = await response.text();
+            let content = this.HTMLParser.parseFromString(text, "text/html");
+            //
             let manga = {
-                name: mangaName,
                 mangaDexId: this.mangaDexMangaList[index],
                 myAnimeListId: 0,
                 lastMangaDexChapter: 0,
@@ -465,9 +487,17 @@ class OptionsManager {
                 },
                 chapters: []
             };
-
+            // Scan the manga page for the mal icon and mal url
+            let mangaName = content.querySelector("h6[class='card-header']").textContent.trim();
+            let myAnimeListURL = content.querySelector("img[src='/images/misc/mal.png'");
+            if (myAnimeListURL !== null) {
+                myAnimeListURL = myAnimeListURL.nextElementSibling;
+                manga.myAnimeListId = parseInt(/https:\/\/myanimelist\.net\/manga\/(\d+)/.exec(myAnimeListURL.href)[1]);
+            } else {
+                manga.myAnimeListId = 0;
+            }
             // If regex is empty, there is no mal link, can't do anything
-            if (myAnimeListURL === null) {
+            if (manga.myAnimeListId == 0) {
                 // insert in local storage
                 this.logAndScroll(LOG.WARNING, "> " + mangaName + " set to Chapter 0 (No MyAnimeList entry)");
                 await updateLocalStorage(manga, this.options);
@@ -478,14 +508,9 @@ class OptionsManager {
                     this.logAndScroll(LOG.SUCCESS, "Done.");
                 }
             } else {
-                // Finish gettint the mal url
-                myAnimeListURL = myAnimeListURL[1];
-                // If there is a mal link, add it and save it in local storage
-                manga.mal = parseInt(/.+\/(\d+)/.exec(myAnimeListURL)[1]);
-
                 // Search for data from the mal_list object
-                if (manga.mal in this.myAnimeListMangaList) {
-                    manga.currentChapter.chapter = this.myAnimeListMangaList[manga.mal];
+                if (manga.myAnimeListId in this.myAnimeListMangaList) {
+                    manga.currentChapter.chapter = this.myAnimeListMangaList[manga.myAnimeListId];
 
                     // Add last max_save_opened chapters since the current one in the opened array
                     if (this.options.saveAllOpened) {
@@ -518,6 +543,179 @@ class OptionsManager {
             } else {
                 this.logAndScroll(LOG.SUCCESS, "Done.");
             }
+        }
+    }
+
+    async exportMAL() {
+        if (this.malBusy)
+            return;
+
+        // Disable import
+        this.malBusy = true;
+        this.logOutput = this.exportOutput;
+        this.logOutput.style.display = "block";
+        clearDomNode(this.logOutput);
+        this.logAndScroll(LOG.INFO, "Starting... don't close the options page.");
+
+        // Do the same process for every status
+        for (let s = 1; s <= 6; s++) {
+            await new Promise(resolve => {
+                setTimeout(() => {
+                    resolve();
+                }, 500);
+            });
+
+            this.logAndScroll(LOG.INFO, "Updating manga with the status " + s);
+            // Arrays with the data in this.mangaDexMangaList
+            this.mangaDexMangaList = [];
+            await this.listMangaDex(1, 1, s);
+
+            // Abort if empty
+            let max = this.mangaDexMangaList.length;
+            if (max == 0)
+                continue;
+
+            // Update everything
+            for (let i = 0; i < max; i++) {
+                await new Promise(resolve => {
+                    setTimeout(() => {
+                        resolve();
+                    }, 500);
+                });
+
+                this.logAndScroll(LOG.INFO, "Updating #" + this.mangaDexMangaList[i]);
+                let current = await storageGet(this.mangaDexMangaList[i]);
+
+                // Get the MAL id
+                let notSaved = false;
+                if (current == null) {
+                    notSaved = true;
+                    this.logAndScroll(LOG.INFO, "Trying to find a MyAnimeList id for #" + this.mangaDexMangaList[i]);
+                    let response = await fetch("https://mangadex.org/title/" + this.mangaDexMangaList[i], {
+                        method: "GET",
+                        cache: "no-cache"
+                    });
+                    let text = await response.text();
+                    let content = this.HTMLParser.parseFromString(text, "text/html");
+                    //
+                    current = {
+                        mal: 0,
+                        last: 0,
+                        chapters: []
+                    };
+                    // Scan the manga page for the mal icon and mal url
+                    let myAnimeListURL = content.querySelector("img[src='/images/misc/mal.png'");
+                    if (myAnimeListURL !== null) {
+                        myAnimeListURL = myAnimeListURL.nextElementSibling;
+                        current.mal = parseInt(/https:\/\/myanimelist\.net\/manga\/(\d+)/.exec(myAnimeListURL.href)[1]);
+                    }
+                }
+
+                if (current.mal == 0) {
+                    this.logAndScroll(LOG.WARNING, "No MyAnimeList id, skip.");
+                    continue;
+                }
+
+                // Update MyAnimeList
+                let manga = {};
+                manga.myAnimeListId = current.mal;
+                await this.fetchMyAnimeList(manga, current.mal);
+                // Abort if not logged in - we didn't receive any data
+                if (!this.loggedMyAnimeList) {
+                    this.logAndScroll(LOG.ERROR, "Not logged on MyAnimeList, aborting.");
+                    return;
+                }
+                // Finally update Local Storage or MAL if possible
+                if (manga.is_approved) {
+                    // If MAL is already in the list save it to local
+                    if (manga.in_list) {
+                        if (current.last > manga.lastMyAnimeListChapter) {
+                            await this.updateMyAnimeList(manga, s);
+                            this.logAndScroll(LOG.INFO, "> MyAnimeList #" + current.mal + " updated with chapter " + current.last);
+                            manga.lastMangaDexChapter = current.last;
+                        } else {
+                            this.logAndScroll(LOG.INFO, "> MyAnimeList #" + current.mal + " NOT updated since it is up to date.");
+                            manga.lastMangaDexChapter = manga.lastMyAnimeListChapter;
+                        }
+                    } else { // Else update MAL
+                        manga.currentChapter = {chapter: current.last, volume: 0};
+                        await this.updateMyAnimeList(manga, s);
+                        this.logAndScroll(LOG.INFO, "> MyAnimeList #" + current.mal + " added with chapter " + current.last);
+                    }
+                } else {
+                    this.logAndScroll(LOG.INFO, "The manga is still pending approval on MyAnimelist and can't be updated, skip.");
+                }
+                // Save to Local Storage if needed
+                if (notSaved) {
+                    manga.mangaDexId = this.mangaDexMangaList[i];
+                    manga.currentChapter = {
+                        chapter: manga.lastMangaDexChapter,
+                        volume: 0
+                    };
+                    manga.chapters = [];
+                    if (this.options.saveAllOpened) {
+                        let min = Math.max(manga.currentChapter.chapter - this.options.maxChapterSaved, 0);
+                        for (let i = manga.currentChapter.chapter; i > min; i--) {
+                            manga.chapters.push(i);
+                        }
+                    }
+                    await updateLocalStorage(manga, this.options);
+                }
+            }
+            this.logAndScroll(LOG.SUCCESS, "Status " + s + " done.");
+        }
+
+        // Done
+        this.flashBackground(true);
+        this.logAndScroll(LOG.SUCCESS, "Done.");
+        this.malBusy = false;
+    }
+
+    async fetchMyAnimeList(manga) {
+        let data = await fetch("https://myanimelist.net/ownlist/manga/" + manga.myAnimeListId + "/edit?hideLayout", {
+            method: "GET",
+            redirect: "follow",
+            cache: "no-cache",
+            credentials: "include"
+        });
+        let text = await data.text();
+
+        if (data.url.indexOf("login.php") > -1) {
+            this.loggedMyAnimeList = false;
+        } else {
+            // CSRF Token
+            this.csrf = /'csrf_token'\scontent='(.{40})'/.exec(text)[1];
+            processMyAnimeListResponse(manga, text);
+        }
+    }
+
+    async updateMyAnimeList(manga, status) {
+        // MD Status to MAL Status
+        if (status == 4) {
+            status = 6;
+        } else if (status == 5) {
+            status = 4;
+        } else if (status == 6) {
+            status = 1;
+            manga.is_rereading = true;
+        }
+
+        // Build body
+        let {requestURL, body} = buildMyAnimeListBody(true, manga, this.csrf, status);
+        // Send the POST request to update or add the manga
+        try {
+            await fetch(requestURL, {
+                method: "POST",
+                body: body,
+                redirect: "follow",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+                }
+            });
+        } catch (error) {
+            this.logAndScroll(LOG.ERROR, "Error updating the manga. error: " + error);
         }
     }
 
