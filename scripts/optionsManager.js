@@ -437,18 +437,23 @@ class OptionsManager {
 
             // Check the number of pages
             if (page == 1) {
-                try {
-                    let regex = /Showing\s\d+\sto\s\d+\sof\s(\d+)\stitles/.exec(document.querySelector(".mt-3.text-center").textContent);
+                let node = domContent.querySelector(".mt-3.text-center");
+                if (node !== null) {
+                    let regex = /Showing\s\d+\sto(\s\d+)\sof\s(\d+)\stitles/.exec(node.textContent);
                     if (regex !== null) {
-                        max_page = Math.ceil(regex[1] / 100);
+                        max_page = Math.ceil(parseInt(regex[2]) / parseInt(regex[1]));
                     }
-                } catch (error) {
-                    max_page = 1;
                 }
             }
 
             // We fetch the next page if required
             if (page < max_page) {
+                // Wait 500ms
+                await new Promise(resolve => {
+                    setTimeout(() => {
+                        resolve();
+                    }, 500);
+                });
                 await this.listMangaDex(page + 1, max_page);
             } else {
                 this.logAndScroll(LOG.SUCCESS, "Done fetching MangaDex follow manga.");

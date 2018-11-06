@@ -1,6 +1,10 @@
 # Changelog
 
-## 1.10
+## 1.9.8
+
+* Fix for the "Export (MAL)" feature
+
+## 1.9.7
 
 * Added a "Copy" button when exporting a MyMangaDex save
 * Added a "Delete on MyAnimeList" button inside the MAL Modal

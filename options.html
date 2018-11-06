@@ -194,6 +194,7 @@
         <h1 class="header-separator py-2 px-2"><i class="fas fa-upload"></i> Import (MMD)</h1>
         <p>You can import your <strong>MyMangaDex</strong> data that you exported, paste your save and click <strong>Import</strong>. Options <strong>are</strong> override.<br>
         Merging your data will <i>merge</i> the saved opened chapters, and pick the highest last opened chapter for each manga.</p>
+        <div class="alert alert-danger" role="alert">This will erase your <b>current</b> save, export it if you don't want to lose it.</div>
         <form id="save-import">
             <textarea class="form-control" name="save" placeholder="Exported Save (JSON)"></textarea>
             <div id="importInformations"></div>
@@ -203,6 +204,7 @@
         </form>
         <h1 class="header-separator py-2 px-2"><i class="fas fa-upload"></i> Import (MAL)</h1>
         <p>Update your <b>MangaDex</b> follow list with data from MyAnimeList. If <kbd>saveAllOpened</kbd> is enabled, a list of chapters is generated.</p>
+        <div class="alert alert-danger" role="alert">This will erase your <b>current</b> save, export it if you don't want to lose it.</div>
         <form id="mal-import" class="text-center form-inline justify-content-md-center mx-auto">
             <div class="form-group mx-sm-3 mb-2 input-group">
                 <input type="text" class="form-control" name="username" placeholder="MyAnimeList username">
