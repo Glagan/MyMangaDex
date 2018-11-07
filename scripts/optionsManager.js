@@ -453,7 +453,7 @@ class OptionsManager {
                         resolve();
                     }, 500);
                 });
-                await this.listMangaDex(page + 1, max_page);
+                await this.listMangaDex(page + 1, max_page, type);
             } else {
                 this.logAndScroll(LOG.SUCCESS, "Done fetching MangaDex follow manga.");
             }
@@ -628,6 +628,13 @@ class OptionsManager {
                 // Abort if not logged in - we didn't receive any data
                 if (!this.loggedMyAnimeList) {
                     this.logAndScroll(LOG.ERROR, "Not logged on MyAnimeList, aborting.");
+                    // Still save it in Local Storage to know it's empty
+                    await updateLocalStorage({
+                        mangaDexId: this.mangaDexMangaList[i],
+                        last: 0,
+                        mal: 0,
+                        chapters: []
+                    }, this.options);
                     return;
                 }
                 // Finally update Local Storage or MAL if possible
