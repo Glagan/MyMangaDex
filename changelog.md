@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.10 + 1.9.11
+
+* Fix icon in options page
+* Final fix for the "Export (MAL)" feature
+* Save empty new entries when exporting to MAL
+
 ## 1.9.9
 
 * Added warnings in the options
