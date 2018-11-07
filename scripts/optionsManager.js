@@ -277,7 +277,6 @@ class OptionsManager {
             });
             // Save
             await storageSet("options", this.options);
-            console.log("Saved");
             this.flashBackground(true);
         } catch (error) {
             console.error(error);
@@ -624,6 +623,7 @@ class OptionsManager {
                 // Update MyAnimeList
                 let manga = {};
                 manga.myAnimeListId = current.mal;
+                manga.currentChapter = {chapter: current.last, volume: 0};
                 await this.fetchMyAnimeList(manga, current.mal);
                 // Abort if not logged in - we didn't receive any data
                 if (!this.loggedMyAnimeList) {
@@ -640,10 +640,10 @@ class OptionsManager {
                             manga.lastMangaDexChapter = current.last;
                         } else {
                             this.logAndScroll(LOG.INFO, "> MyAnimeList #" + current.mal + " NOT updated since it is up to date.");
+                            manga.currentChapter.chapter = manga.lastMyAnimeListChapter;
                             manga.lastMangaDexChapter = manga.lastMyAnimeListChapter;
                         }
                     } else { // Else update MAL
-                        manga.currentChapter = {chapter: current.last, volume: 0};
                         await this.updateMyAnimeList(manga, s);
                         this.logAndScroll(LOG.INFO, "> MyAnimeList #" + current.mal + " added with chapter " + current.last);
                     }
@@ -653,10 +653,6 @@ class OptionsManager {
                 // Save to Local Storage if needed
                 if (notSaved) {
                     manga.mangaDexId = this.mangaDexMangaList[i];
-                    manga.currentChapter = {
-                        chapter: manga.lastMangaDexChapter,
-                        volume: 0
-                    };
                     manga.chapters = [];
                     if (this.options.saveAllOpened) {
                         let min = Math.max(manga.currentChapter.chapter - this.options.maxChapterSaved, 0);

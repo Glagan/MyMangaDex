@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.9
+
+* Added warnings in the options
+* Fix for the "Export (MAL)" feature, again
+
 ## 1.9.8
 
 * Fix for the "Export (MAL)" feature

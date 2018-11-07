@@ -669,7 +669,6 @@ class MyMangaDex {
                 let text = await data.text();
                 // Scan the manga page for the mal icon and mal url
                 let myAnimeListURL = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(text);
-
                 // If regex is empty, there is no mal link, can't do anything
                 if (myAnimeListURL === null) {
                     this.notification(NOTIFY.ERROR, "No MyAnimeList id found", "You will need to go on the manga page if one is added.\nLast open chapters are still saved.", undefined, true);
