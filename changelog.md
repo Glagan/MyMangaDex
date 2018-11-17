@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0
+
+* Online Save
+* Updated options layout, again
+
 ## 1.9.10 + 1.9.11
 
 * Fix icon in options page

@@ -54,6 +54,14 @@ The export to MAL feature add or update on MyAnimeList all your titles in your M
 
 > This is good if you wish to **start** using MyAnimeList with a full MangaDex follow list ;)
 
+## Online Save
+
+You can enable the option to upload your save to an online service, using a [MMD - Online Save](https://github.com/Glagan/MyMangaDex-OnlineSave) website.  
+By default, the option is turned off and the default website available is my site, [https://mmd.nikurasu.org](https://mmd.nikurasu.org/), but you can clone the Online Save repo and host it yourself, you then just have to change the URL in the options.  
+When you enable that option, you need to set your username and your password, and that's the only thing you need to remember.  
+When you change computer, after reinstalling the extension, you just have to enter them again and your save will be imported locally, and your future updates will be saved online.  
+All of the data is still saved locally and the extension only use local data.
+
 ## Data stored
 
 I only store the least possible data:

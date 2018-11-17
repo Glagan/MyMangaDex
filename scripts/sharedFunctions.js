@@ -105,16 +105,26 @@ async function loadOptions() {
                 });
             }
 
+            if (data.version < 2.0) {
+                data.showNoMal = defaultOptions.showNoMal;
+                data.onlineSave = defaultOptions.onlineSave; // New options to default
+                data.onlineURL = defaultOptions.onlineURL;
+                data.username = defaultOptions.username;
+                data.password = defaultOptions.password;
+                data.version = 2.0;
+
+                vNotify.info({
+                    title: "MyMangaDex as been updated to 2.0",
+                    text: "Online Save as been added, if you wish to use it you need to manually enable it. You can see the changelog on https://github.com/Glagan/MyMangaDex."
+                });
+            }
+
             await storageSet("options", data);
         } // Easy to add updates here, on another if and push the promise in the updates array
 
         // Sub version option fix
         if (data.showNoMal === undefined) {
             data.showNoMal = defaultOptions.showNoMal;
-            vNotify.info({
-                title: "MyMangaDex as been updated to 1.9.7",
-                text: "You can see the changelog on https://github.com/Glagan/MyMangaDex, new options have been added, you should check them out !"
-            });
             await storageSet("options", data);
         }
 

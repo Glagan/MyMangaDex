@@ -27,6 +27,9 @@ let defaultOptions = {
     showNotifications: true,
     showErrors: true,
     showNoMal: true,
-    version: 1.9,
-    subVersion: 7
+    onlineSave: false,
+    onlineURL: "https://mmd.nikurasu.org/api/",
+    username: "",
+    password: "",
+    version: 2.0
 };

@@ -1,20 +1,18 @@
 body {
-    color: white;
-}
-
-.main-options {
-    border: 1px solid rgba(0, 0, 0, 0.6);
-    border-radius: 4px;
-    background-color: rgb(46, 51, 56);
+    background: rgba(0, 0, 0, 0.2);
     transition: background-color 0.5s ease-in-out;
 }
 
-.header-separator {
-    border-bottom: 2px solid rgba(0, 0, 0, 0.6);
+h1 {
+    text-shadow: 0 0 2px gray;
 }
 
-.font-2 {
+#save {
+    position: fixed;
+    top: 1rem;
+    right: 2rem;
     font-size: 1.5rem;
+    z-index: 9999;
 }
 
 #malImportStatus, #malExportStatus {
@@ -23,16 +21,17 @@ body {
     overflow: auto;
 }
 
-.col-form-label {
-    text-align: right;
-    font-weight: bold;
-}
-
 .saved {
     background-color: rgb(0, 102, 0) !important;
 }
 
-
 .failed {
     background-color: firebrick !important;
+}
+
+.text-container {
+    background-color: rgb(46, 51, 56);
+    border-radius: 4px;
+    color: white;
+    box-shadow: 1px 1px 4px rgb(46, 51, 56);
 }
