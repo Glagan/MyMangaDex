@@ -1,8 +1,9 @@
 #!/usr/bin/env node
+/* eslint-disable no-console */
 
 const fs = require("fs");
 const { exec, execSync } = require("child_process");
-const rimraf = require('rimraf');
+const rimraf = require("rimraf");
 
 // Args
 const [,, ...args] = process.argv;
@@ -33,6 +34,28 @@ if (args[0] == "firefox" || args[0] == "f") {
 } else if (args[0] == "chrome" || args[0] == "c") {
     browser = "chrome";
     files.third_party.push("chrome-extension-async.js");
+}
+
+// Options
+let minify = true;
+let webExt = true;
+
+// If we don't minify we don't use the "minified" subfolder for scripts
+if (args.includes("--no-minify")) {
+    minify = false;
+    files.scripts = {
+        ".": [
+            "defaultOptions.js",
+            "myMangaDex.js",
+            "optionsManager.js",
+            "sharedFunctions.js",
+        ]
+    };
+}
+
+// Don't build the web-ext artifact
+if (args.includes("--no-web-ext")) {
+    webExt = false;
 }
 
 // Used to merge manifests
@@ -99,27 +122,33 @@ if (["firefox", "chrome"].includes(browser)) {
     bundleManifestStream.end();
 
     // Minify script
-    console.log("Minifying scripts");
-    execSync("minify");
+    if (minify) {
+        console.log("Minifying scripts");
+        execSync("minify");
+    }
 
     // Copy files
     console.log("Copying files");
     deepFileCopy(files, makeFolder + "/", "");
 
-    exec("web-ext build", {cwd: makeFolder}, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Build error: ${error}`);
-            return;
-        }
+    if (webExt) {
+        exec("web-ext build", {cwd: makeFolder}, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Build error: ${error}`);
+                return;
+            }
 
-        if (!fs.existsSync("builds")) {
-            fs.mkdirSync("builds");
-        }
-        console.log("Moving zip archive to 'builds'");
-        fs.renameSync(makeFolder + "/web-ext-artifacts/mymangadex-" + mainManifest.version + ".zip", "builds/mymangadex-" + mainManifest.version + "_" + browser + ".zip");
+            if (!fs.existsSync("builds")) {
+                fs.mkdirSync("builds");
+            }
+            console.log("Moving zip archive to 'builds'");
+            fs.renameSync(makeFolder + "/web-ext-artifacts/mymangadex-" + mainManifest.version + ".zip", "builds/mymangadex-" + mainManifest.version + "_" + browser + ".zip");
 
+            console.log("Done");
+        });
+    } else {
         console.log("Done");
-    });
+    }
 } else {
     console.error("Unrecognized browser to bundle for.");
 }

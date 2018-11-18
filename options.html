@@ -12,7 +12,7 @@
 </head>
 <body>
     <button id="save" class="btn btn-success"><i class="fas fa-save"></i> Save</button>
-    <div id="content" class="container-fluid py-2">
+    <div class="container-fluid py-2">
         <div class="row">
             <div class="col">
                 <div class="text-container p-2 mb-3">
@@ -311,46 +311,60 @@
                     </div>
                 </div>
                 <!-- Logged in -->
-                <div class="text-container p-2 mb-3">
+                <div id="loggedInPanel" class="text-container p-2 mb-3">
                     <div class="alert alert-info" role="alert">You are currently <b>LOGGED IN</b>.</div>
                     <div class="input-group">
-                        <div class="col-sm-12 col-md-6 mb-2 mb-md-0 text-center">
-                            <button class="btn btn-primary mr-2"><i class="fas fa-download"></i> Import Online</button>
-                            <button class="btn btn-primary mr-2"><i class="fas fa-upload"></i> Export Online</button>
+                        <div class="col-sm-12 col-md-8 mb-2 mb-md-0 text-center">
+                            <button class="btn btn-primary mr-2" id="importOnline"><i class="fas fa-download"></i> Import Online</button>
+                            <button class="btn btn-primary" id="exportOnline"><i class="fas fa-upload"></i> Export Online</button>
                         </div>
-                        <div class="col-sm-12 col-md-6 text-center">
-                            <button class="btn btn-danger mr-2"><i class="fas fa-sign-out-alt"></i> Disconnect</button>
-                            <button class="btn btn-danger mr-2"><i class="fas fa-trash"></i> Delete Online Data</button>
+                        <div class="col-sm-12 col-md-4 text-center">
+                            <button class="btn btn-danger mr-2" id="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
                         </div>
                     </div>
                 </div>
-                <!-- Logged off -->
-                <div class="text-container p-2 mb-3">
-                    <div class="alert alert-info" role="alert">You are currently <b>LOGGED OFF</b>.</div>
-                    <p>To connect, fill the following fields and press <b>Login</b>.</p>
+                <!-- Logged out -->
+                <div id="loggedOutPanel" class="text-container p-2 mb-3">
+                    <div class="alert alert-info" role="alert">You are currently <b>LOGGED OUT</b>.</div>
+                    <p>To connect, fill the following fields and press <b>Login</b> or <b>Register</b> if you don't have an account on this service.</p>
                     <div class="input-group justify-content-center">
-                        <button class="btn btn-primary mr-2"><i class="fas fa-sign-in-alt"></i> Login</button>
+                        <button class="btn btn-primary mr-2" id="login"><i class="fas fa-sign-in-alt"></i> Login</button>
+                        <button class="btn btn-primary" id="register"><i class="fas fa-user-plus"></i> Register</button>
                     </div>
                 </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Online URL <a data-default="onlineURL" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">The URL of the online service.</p>
-                    <div class="px-0">
-                        <input data-option="onlineURL" data-type="text" type="text" placeholder="URL" class="form-control" />
+                <div id="onlineSuccess" class="alert alert-success" role="alert"></div>
+                <div id="onlineError" class="alert alert-danger" role="alert"></div>
+                <!-- Values -->
+                <form id="onlineForm">
+                    <div class="form-group text-container p-2">
+                        <label class="font-weight-bold">Online URL <a data-default="onlineURL" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+                        <p class="d-none d-xl-block">The URL of the online service.</p>
+                        <div class="px-0">
+                            <input data-option="onlineURL" data-type="text" type="text" name="onlineURL" placeholder="URL" class="form-control" />
+                        </div>
                     </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Username <a data-default="username" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Your username on the service.</p>
-                    <div class="px-0">
-                        <input data-option="username" data-type="text" type="text" placeholder="Username" class="form-control" />
+                    <div class="form-group text-container p-2">
+                        <label class="font-weight-bold">Username <a data-default="username" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+                        <p class="d-none d-xl-block">Your username on the service.</p>
+                        <div class="px-0">
+                            <input data-option="username" data-type="text" type="text" name="username" placeholder="Username" class="form-control" />
+                        </div>
                     </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Password <a data-default="password" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Your password on the service.</p>
-                    <div class="px-0">
-                        <input data-option="password" data-type="text" type="password" placeholder="Password" class="form-control" />
+                    <div class="form-group text-container p-2">
+                        <label class="font-weight-bold">Password <a data-default="password" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+                        <p class="d-none d-xl-block">Your password on the service.</p>
+                        <div class="px-0">
+                            <input data-option="password" data-type="text" type="password" name="password" placeholder="Password" class="form-control" />
+                        </div>
+                    </div>
+                </form>
+                <!-- Management when online -->
+                <div id="onlineAdvancedPanel" class="text-container p-2 mb-3">
+                    <div class="text-center">
+                        <button class="btn btn-secondary mr-2" id="receiveToken"><i class="fas fa-download"></i> Receive Token</button>
+                        <button class="btn btn-secondary mr-2" id="update"><i class="fas fa-edit"></i> Update Credentials</button>
+                        <button class="btn btn-secondary mr-2" id="refreshToken"><i class="fas fa-wrench"></i> Refresh Token</button>
+                        <button class="btn btn-danger" id="deleteOnline"><i class="fas fa-trash"></i> Delete Online Data</button>
                     </div>
                 </div>
             </div>
@@ -371,7 +385,7 @@
     <script src="third_party/vanilla-notify.min.js"></script>
     <script src="scripts/defaultOptions.js"></script>
     <script src="third_party/chrome-extension-async.js"></script>
-    <script src="scripts/minified/sharedFunctions.js"></script>
-    <script src="scripts/minified/optionsManager.js"></script>
+    <script src="scripts/sharedFunctions.js"></script>
+    <script src="scripts/optionsManager.js"></script>
 </body>
 </html>

@@ -111,6 +111,8 @@ async function loadOptions() {
                 data.onlineURL = defaultOptions.onlineURL;
                 data.username = defaultOptions.username;
                 data.password = defaultOptions.password;
+                data.isLoggedIn = defaultOptions.isLoggedIn;
+                data.token = defaultOptions.token;
                 data.version = 2.0;
 
                 vNotify.info({

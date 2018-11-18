@@ -1,6 +1,7 @@
 body {
     background: rgba(0, 0, 0, 0.2);
-    transition: background-color 0.5s ease-in-out;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+    transition: background 1s ease-in-out;
 }
 
 h1 {
@@ -15,18 +16,19 @@ h1 {
     z-index: 9999;
 }
 
-#malImportStatus, #malExportStatus {
+#malImportStatus,
+#malExportStatus {
     display: none;
     max-height: 18rem;
     overflow: auto;
 }
 
-.saved {
-    background-color: rgb(0, 102, 0) !important;
+.bg-success {
+    background: rgb(0, 102, 0) !important;
 }
 
-.failed {
-    background-color: firebrick !important;
+.bg-fail {
+    background: firebrick !important;
 }
 
 .text-container {
@@ -34,4 +36,12 @@ h1 {
     border-radius: 4px;
     color: white;
     box-shadow: 1px 1px 4px rgb(46, 51, 56);
+}
+
+#loggedInPanel,
+#loggedOutPanel,
+#onlineAdvancedPanel,
+#onlineError,
+#onlineSuccess {
+    display: none;
 }

@@ -17,12 +17,26 @@ class OptionsManager {
         this.importMALForm = document.getElementById("mal-import");
         this.exportMALForm = document.getElementById("mal-export");
         this.deleteSaveButton = document.getElementById("delete-save");
-        this.contentNode = document.getElementById("content");
         this.lastOpenColorsNodes = {};
         this.importOutput = document.getElementById("malImportStatus");
         this.exportOutput = document.getElementById("malExportStatus");
         this.importInformations = document.getElementById("importInformations");
         this.importSubmitButton = document.getElementById("importSubmitButton");
+        this.loggedInPanel = document.getElementById("loggedInPanel");
+        this.onlineAdvancedPanel = document.getElementById("onlineAdvancedPanel");
+        this.loggedOutPanel = document.getElementById("loggedOutPanel");
+        this.importOnlineButton = document.getElementById("importOnline");
+        this.exportOnlineButton = document.getElementById("exportOnline");
+        this.logoutButton = document.getElementById("logout");
+        this.loginButton = document.getElementById("login");
+        this.registerButton = document.getElementById("register");
+        this.onlineForm = document.getElementById("onlineForm");
+        this.onlineError = document.getElementById("onlineError");
+        this.onlineSuccess = document.getElementById("onlineSuccess");
+        this.updateButton = document.getElementById("update");
+        this.refreshTokenButton = document.getElementById("refreshToken");
+        this.deleteOnlineButton = document.getElementById("deleteOnline");
+        this.receiveTokenButton = document.getElementById("receiveToken");
 
         //
         this.options = {};
@@ -39,8 +53,12 @@ class OptionsManager {
     }
 
     async start() {
+        // Load options
         this.options = await loadOptions();
         this.restoreOptions();
+
+        // Load online save
+        this.toggleOnlinePanels();
     }
 
     setEvents() {
@@ -129,6 +147,33 @@ class OptionsManager {
         // Delete
         this.deleteSaveButton.addEventListener("click", () => {
             this.deleteSave();
+        });
+
+        // Online
+        this.importOnlineButton.addEventListener("click", () => {
+        });
+        this.exportOnlineButton.addEventListener("click", () => {
+        });
+        this.logoutButton.addEventListener("click", () => {
+            this.logout();
+        });
+        this.loginButton.addEventListener("click", () => {
+            this.login();
+        });
+        this.registerButton.addEventListener("click", () => {
+            this.register();
+        });
+        this.updateButton.addEventListener("click", () => {
+            this.update();
+        });
+        this.refreshTokenButton.addEventListener("click", () => {
+            this.refreshToken();
+        });
+        this.deleteOnlineButton.addEventListener("click", () => {
+            this.deleteOnline();
+        });
+        this.receiveTokenButton.addEventListener("click", () => {
+            this.receiveToken();
         });
     }
 
@@ -253,9 +298,9 @@ class OptionsManager {
     }
 
     flashBackground(value) {
-        this.contentNode.classList.add(value ? "bg-success" : "bg-fail");
+        document.body.classList.add(value ? "bg-success" : "bg-fail");
         setTimeout(() => {
-            this.contentNode.classList.remove(value ? "bg-success" : "bg-fail");
+            document.body.classList.remove(value ? "bg-success" : "bg-fail");
         }, 500);
     }
 
@@ -728,7 +773,299 @@ class OptionsManager {
     }
 
     // END IMPORT EXPORT
+
+    // START ONLINE
+
+    toggleOnlinePanels() {
+        if (this.options.isLoggedIn) {
+            this.loggedInPanel.style.display = "block";
+            this.loggedOutPanel.style.display = "none";
+            this.onlineAdvancedPanel.style.display = "block";
+        } else {
+            this.loggedInPanel.style.display = "none";
+            this.loggedOutPanel.style.display = "block";
+            this.onlineAdvancedPanel.style.display = "none";
+        }
+    }
+
+    hideOnlineMessage(which=undefined) {
+        if (which == "error" || which == undefined) {
+            this.onlineError.style.display = "none";
+        }
+        if (which == "success" || which == undefined) {
+            this.onlineSuccess.style.display = "none";
+        }
+    }
+
+    handleOnlineError(response) {
+        // Convert to object if it's a simple string
+        if (typeof response === "string") {
+            response = {status: response};
+        }
+
+        // Display error alert
+        this.onlineError.style.display = "block";
+        this.onlineError.textContent = "";
+        this.flashBackground(false);
+
+        // If there is no status the errors is a list
+        if (response.status == undefined) {
+            Object.keys(response).forEach(key => {
+                let errorName = document.createElement("b");
+                errorName.textContent = key + ": ";
+                this.onlineError.appendChild(errorName);
+                this.onlineError.appendChild(document.createTextNode(response[key].join(", "))); // List of errors
+                this.onlineError.appendChild(document.createElement("br"));
+            });
+        } else {
+            // If there is a status just display it
+            let errorName = document.createElement("b");
+            errorName.textContent = "Error: ";
+            this.onlineError.appendChild(errorName);
+            this.onlineError.appendChild(document.createTextNode(response.status));
+        }
+    }
+
+    handleOnlineSuccess(response) {
+        // Convert to object if it's a simple string
+        if (typeof response === "string") {
+            response = {status: response};
+        }
+
+        // Display success alert
+        this.onlineSuccess.style.display = "block";
+        this.onlineSuccess.textContent = "";
+
+        let successName = document.createElement("b");
+        successName.textContent = "Success: ";
+        this.onlineSuccess.appendChild(successName);
+        this.onlineSuccess.appendChild(document.createTextNode(response.status));
+    }
+
+    async login() {
+        this.hideOnlineMessage();
+        let onlineURL = this.onlineForm.onlineURL.value;
+        let username = this.onlineForm.username.value;
+        let password = this.onlineForm.password.value;
+
+        // Send a request to the "login" route /user
+        try {
+            let response = await fetch(onlineURL + "user", {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                    "X-Auth-Name": username,
+                    "X-Auth-Pass": password
+                }
+            });
+            let text = await response.json();
+
+            // Check headers and get token if correct
+            if (response.status == 200) {
+                this.options.onlineURL = onlineURL;
+                this.options.username = username;
+                this.options.password = password;
+                this.options.isLoggedIn = true;
+                this.options.token = text.token;
+                this.handleOnlineSuccess(text);
+                this.saveOptions();
+                this.toggleOnlinePanels();
+            } else {
+                this.handleOnlineError(text);
+            }
+        } catch (error) {
+            this.handleOnlineError(error);
+        }
+    }
+
+    async register() {
+        this.hideOnlineMessage();
+        let onlineURL = this.onlineForm.onlineURL.value;
+        let body = {
+            username: this.onlineForm.username.value,
+            password: this.onlineForm.password.value
+        };
+
+        // Send a request to the /user route
+        try {
+            let response = await fetch(onlineURL + "user", {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json; charset=utf-8"
+                },
+                body: JSON.stringify(body)
+            });
+            let text = await response.json();
+
+            if (response.status == 201) {
+                this.options.onlineURL = onlineURL;
+                this.options.username = body.username;
+                this.options.password = body.password;
+                this.options.isLoggedIn = true;
+                this.options.token = text.token;
+                this.handleOnlineSuccess(text);
+                this.saveOptions();
+                this.toggleOnlinePanels();
+            } else {
+                this.handleOnlineError(text);
+            }
+        } catch (error) {
+            this.handleOnlineError(error);
+        }
+    }
+
+    logout() {
+        // Set the options
+        this.options.username = "";
+        this.options.password = "";
+        this.options.isLoggedIn = false;
+        this.options.token = "";
+        // Delete the form too
+        this.onlineForm.username.value = "";
+        this.onlineForm.password.value = "";
+        // Save
+        this.handleOnlineSuccess("Logged out.");
+        this.saveOptions();
+        this.toggleOnlinePanels();
+    }
+
+    async importOnline() {
+
+    }
+
+    async exportOnline() {
+
+    }
+
+    async deleteOnline() {
+        this.hideOnlineMessage();
+
+        // Send a simple DELETE request
+        try {
+            let response = await fetch(this.options.onlineURL + "user/self", {
+                method: "DELETE",
+                headers: {
+                    "Accept": "application/json",
+                    "X-Auth-Name": this.options.username,
+                    "X-Auth-Pass": this.options.password
+                }
+            });
+            let text = await response.json();
+
+            if (response.status == 200) {
+                // Delete in the options
+                this.options.username = "";
+                this.options.password = "";
+                this.options.isLoggedIn = false;
+                this.options.token = "";
+                // Delete the form too
+                this.onlineForm.username.value = "";
+                this.onlineForm.password.value = "";
+                // Save
+                this.handleOnlineSuccess(text);
+                this.saveOptions();
+                this.toggleOnlinePanels();
+            } else {
+                this.handleOnlineError(text);
+            }
+        } catch (error) {
+            this.handleOnlineError(error);
+        }
+    }
+
+    async update() {
+        this.hideOnlineMessage();
+        // Can't change the online URL or username while updating credentials
+        this.onlineForm.onlineURL.value = this.options.onlineURL;
+        this.onlineForm.username.value = this.options.username;
+        // Only the password can be updated
+        let body = {
+            password: this.onlineForm.password.value
+        };
+
+        try {
+            let response = await fetch(this.options.onlineURL + "user/self", {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json; charset=utf-8",
+                    "X-Auth-Name": this.options.username,
+                    "X-Auth-Pass": this.options.password
+                },
+                body: JSON.stringify(body)
+            });
+            let text = await response.json();
+
+            if (response.status == 200) {
+                this.options.password = body.password;
+                this.options.token = text.token;
+                this.handleOnlineSuccess(text);
+                this.saveOptions();
+            } else {
+                this.handleOnlineError(text);
+            }
+        } catch (error) {
+            this.handleOnlineError(error);
+        }
+    }
+
+    async refreshToken() {
+        this.hideOnlineMessage();
+        try {
+            let response = await fetch(this.options.onlineURL + "user/self/token/refresh", {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                    "X-Auth-Name": this.options.username,
+                    "X-Auth-Pass": this.options.password
+                }
+            });
+            let text = await response.json();
+
+            if (response.status == 200) {
+                // Delete in the options
+                this.options.token = text.token;
+                // Save
+                this.handleOnlineSuccess("Token updated.");
+                this.saveOptions();
+            } else {
+                this.handleOnlineError(text);
+            }
+        } catch (error) {
+            this.handleOnlineError(error);
+        }
+    }
+
+    async receiveToken() {
+        this.hideOnlineMessage();
+
+        try {
+            let response = await fetch(this.options.onlineURL + "user/self/token", {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                    "X-Auth-Name": this.options.username,
+                    "X-Auth-Pass": this.options.password
+                }
+            });
+            let text = await response.json();
+
+            // Check headers and get token if correct
+            if (response.status == 200) {
+                this.options.token = text.token;
+                this.handleOnlineSuccess("Token received.");
+                this.saveOptions();
+            } else {
+                this.handleOnlineError(text);
+            }
+        } catch (error) {
+            this.handleOnlineError(error);
+        }
+    }
+
+    // END ONLINE
 }
 document.addEventListener("DOMContentLoaded", async () => {
-    let optionsManager = new OptionsManager();
+    new OptionsManager();
 });
