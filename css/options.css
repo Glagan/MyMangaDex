@@ -38,10 +38,16 @@ h1 {
     box-shadow: 1px 1px 4px rgb(46, 51, 56);
 }
 
+#onlineOptions,
 #loggedInPanel,
 #loggedOutPanel,
 #onlineAdvancedPanel,
 #onlineError,
 #onlineSuccess {
     display: none;
+}
+
+#onlineError,
+#onlineSuccess {
+    cursor: pointer;
 }

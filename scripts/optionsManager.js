@@ -22,21 +22,13 @@ class OptionsManager {
         this.exportOutput = document.getElementById("malExportStatus");
         this.importInformations = document.getElementById("importInformations");
         this.importSubmitButton = document.getElementById("importSubmitButton");
+        this.onlineOptions = document.getElementById("onlineOptions");
         this.loggedInPanel = document.getElementById("loggedInPanel");
         this.onlineAdvancedPanel = document.getElementById("onlineAdvancedPanel");
         this.loggedOutPanel = document.getElementById("loggedOutPanel");
-        this.importOnlineButton = document.getElementById("importOnline");
-        this.exportOnlineButton = document.getElementById("exportOnline");
-        this.logoutButton = document.getElementById("logout");
-        this.loginButton = document.getElementById("login");
-        this.registerButton = document.getElementById("register");
         this.onlineForm = document.getElementById("onlineForm");
         this.onlineError = document.getElementById("onlineError");
         this.onlineSuccess = document.getElementById("onlineSuccess");
-        this.updateButton = document.getElementById("update");
-        this.refreshTokenButton = document.getElementById("refreshToken");
-        this.deleteOnlineButton = document.getElementById("deleteOnline");
-        this.receiveTokenButton = document.getElementById("receiveToken");
 
         //
         this.options = {};
@@ -56,9 +48,6 @@ class OptionsManager {
         // Load options
         this.options = await loadOptions();
         this.restoreOptions();
-
-        // Load online save
-        this.toggleOnlinePanels();
     }
 
     setEvents() {
@@ -150,31 +139,32 @@ class OptionsManager {
         });
 
         // Online
-        this.importOnlineButton.addEventListener("click", () => {
+        this.onlineError.addEventListener("click", () => {
+            this.onlineError.style.display = "none";
         });
-        this.exportOnlineButton.addEventListener("click", () => {
+        this.onlineSuccess.addEventListener("click", () => {
+            this.onlineSuccess.style.display = "none";
         });
-        this.logoutButton.addEventListener("click", () => {
-            this.logout();
+        // Buttons that can be clicked only once
+        document.querySelectorAll("[data-button-protect]").forEach(async button => {
+            button.addEventListener("click", this.protectButton.bind(this, button));
         });
-        this.loginButton.addEventListener("click", () => {
-            this.login();
+        // Hide panels if online save is disabled
+        let onlineSaveCheckbox = document.querySelector("[data-option='onlineSave']");
+        onlineSaveCheckbox.firstElementChild.firstElementChild.addEventListener("click", () => {
+            this.toggleOnlinePanels(true);
         });
-        this.registerButton.addEventListener("click", () => {
-            this.register();
+        onlineSaveCheckbox.lastElementChild.lastElementChild.addEventListener("click", () => {
+            this.toggleOnlinePanels(false);
         });
-        this.updateButton.addEventListener("click", () => {
-            this.update();
-        });
-        this.refreshTokenButton.addEventListener("click", () => {
-            this.refreshToken();
-        });
-        this.deleteOnlineButton.addEventListener("click", () => {
-            this.deleteOnline();
-        });
-        this.receiveTokenButton.addEventListener("click", () => {
-            this.receiveToken();
-        });
+    }
+
+    async protectButton(button) {
+        if (button.dataset.busy === undefined) {
+            button.dataset.busy = true;
+            await this[button.dataset.buttonProtect]();
+            delete button.dataset.busy;
+        }
     }
 
     // FUNCTIONS
@@ -200,6 +190,14 @@ class OptionsManager {
                 }
             }
         });
+
+        // Restore online options
+        this.onlineForm.onlineURL.value = this.options.onlineURL;
+        this.onlineForm.username.value = this.options.username;
+        this.onlineForm.password.value = this.options.password;
+
+        // Show panels
+        this.toggleOnlinePanels(this.options.onlineSave);
     }
 
     addColor(name = "") {
@@ -776,15 +774,21 @@ class OptionsManager {
 
     // START ONLINE
 
-    toggleOnlinePanels() {
-        if (this.options.isLoggedIn) {
-            this.loggedInPanel.style.display = "block";
-            this.loggedOutPanel.style.display = "none";
-            this.onlineAdvancedPanel.style.display = "block";
+    toggleOnlinePanels(enabled=true) {
+        if (enabled) {
+            this.onlineOptions.style.display = "block";
+
+            if (this.options.isLoggedIn) {
+                this.loggedInPanel.style.display = "block";
+                this.loggedOutPanel.style.display = "none";
+                this.onlineAdvancedPanel.style.display = "block";
+            } else {
+                this.loggedInPanel.style.display = "none";
+                this.loggedOutPanel.style.display = "block";
+                this.onlineAdvancedPanel.style.display = "none";
+            }
         } else {
-            this.loggedInPanel.style.display = "none";
-            this.loggedOutPanel.style.display = "block";
-            this.onlineAdvancedPanel.style.display = "none";
+            this.onlineOptions.style.display = "none";
         }
     }
 
@@ -844,6 +848,7 @@ class OptionsManager {
 
     async login() {
         this.hideOnlineMessage();
+
         let onlineURL = this.onlineForm.onlineURL.value;
         let username = this.onlineForm.username.value;
         let password = this.onlineForm.password.value;
@@ -880,6 +885,7 @@ class OptionsManager {
 
     async register() {
         this.hideOnlineMessage();
+
         let onlineURL = this.onlineForm.onlineURL.value;
         let body = {
             username: this.onlineForm.username.value,
@@ -916,6 +922,8 @@ class OptionsManager {
     }
 
     logout() {
+        this.hideOnlineMessage();
+
         // Set the options
         this.options.username = "";
         this.options.password = "";
@@ -931,11 +939,81 @@ class OptionsManager {
     }
 
     async importOnline() {
+        this.hideOnlineMessage();
 
+        try {
+            let response = await fetch(this.options.onlineURL + "user/self/title", {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                    "X-Auth-Token": this.options.token
+                }
+            });
+            let text = await response.json();
+
+            if (response.status == 200) {
+                // Clear storage
+                browser.storage.local.clear();
+                // Build titles
+                let titles = {};
+                text.titles.forEach(element => {
+                    titles[element.md_id] = {
+                        mal: element.mal_id,
+                        last: element.last,
+                        chapters: element.chapters
+                    };
+                });
+                storageSet(null, titles); // Only one query
+                // Restore options
+                this.saveOptions();
+                this.handleOnlineSuccess("Titles imported.");
+            } else {
+                this.handleOnlineError(text);
+            }
+        } catch (error) {
+            this.handleOnlineError(error);
+        }
     }
 
     async exportOnline() {
+        this.hideOnlineMessage();
 
+        let body = {
+            titles: {},
+            options: {
+                "saveAllOpened": this.options.saveAllOpened,
+                "maxChapterSaved": this.options.maxChapterSaved
+            }
+        };
+
+        // Build titles list
+        let titles = await storageGet(null);
+        Object.keys(titles).forEach(key => {
+            if (key == "options") return;
+            body.titles[key] = titles[key];
+        });
+
+        // Send the request
+        try {
+            let response = await fetch(this.options.onlineURL + "user/self/title", {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json; charset=utf-8",
+                    "X-Auth-Token": this.options.token
+                },
+                body: JSON.stringify(body)
+            });
+            let text = await response.json();
+
+            if (response.status == 200) {
+                this.handleOnlineSuccess(text);
+            } else {
+                this.handleOnlineError(text);
+            }
+        } catch (error) {
+            this.handleOnlineError(error);
+        }
     }
 
     async deleteOnline() {
@@ -976,6 +1054,7 @@ class OptionsManager {
 
     async update() {
         this.hideOnlineMessage();
+
         // Can't change the online URL or username while updating credentials
         this.onlineForm.onlineURL.value = this.options.onlineURL;
         this.onlineForm.username.value = this.options.username;
@@ -1012,6 +1091,7 @@ class OptionsManager {
 
     async refreshToken() {
         this.hideOnlineMessage();
+
         try {
             let response = await fetch(this.options.onlineURL + "user/self/token/refresh", {
                 method: "GET",
@@ -1066,6 +1146,6 @@ class OptionsManager {
 
     // END ONLINE
 }
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
     new OptionsManager();
 });

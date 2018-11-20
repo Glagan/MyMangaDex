@@ -250,6 +250,23 @@
                 </div>
             </div>
         </div>
+        <!-- MAL Export -->
+        <div class="row">
+            <div class="col-sm-12 col-md-3">
+                <h1 class="text-container py-2 px-2"><i class="fas fa-download"></i> Export (MAL)</h1>
+            </div>
+            <div class="col">
+                <div class="text-container p-2 mb-3">
+                    <p>Update your <b>MyAnimeList</b> manga list by updating or adding all titles on your MangaDex follow list that have a MyAnimeList id.</p>
+                    <div class="alert alert-info" role="alert">You can be extra careful and <a href="https://myanimelist.net/panel.php?go=export">export</a> your MyAnimeList before using this feature.</div>
+                    <form id="mal-export" class="text-center form-inline justify-content-md-center mx-auto">
+                        <button type="submit" class="btn btn-primary mb-2">Export</button>
+                    </form>
+                    <ul id="malExportStatus" class="list-group">
+                    </ul>
+                </div>
+            </div>
+        </div>
         <!-- MAL Import -->
         <div class="row">
             <div class="col-sm-12 col-md-3">
@@ -268,23 +285,6 @@
                         </div>
                     </form>
                     <ul id="malImportStatus" class="list-group">
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <!-- MAL Export -->
-        <div class="row">
-            <div class="col-sm-12 col-md-3">
-                <h1 class="text-container py-2 px-2"><i class="fas fa-download"></i> Export (MAL)</h1>
-            </div>
-            <div class="col">
-                <div class="text-container p-2 mb-3">
-                    <p>Update your <b>MyAnimeList</b> manga list by updating or adding all titles on your MangaDex follow list that have a MyAnimeList id.</p>
-                    <p>You can be extra careful and <a href="https://myanimelist.net/panel.php?go=export">export</a> your MyAnimeList before using this feature.</p>
-                    <form id="mal-export" class="text-center form-inline justify-content-md-center mx-auto">
-                        <button type="submit" class="btn btn-primary mb-2">Export</button>
-                    </form>
-                    <ul id="malExportStatus" class="list-group">
                     </ul>
                 </div>
             </div>
@@ -310,61 +310,69 @@
                         </div>
                     </div>
                 </div>
-                <!-- Logged in -->
-                <div id="loggedInPanel" class="text-container p-2 mb-3">
-                    <div class="alert alert-info" role="alert">You are currently <b>LOGGED IN</b>.</div>
-                    <div class="input-group">
-                        <div class="col-sm-12 col-md-8 mb-2 mb-md-0 text-center">
-                            <button class="btn btn-primary mr-2" id="importOnline"><i class="fas fa-download"></i> Import Online</button>
-                            <button class="btn btn-primary" id="exportOnline"><i class="fas fa-upload"></i> Export Online</button>
-                        </div>
-                        <div class="col-sm-12 col-md-4 text-center">
-                            <button class="btn btn-danger mr-2" id="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
-                        </div>
-                    </div>
-                </div>
-                <!-- Logged out -->
-                <div id="loggedOutPanel" class="text-container p-2 mb-3">
-                    <div class="alert alert-info" role="alert">You are currently <b>LOGGED OUT</b>.</div>
-                    <p>To connect, fill the following fields and press <b>Login</b> or <b>Register</b> if you don't have an account on this service.</p>
-                    <div class="input-group justify-content-center">
-                        <button class="btn btn-primary mr-2" id="login"><i class="fas fa-sign-in-alt"></i> Login</button>
-                        <button class="btn btn-primary" id="register"><i class="fas fa-user-plus"></i> Register</button>
-                    </div>
-                </div>
-                <div id="onlineSuccess" class="alert alert-success" role="alert"></div>
-                <div id="onlineError" class="alert alert-danger" role="alert"></div>
-                <!-- Values -->
-                <form id="onlineForm">
-                    <div class="form-group text-container p-2">
-                        <label class="font-weight-bold">Online URL <a data-default="onlineURL" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                        <p class="d-none d-xl-block">The URL of the online service.</p>
-                        <div class="px-0">
-                            <input data-option="onlineURL" data-type="text" type="text" name="onlineURL" placeholder="URL" class="form-control" />
+                <div id="onlineOptions">
+                    <!-- Logged in -->
+                    <div id="loggedInPanel" class="text-container p-2 mb-3">
+                        <div class="alert alert-info" role="alert">You are currently <b>LOGGED IN</b>.</div>
+                        <div class="alert alert-danger" role="alert"><b>Import Online</b> will erase your local save, save it before if you don't want to lose it.<br>
+                        <b>Export Online</b> will erase your online save, you can download it before if you don't want to lose it.</div>
+                        <div class="input-group">
+                            <div class="col-sm-12 col-md-8 mb-2 mb-md-0 text-center">
+                                <button class="btn btn-primary mr-2" data-button-protect="importOnline"><i class="fas fa-download"></i> Import Online</button>
+                                <button class="btn btn-primary" data-button-protect="exportOnline"><i class="fas fa-upload"></i> Export Online</button>
+                            </div>
+                            <div class="col-sm-12 col-md-4 text-center">
+                                <button class="btn btn-danger mr-2" data-button-protect="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group text-container p-2">
-                        <label class="font-weight-bold">Username <a data-default="username" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                        <p class="d-none d-xl-block">Your username on the service.</p>
-                        <div class="px-0">
-                            <input data-option="username" data-type="text" type="text" name="username" placeholder="Username" class="form-control" />
+                    <!-- Logged out -->
+                    <div id="loggedOutPanel" class="text-container p-2 mb-3">
+                        <div class="alert alert-info" role="alert">You are currently <b>LOGGED OUT</b>.</div>
+                        <p>To connect, fill the following fields and press <b>Login</b> or <b>Register</b> if you don't have an account on this service.</p>
+                        <div class="input-group justify-content-center">
+                            <button class="btn btn-primary mr-2" data-button-protect="login"><i class="fas fa-sign-in-alt"></i> Login</button>
+                            <button class="btn btn-primary" data-button-protect="register"><i class="fas fa-user-plus"></i> Register</button>
                         </div>
                     </div>
-                    <div class="form-group text-container p-2">
-                        <label class="font-weight-bold">Password <a data-default="password" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                        <p class="d-none d-xl-block">Your password on the service.</p>
-                        <div class="px-0">
-                            <input data-option="password" data-type="text" type="password" name="password" placeholder="Password" class="form-control" />
+                    <div id="onlineSuccess" class="alert alert-success" role="alert"></div>
+                    <div id="onlineError" class="alert alert-danger" role="alert"></div>
+                    <!-- Values -->
+                    <form id="onlineForm">
+                        <div class="form-group text-container p-2">
+                            <label class="font-weight-bold">Online URL <a data-default="onlineURL" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+                            <p class="d-none d-xl-block">The URL of the online service.</p>
+                            <div class="px-0">
+                                <!--<input data-option="onlineURL" data-type="text" type="text" name="onlineURL" placeholder="URL" class="form-control" />-->
+                                <input type="text" name="onlineURL" placeholder="URL" class="form-control" />
+                            </div>
                         </div>
-                    </div>
-                </form>
-                <!-- Management when online -->
-                <div id="onlineAdvancedPanel" class="text-container p-2 mb-3">
-                    <div class="text-center">
-                        <button class="btn btn-secondary mr-2" id="receiveToken"><i class="fas fa-download"></i> Receive Token</button>
-                        <button class="btn btn-secondary mr-2" id="update"><i class="fas fa-edit"></i> Update Credentials</button>
-                        <button class="btn btn-secondary mr-2" id="refreshToken"><i class="fas fa-wrench"></i> Refresh Token</button>
-                        <button class="btn btn-danger" id="deleteOnline"><i class="fas fa-trash"></i> Delete Online Data</button>
+                        <div class="form-group text-container p-2">
+                            <label class="font-weight-bold">Username <a data-default="username" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+                            <p class="d-none d-xl-block">Your username on the service.</p>
+                            <div class="px-0">
+                                <!--<input data-option="username" data-type="text" type="text" name="username" placeholder="Username" class="form-control" />-->
+                                <input type="text" name="username" placeholder="Username" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group text-container p-2">
+                            <label class="font-weight-bold">Password <a data-default="password" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+                            <p class="d-none d-xl-block">Your password on the service.</p>
+                            <div class="px-0">
+                                <!--<input data-option="password" data-type="text" type="password" name="password" placeholder="Password" class="form-control" />-->
+                                <input type="password" name="password" placeholder="Password" class="form-control" />
+                            </div>
+                        </div>
+                    </form>
+                    <!-- Management when online -->
+                    <div id="onlineAdvancedPanel" class="text-container p-2 mb-3">
+                        <div class="text-center">
+                            <button class="btn btn-secondary mr-2" data-button-protect="receiveToken"><i class="fas fa-download"></i> Receive Token</button>
+                            <button class="btn btn-secondary mr-2" data-button-protect="refreshToken"><i class="fas fa-wrench"></i> Refresh Token</button>
+                            <button class="btn btn-secondary mr-2" data-button-protect="update"><i class="fas fa-edit"></i> Update Credentials</button>
+                            <button class="btn btn-info mr-2" data-button-protect="downloadOnline"><i class="fas fa-download"></i> Download Online</button>
+                            <button class="btn btn-danger" data-button-protect="deleteOnline"><i class="fas fa-trash"></i> Delete Online Data</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -376,7 +384,8 @@
             </div>
             <div class="col">
                 <div class="text-container p-2 mb-3">
-                    <p>Delete all of your data. A new save will be created with default parameters. <strong>Not reversible.</strong></p>
+                    <p>Delete all of your data. A new save will be created with default parameters.</p>
+                    <div class="alert alert-danger" role="alert">This will erase your <b>current</b> save, export it or save it online if you don't want to lose it. <b>Not reversible.</b></div>
                     <p><button id="delete-save" class="btn btn-danger font-2 d-block mx-auto">Delete</button></p>
             </div>
         </div>

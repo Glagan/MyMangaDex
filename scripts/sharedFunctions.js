@@ -106,7 +106,6 @@ async function loadOptions() {
             }
 
             if (data.version < 2.0) {
-                data.showNoMal = defaultOptions.showNoMal;
                 data.onlineSave = defaultOptions.onlineSave; // New options to default
                 data.onlineURL = defaultOptions.onlineURL;
                 data.username = defaultOptions.username;
