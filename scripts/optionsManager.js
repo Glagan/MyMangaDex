@@ -29,6 +29,7 @@ class OptionsManager {
         this.onlineForm = document.getElementById("onlineForm");
         this.onlineError = document.getElementById("onlineError");
         this.onlineSuccess = document.getElementById("onlineSuccess");
+        this.downloadOnlineButton = document.getElementById("downloadOnline");
 
         //
         this.options = {};
@@ -135,6 +136,13 @@ class OptionsManager {
 
         // Delete
         this.deleteSaveButton.addEventListener("click", () => {
+            if (this.deleteSaveButton.dataset.again === undefined) {
+                this.deleteSaveButton.style.fontSize = "2rem";
+                this.deleteSaveButton.dataset.again = true;
+                this.deleteSaveButton.textContent = "Click again to confirm";
+                return;
+            }
+
             this.deleteSave();
         });
 
@@ -328,6 +336,11 @@ class OptionsManager {
     }
 
     async deleteSave() {
+        // Done
+        this.deleteSaveButton.style.fontSize = "1rem";
+        delete this.deleteSaveButton.dataset.again;
+        this.deleteSaveButton.textContent = "Delete";
+
         // Clear
         await browser.storage.local.clear();
 
@@ -1136,6 +1149,39 @@ class OptionsManager {
                 this.options.token = text.token;
                 this.handleOnlineSuccess("Token received.");
                 this.saveOptions();
+            } else {
+                this.handleOnlineError(text);
+            }
+        } catch (error) {
+            this.handleOnlineError(error);
+        }
+    }
+
+    async downloadOnline() {
+        try {
+            let response = await fetch(this.options.onlineURL + "user/self/title", {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                    "X-Auth-Token": this.options.token
+                }
+            });
+            let text = await response.json();
+            let body = {
+                options: JSON.parse(JSON.stringify(this.options))
+            };
+            text.titles.forEach(element => {
+                body[element.md_id] = {
+                    mal: element.mal_id,
+                    last: element.last,
+                    chapters: element.chapters
+                };
+            });
+
+            if (response.status == 200) {
+                this.downloadOnlineButton.href = "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(body));
+                this.downloadOnlineButton.click();
+                this.downloadOnlineButton.href = "";
             } else {
                 this.handleOnlineError(text);
             }
