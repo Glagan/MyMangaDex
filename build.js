@@ -61,7 +61,15 @@ if (args.includes("--no-web-ext")) {
 // Used to merge manifests
 function deepMerge(first, toMerge) {
     for (let property in toMerge) {
-        if (first[property] !== undefined && typeof first[property] === "object") {
+        if (first[property] !== undefined && Array.isArray(first[property])) {
+            toMerge[property].forEach((value, key) => {
+                if (typeof value === "object") {
+                    deepMerge(first[property][key], value);
+                } else {
+                    first[property].push(value);
+                }
+            });
+        } else if (first[property] !== undefined && typeof first[property] === "object") {
             deepMerge(first[property], toMerge[property]);
         } else {
             first[property] = toMerge[property];

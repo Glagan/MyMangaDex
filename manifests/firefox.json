@@ -1,4 +1,8 @@
 {
+	"permissions": [
+		"*://*.nikurasu.org/*"
+	],
+
 	"applications": {
 		"gecko": {
 			"id": "mymangadex@glagan",

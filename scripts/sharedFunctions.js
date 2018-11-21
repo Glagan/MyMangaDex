@@ -152,6 +152,48 @@ async function updateLocalStorage(manga, options) {
             image: "https://mangadex.org/images/manga/" + manga.mangaDexId + ".thumb.jpg"
         });
     }
+    // Update online
+    if (options.onlineSave && options.isLoggedIn) {
+        // Build body
+        let body = {
+            mal: manga.myAnimeListId,
+            last: manga.lastMangaDexChapter,
+            options: {
+                "saveAllOpened": options.saveAllOpened,
+                "maxChapterSaved": options.maxChapterSaved
+            }
+        };
+        // Send the request
+        try {
+            let response = await fetch(options.onlineURL + "user/self/title/" + manga.mangaDexId, {
+                method: "POST",
+                mode: "cors",
+                headers: new Headers({
+                    "Accept": "application/json",
+                    "Content-Type": "application/json; charset=utf-8",
+                    "X-Auth-Token": options.token
+                }),
+                body: JSON.stringify(body)
+            });
+
+            if (response.status != 200) {
+                options.isLoggedIn = false;
+            }
+        } catch (error) {
+            options.isLoggedIn = false;
+            console.error(error);
+        }
+
+        if (options.isLoggedIn == false) {
+            if (options.showErrors) {
+                vNotify.error({
+                    title: "Couldn't save Online",
+                    text: "The Online Service might have a problem, or your credentials has been changed. Go to the options to update it."
+                });
+            }
+            await storageSet("options", options);
+        }
+    }
 }
 
 function clearDomNode(node) {
