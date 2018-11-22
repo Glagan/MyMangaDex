@@ -317,13 +317,13 @@
                         <div class="alert alert-info" role="alert">You are currently <b>LOGGED IN</b>.</div>
                         <div class="alert alert-danger" role="alert"><b>Import Online</b> will erase your local save, save it before if you don't want to lose it.<br>
                         <b>Export Online</b> will erase your online save, you can download it before if you don't want to lose it.</div>
-                        <div class="input-group">
-                            <div class="col-sm-12 col-md-8 mb-2 mb-md-0 text-center">
-                                <button class="btn btn-primary mr-2" data-button-protect="importOnline"><i class="fas fa-download"></i> Import Online</button>
-                                <button class="btn btn-primary" data-button-protect="exportOnline"><i class="fas fa-upload"></i> Export Online</button>
+                        <div class="row no-gutters input-group">
+                            <div class="col-sm-12 col-md-8 text-center">
+                                <button class="btn btn-primary mr-2 my-2" data-button-protect="importOnline"><i class="fas fa-download"></i> Import Online</button>
+                                <button class="btn btn-primary mr-2 my-2" data-button-protect="exportOnline"><i class="fas fa-upload"></i> Export Online</button>
                             </div>
                             <div class="col-sm-12 col-md-4 text-center">
-                                <button class="btn btn-danger mr-2" data-button-protect="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                                <button class="btn btn-danger my-2" data-button-protect="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
                             </div>
                         </div>
                     </div>
@@ -364,12 +364,16 @@
                     </form>
                     <!-- Management when online -->
                     <div id="onlineAdvancedPanel" class="text-container p-2 mb-3">
-                        <div class="text-center">
-                            <button class="btn btn-secondary mr-2" data-button-protect="receiveToken"><i class="fas fa-download"></i> Receive Token</button>
-                            <button class="btn btn-secondary mr-2" data-button-protect="refreshToken"><i class="fas fa-wrench"></i> Refresh Token</button>
-                            <button class="btn btn-secondary mr-2" data-button-protect="update"><i class="fas fa-edit"></i> Update Credentials</button>
-                            <a class="btn btn-info mr-2" download="export.json" id="downloadOnline" target="_blank" data-button-protect="downloadOnline"><i class="fas fa-download"></i> Download Online</a>
-                            <button class="btn btn-danger" data-button-protect="deleteOnline"><i class="fas fa-trash"></i> Delete Online Data</button>
+                        <div class="row no-gutters text-center">
+                            <div class="col-sm-12 col-md-6 text-center">
+                                <button class="btn btn-secondary mr-2 my-2" data-button-protect="receiveToken"><i class="fas fa-download"></i> Receive Token</button>
+                                <button class="btn btn-secondary mr-2 my-2" data-button-protect="refreshToken"><i class="fas fa-wrench"></i> Refresh Token</button>
+                                <button class="btn btn-secondary mr-2 my-2" data-button-protect="update"><i class="fas fa-edit"></i> Update Credentials</button>
+                            </div>
+                            <div class="col-sm-12 col-md-6 text-center">
+                                <a class="btn btn-info mr-2 my-2" download="export.json" id="downloadOnline" target="_blank" data-button-protect="downloadOnline"><i class="fas fa-download"></i> Download</a>
+                                <button class="btn btn-danger my-2" id="deleteOnline" data-button-protect="deleteOnline"><i class="fas fa-trash"></i> Delete Online</button>
+                            </div>
                         </div>
                     </div>
                 </div>

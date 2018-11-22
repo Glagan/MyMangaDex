@@ -1047,6 +1047,18 @@ class OptionsManager {
     async deleteOnline() {
         this.hideOnlineMessage();
 
+        let deleteOnlineButton = document.getElementById("deleteOnline");
+        if (deleteOnlineButton.dataset.again === undefined) {
+            deleteOnlineButton.style.fontSize = "2rem";
+            deleteOnlineButton.dataset.again = true;
+            deleteOnlineButton.textContent = "Click again to confirm";
+            return;
+        } else {
+            deleteOnlineButton.style.fontSize = "1rem";
+            delete deleteOnlineButton.dataset.again;
+            deleteOnlineButton.textContent = "Delete Online";
+        }
+
         let password = this.getPassword();
         if (!password) return;
 
