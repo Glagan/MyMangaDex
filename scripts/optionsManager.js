@@ -31,6 +31,13 @@ class OptionsManager {
         this.onlineSuccess = document.getElementById("onlineSuccess");
         this.downloadOnlineButton = document.getElementById("downloadOnline");
 
+        // Only Chrome users can update the online save
+        if (CHROME) {
+            document.getElementById("onlineURLPanel").style.display = "block";
+        } else {
+            document.getElementById("onlineServiceInfo").style.display = "block";
+        }
+
         //
         this.options = {};
         this.myAnimeListMangaList = {};
@@ -202,7 +209,6 @@ class OptionsManager {
         // Restore online options
         this.onlineForm.onlineURL.value = this.options.onlineURL;
         this.onlineForm.username.value = this.options.username;
-        this.onlineForm.password.value = this.options.password;
 
         // Show panels
         this.toggleOnlinePanels(this.options.onlineSave);
@@ -859,12 +865,23 @@ class OptionsManager {
         this.onlineSuccess.appendChild(document.createTextNode(response.status));
     }
 
+    getPassword() {
+        let password = this.onlineForm.password.value;
+        this.onlineForm.password.value = "";
+        if (password == "" || password.length < 10) {
+            this.handleOnlineError("Empty or invalid password.");
+            return false;
+        }
+        return password;
+    }
+
     async login() {
         this.hideOnlineMessage();
 
         let onlineURL = this.onlineForm.onlineURL.value;
         let username = this.onlineForm.username.value;
-        let password = this.onlineForm.password.value;
+        let password = this.getPassword();
+        if (!password) return;
 
         // Send a request to the "login" route /user
         try {
@@ -882,7 +899,6 @@ class OptionsManager {
             if (response.status == 200) {
                 this.options.onlineURL = onlineURL;
                 this.options.username = username;
-                this.options.password = password;
                 this.options.isLoggedIn = true;
                 this.options.token = text.token;
                 this.handleOnlineSuccess(text);
@@ -901,9 +917,10 @@ class OptionsManager {
 
         let onlineURL = this.onlineForm.onlineURL.value;
         let body = {
-            username: this.onlineForm.username.value,
-            password: this.onlineForm.password.value
+            username: this.onlineForm.username.value
         };
+        body.password = this.getPassword();
+        if (!body.password) return;
 
         // Send a request to the /user route
         try {
@@ -920,7 +937,6 @@ class OptionsManager {
             if (response.status == 201) {
                 this.options.onlineURL = onlineURL;
                 this.options.username = body.username;
-                this.options.password = body.password;
                 this.options.isLoggedIn = true;
                 this.options.token = text.token;
                 this.handleOnlineSuccess(text);
@@ -939,7 +955,6 @@ class OptionsManager {
 
         // Set the options
         this.options.username = "";
-        this.options.password = "";
         this.options.isLoggedIn = false;
         this.options.token = "";
         // Delete the form too
@@ -1032,6 +1047,9 @@ class OptionsManager {
     async deleteOnline() {
         this.hideOnlineMessage();
 
+        let password = this.getPassword();
+        if (!password) return;
+
         // Send a simple DELETE request
         try {
             let response = await fetch(this.options.onlineURL + "user/self", {
@@ -1039,7 +1057,7 @@ class OptionsManager {
                 headers: {
                     "Accept": "application/json",
                     "X-Auth-Name": this.options.username,
-                    "X-Auth-Pass": this.options.password
+                    "X-Auth-Pass": password
                 }
             });
             let text = await response.json();
@@ -1047,12 +1065,10 @@ class OptionsManager {
             if (response.status == 200) {
                 // Delete in the options
                 this.options.username = "";
-                this.options.password = "";
                 this.options.isLoggedIn = false;
                 this.options.token = "";
                 // Delete the form too
                 this.onlineForm.username.value = "";
-                this.onlineForm.password.value = "";
                 // Save
                 this.handleOnlineSuccess(text);
                 this.saveOptions();
@@ -1068,12 +1084,20 @@ class OptionsManager {
     async update() {
         this.hideOnlineMessage();
 
-        // Can't change the online URL or username while updating credentials
-        this.onlineForm.onlineURL.value = this.options.onlineURL;
-        this.onlineForm.username.value = this.options.username;
+        let password = this.getPassword();
+        if (!password) return;
+
+        let oldPassword = this.onlineForm.password.dataset.currentPassword;
+        if (oldPassword === undefined) {
+            this.onlineForm.password.dataset.currentPassword = password;
+            this.handleOnlineSuccess("Enter your new password and click Update Credentials again.");
+        } else {
+            delete this.onlineForm.password.dataset.currentPassword;
+        }
+
         // Only the password can be updated
         let body = {
-            password: this.onlineForm.password.value
+            password: password
         };
 
         try {
@@ -1083,14 +1107,13 @@ class OptionsManager {
                     "Accept": "application/json",
                     "Content-Type": "application/json; charset=utf-8",
                     "X-Auth-Name": this.options.username,
-                    "X-Auth-Pass": this.options.password
+                    "X-Auth-Pass": oldPassword
                 },
                 body: JSON.stringify(body)
             });
             let text = await response.json();
 
             if (response.status == 200) {
-                this.options.password = body.password;
                 this.options.token = text.token;
                 this.handleOnlineSuccess(text);
                 this.saveOptions();
@@ -1105,19 +1128,22 @@ class OptionsManager {
     async refreshToken() {
         this.hideOnlineMessage();
 
+        let password = this.getPassword();
+        if (!password) return;
+
         try {
             let response = await fetch(this.options.onlineURL + "user/self/token/refresh", {
                 method: "GET",
                 headers: {
                     "Accept": "application/json",
                     "X-Auth-Name": this.options.username,
-                    "X-Auth-Pass": this.options.password
+                    "X-Auth-Pass": password
                 }
             });
             let text = await response.json();
 
             if (response.status == 200) {
-                // Delete in the options
+                // Update in the options
                 this.options.token = text.token;
                 // Save
                 this.handleOnlineSuccess("Token updated.");
@@ -1133,13 +1159,16 @@ class OptionsManager {
     async receiveToken() {
         this.hideOnlineMessage();
 
+        let password = this.getPassword();
+        if (!password) return;
+
         try {
             let response = await fetch(this.options.onlineURL + "user/self/token", {
                 method: "GET",
                 headers: {
                     "Accept": "application/json",
                     "X-Auth-Name": this.options.username,
-                    "X-Auth-Pass": this.options.password
+                    "X-Auth-Pass": password
                 }
             });
             let text = await response.json();

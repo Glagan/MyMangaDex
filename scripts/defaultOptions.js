@@ -30,7 +30,6 @@ let defaultOptions = {
     onlineSave: false,
     onlineURL: "https://mmd.nikurasu.org/api/",
     username: "",
-    password: "",
     isLoggedIn: false,
     token: "",
     version: 2.0

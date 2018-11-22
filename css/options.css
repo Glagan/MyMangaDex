@@ -43,7 +43,9 @@ h1 {
 #loggedOutPanel,
 #onlineAdvancedPanel,
 #onlineError,
-#onlineSuccess {
+#onlineSuccess,
+#onlineURLPanel,
+#onlineServiceInfo {
     display: none;
 }
 

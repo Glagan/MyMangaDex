@@ -297,7 +297,8 @@
             <div class="col">
                 <div class="form-group text-container p-2">
                     <label class="font-weight-bold">Online Save <a data-default="onlineSave" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p>Online Save will update your data on a MMD Online Save instance. I propose a default one hosted on my site <a href="https://mmd.nikurasu.org">nikurasu</a>.</p>
+                    <p>Online Save will update your data on a MMD Online Save instance, which you can find <a href="https://github.com/Glagan/MMD-Online-Save">here</a>. I propose a default one hosted on my site <a href="https://mmd.nikurasu.org">nikurasu</a>.</p>
+                    <div id="onlineServiceInfo" class="alert alert-info" role="alert">You can't currently host your own MMD Online Save for Firefox (working only on Chrome) since permissions don't allow me to make requests to a domain which isn't in the extension manifest, and I can't know what domain you will use.</div>
                     <p>You only need to set a Username and Password, then when you need to use your data on another computer or another device, log in and your data will be imported.</p>
                     <p>All data is still saved locally, and the extension only use local storage to retrieve data, you can disable online save and delete all of your saved data at any time.<br />
                     What Online Save do is updating your save online every time your save is updated locally.</p>
@@ -339,11 +340,9 @@
                     <div id="onlineError" class="alert alert-danger" role="alert"></div>
                     <!-- Values -->
                     <form id="onlineForm">
-                        <div class="form-group text-container p-2">
+                        <div id="onlineURLPanel" class="form-group text-container p-2">
                             <label class="font-weight-bold">Online URL <a data-default="onlineURL" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
                             <p class="d-none d-xl-block">The URL of the online service.</p>
-                            <div class="alert alert-info" role="alert">If you wish to host your own service and use it on <b>Firefox</b> you need to send me a message due to <b>Firefox</b> limitations.<br>
-                            You don't need to message me if you wish to host your own service and use it only on <b>Chrome</b>.</div>
                             <div class="px-0">
                                 <!--<input data-option="onlineURL" data-type="text" type="text" name="onlineURL" placeholder="URL" class="form-control" />-->
                                 <input type="text" name="onlineURL" placeholder="URL" class="form-control" />

@@ -168,11 +168,11 @@ async function updateLocalStorage(manga, options) {
             let response = await fetch(options.onlineURL + "user/self/title/" + manga.mangaDexId, {
                 method: "POST",
                 mode: "cors",
-                headers: new Headers({
+                headers: {
                     "Accept": "application/json",
                     "Content-Type": "application/json; charset=utf-8",
                     "X-Auth-Token": options.token
-                }),
+                },
                 body: JSON.stringify(body)
             });
 

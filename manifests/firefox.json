@@ -1,6 +1,6 @@
 {
 	"permissions": [
-		"*://*.nikurasu.org/*"
+		"*://*.nikurasu.org/api/*"
 	],
 
 	"applications": {
