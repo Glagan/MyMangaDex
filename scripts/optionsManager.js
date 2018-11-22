@@ -1091,6 +1091,7 @@ class OptionsManager {
         if (oldPassword === undefined) {
             this.onlineForm.password.dataset.currentPassword = password;
             this.handleOnlineSuccess("Enter your new password and click Update Credentials again.");
+            return;
         } else {
             delete this.onlineForm.password.dataset.currentPassword;
         }
