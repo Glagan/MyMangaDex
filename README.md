@@ -9,7 +9,7 @@ Updating your manga one by one, by hand, when you have hundreds of them and read
 
 ## How to Install
 
-You can install it from the [Google Chrome Web Store](https://chrome.google.com/webstore/detail/mymangadex/ihejddjcdmdppiimegmknbcaiebklajl) or the [Firefox add-ons site](https://addons.mozilla.org/fr/firefox/addon/mymangadex/) (Also working on Firefox for Android).  
+You can install it from the [Google Chrome Web Store](https://chrome.google.com/webstore/detail/mymangadex/ihejddjcdmdppiimegmknbcaiebklajl) or the [Firefox add-ons site](https://addons.mozilla.org/en/firefox/addon/mymangadex/) (Also working on Firefox for Android).  
 
 ## Requirements
 
@@ -106,5 +106,5 @@ There is 2 parameters you can set:
 
 ## Useful links
 
-* Extension inspired from [KissAnimeList](https://github.com/lolamtisch/KissAnimeList).
+* Extension inspired from [MAL-Sync](https://github.com/lolamtisch/MALSync).
 * [Import favorites from KissManga to MangaDex](https://old.reddit.com/r/manga/comments/8qebu4/import_kissmanga_bookmarks_to_mangadex/)
