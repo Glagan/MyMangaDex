@@ -30,6 +30,7 @@ class MyMangaDex {
             this.pageUrl.indexOf("org/?page=titles") > -1 ||
             this.pageUrl.indexOf("org/featured") > -1 ||
             this.pageUrl.indexOf("org/titles") > -1 ||
+            this.pageUrl.indexOf("org/genre") > -1 ||
             this.pageUrl.indexOf("org/list") > -1 ||
             (this.pageUrl.indexOf("org/group") > -1 && this.pageUrl.indexOf("/manga/") > -1) ||
             (this.pageUrl.indexOf("org/user") > -1 && this.pageUrl.indexOf("/manga/") > -1)) {

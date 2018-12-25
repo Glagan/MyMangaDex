@@ -32,6 +32,7 @@
 			"https://mangadex.org/?page=titles*",
 			"https://mangadex.org/featured",
 			"https://mangadex.org/group*",
+			"https://mangadex.org/genre*",
 			"https://mangadex.org/user*",
 			"https://mangadex.org/list*"
 		],

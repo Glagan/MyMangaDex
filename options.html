@@ -223,6 +223,7 @@
                         <p>Click the area to select your save, then use <kbd>CTRL + C</kbd> or right-click and then copy.</p>
                         <textarea class="form-control" id="save-content" placeholder="Press Refresh to display your save file"></textarea>
                         <div class="text-right mt-2">
+                            <a id="download-save" download="export.json" target="_blank" class="btn btn-primary">Download</a>
                             <button id="refresh-save" class="btn btn-primary">Refresh</button>
                             <button id="copy-save" class="btn btn-primary d-none">Copy</button>
                         </div>
@@ -237,13 +238,14 @@
             </div>
             <div class="col">
                 <div class="text-container p-2 mb-3">
-                    <p>You can import your <strong>MyMangaDex</strong> data that you exported, paste your save and click <strong>Import</strong>. Options <strong>are</strong> override.<br>
+                    <p>You can import your <strong>MyMangaDex</strong> data that you exported, paste your save or select your file save and click <strong>Import</strong>. Options <strong>are</strong> override.<br>
                     Merging your data will <i>merge</i> the saved opened chapters, and pick the highest last opened chapter for each manga.</p>
                     <div class="alert alert-danger" role="alert">This will erase your <b>current</b> save, export it if you don't want to lose it.</div>
                     <form id="save-import">
                         <textarea class="form-control" name="save" placeholder="Exported Save (JSON)"></textarea>
                         <div id="importInformations"></div>
                         <div class="text-right mt-2">
+                            <input id="saveUploadButton" type="file" class="btn btn-primary" />
                             <button id="importSubmitButton" type="submit" class="btn btn-primary">Import</button>
                         </div>
                     </form>

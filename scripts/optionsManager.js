@@ -10,6 +10,7 @@ class OptionsManager {
         this.saveButton = document.getElementById("save");
         this.lastOpenColorsList = document.getElementById("lastOpenColors");
         this.defaultLastOpenColors = document.getElementById("defaultLastOpenColors");
+        this.downloadSaveButton = document.getElementById("download-save");
         this.refreshSaveButton = document.getElementById("refresh-save");
         this.copySave = document.getElementById("copy-save");
         this.saveContent = document.getElementById("save-content");
@@ -21,6 +22,7 @@ class OptionsManager {
         this.importOutput = document.getElementById("malImportStatus");
         this.exportOutput = document.getElementById("malExportStatus");
         this.importInformations = document.getElementById("importInformations");
+        this.saveUploadButton = document.getElementById("saveUploadButton");
         this.importSubmitButton = document.getElementById("importSubmitButton");
         this.onlineOptions = document.getElementById("onlineOptions");
         this.loggedInPanel = document.getElementById("loggedInPanel");
@@ -110,6 +112,16 @@ class OptionsManager {
         });
 
         // Export
+        this.downloadSaveButton.addEventListener("click", async event => {
+            if (this.downloadSaveButton.dataset.busy === undefined) {
+                this.downloadSaveButton.dataset.busy = true;
+                let data = await storageGet(null);
+                this.downloadSaveButton.href = "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+                this.downloadSaveButton.click();
+                this.downloadSaveButton.href = "";
+                delete this.downloadSaveButton.dataset.busy;
+            }
+        });
         this.refreshSaveButton.addEventListener("click", async () => {
             // Load save
             this.copySave.classList.add("d-none");
@@ -372,33 +384,48 @@ class OptionsManager {
         this.logOutput.scrollTop = this.logOutput.scrollHeight;
     }
 
-    async importMMD() {
+    importMMD() {
         // try catch if JSON can't be parsed
         try {
-            this.importSubmitButton.disabled = true;
-            let importedData = JSON.parse(this.importMMDForm.save.value);
-            if (isEmpty(importedData) || importedData.options === undefined) {
-                this.importInformations.textContent = "Invalid save.";
-                this.importSubmitButton.disabled = false;
-                this.flashBackground(false);
-                return;
+            // Import from file if specified
+            if (this.saveUploadButton.files[0] != undefined) {
+                var reader = new FileReader();
+                reader.onload = () => {
+                    this.importMMDForm.reset();
+                    this.finishImportMMD(JSON.parse(reader.result));
+                };
+                reader.readAsText(this.saveUploadButton.files[0]);
             } else {
-                this.importInformations.textContent = "Entries in the save: " + (Object.keys(importedData).length - 1);
+                // Import from the text field if there is no file
+                this.finishImportMMD(JSON.parse(this.importMMDForm.save.value));
             }
-            await storageSet(null, importedData);
-
-            // Load options to check for updates
-            this.options = await loadOptions();
-            // Update UI
-            await this.restoreOptions();
-            this.flashBackground(true);
-            this.importSubmitButton.disabled = false;
-            this.importMMDForm.save.value = "";
-        } catch (error) {
+        } catch(error) {
             this.importSubmitButton.disabled = false;
             this.flashBackground(false);
             console.error(error);
+            return;
         }
+    }
+
+    async finishImportMMD(importedData) {
+        this.importSubmitButton.disabled = true;
+        if (isEmpty(importedData) || importedData.options === undefined) {
+            this.importInformations.textContent = "Invalid save.";
+            this.importSubmitButton.disabled = false;
+            this.flashBackground(false);
+            return;
+        } else {
+            this.importInformations.textContent = "Entries in the save: " + (Object.keys(importedData).length - 1);
+        }
+        await storageSet(null, importedData);
+
+        // Load options to check for updates
+        this.options = await loadOptions();
+        // Update UI
+        await this.restoreOptions();
+        this.flashBackground(true);
+        this.importSubmitButton.disabled = false;
+        this.importMMDForm.save.value = "";
     }
 
     async importMAL() {

@@ -3,7 +3,13 @@
 ## 2.0
 
 * Online Save
+  * Import, Export or Download the list
+  * Disabled by default
+  * Manage online list (update credentials, token and delete the list)
 * Updated options layout, again
+* Added a *Download* button for **Export (MMD)**
+* Added an file select button for the **Import (MMD)**
+* Added support for the new */genre* page on MangaDex
 
 ## 1.9.10 + 1.9.11
 
