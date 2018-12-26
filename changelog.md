@@ -10,6 +10,7 @@
 * Added a *Download* button for **Export (MMD)**
 * Added an file select button for the **Import (MMD)**
 * Added support for the new */genre* page on MangaDex
+* Added a *Show Lower* button on chapter list pages to show hidden chapters
 
 ## 1.9.10 + 1.9.11
 

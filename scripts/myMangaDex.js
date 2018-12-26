@@ -732,6 +732,7 @@ class MyMangaDex {
     paintOrHide(manga, mangaDexId, chapters, colors) {
         let data = undefined;
         let paintColor = this.options.lastOpenColors[colors.current];
+        let rowsDeleted = 0;
 
         if (manga !== undefined) {
             data = {chapters: manga.chapters};
@@ -769,8 +770,12 @@ class MyMangaDex {
                         currentRow.firstElementChild.style.backgroundColor = paintColor;
                     } else if (!sawHigher || lastRow == 0 || (sawHigher && chapter < lastRow)) {
                         if (this.options.hideLowerChapters) {
-                            currentRow.parentElement.removeChild(currentRow);
-                        } else if (this.options.highlightChapters) {
+                            // Add 2 classes - one to hide the row and the other to find it back
+                            currentRow.classList.add("d-none");
+                            currentRow.classList.add("mmd-hidden");
+                            rowsDeleted++;
+                        }
+                        if (this.options.highlightChapters) {
                             currentRow.style.backgroundColor = this.options.lowerChaptersColor;
                         }
                     }
@@ -794,6 +799,8 @@ class MyMangaDex {
         if (this.options.showTooltips && chapters.length > 0) {
             this.tooltip(chapters[chapters.length-1].row, mangaDexId, data);
         }
+
+        return rowsDeleted;
     }
 
     createQuickButton(content, status) {
@@ -811,7 +818,7 @@ class MyMangaDex {
     async chaptersListPage() {
         if (!this.options.highlightChapters && !this.options.hideLowerChapters && !this.options.showTooltips) {
             return;
-        } // Abort early if useless
+        } // Abort early if useless - no highlight, no hiding and no thumbnails
 
         let chaptersList = document.querySelector(".chapter-container").children;
         // Keep track of the current entries in the follow table
@@ -823,7 +830,7 @@ class MyMangaDex {
         // Save each data storage promises to avoid fetching the same data twice - huge speed boost when there is the same serie multiple times
         var localStorage = {};
 
-        // Create a tooltip holder to avoid spamming the document body
+        // Create a tooltip holder
         if (this.options.showTooltips) {
             this.tooltipContainer = document.createElement("div");
             this.tooltipContainer.id = "mmd-tooltip";
@@ -832,6 +839,8 @@ class MyMangaDex {
 
         // Check each rows of the main table - Stop at 1 because first row is the header
         let lastChapter = chaptersList.length-1;
+        var hiddenRows = 0;
+        let promises = [];
         for (let row = lastChapter; row > 0; --row) {
             let chapter = chaptersList[row];
 
@@ -851,16 +860,50 @@ class MyMangaDex {
 
                 // Check if the data for the current serie is already fetched
                 if (localStorage[mangaDexId] === undefined) {
-                    // Use Promise, to do all rows async
-                    storageGet(mangaDexId).then(result => {
-                        localStorage[mangaDexId] = result;
-                        this.paintOrHide(result, mangaDexId, chaptersCopy, colors);
-                    });
+                    // add the storage call to a promise array for the "show hidden chapters" button
+                    promises.push(
+                        storageGet(mangaDexId).then(result => {
+                            localStorage[mangaDexId] = result;
+                            hiddenRows += this.paintOrHide(result, mangaDexId, chaptersCopy, colors);
+                        })
+                    );
                 } else {
-                    this.paintOrHide(localStorage[mangaDexId], mangaDexId, chaptersCopy, colors);
+                    hiddenRows += this.paintOrHide(localStorage[mangaDexId], mangaDexId, chaptersCopy, colors);
                 }
                 chapters = [];
             }
+        }
+
+        // If chapters are hidden add a button to show them - if there is any hidden
+        await Promise.all(promises); // wait for rows that fetch local storage
+        if (this.options.hideLowerChapters && hiddenRows > 0) {
+            let navBar = document.querySelector(".nav.nav-tabs");
+            let showButton = document.createElement("li");
+            showButton.className = "nav-item";
+            let showLink = document.createElement("a");
+            showLink.className = "nav-link";
+            showLink.href = "#";
+            showLink.addEventListener("click", event => {
+                event.preventDefault();
+                if (event.target.dataset.show == undefined) {
+                    event.target.dataset.show = true;
+                    clearDomNode(showLink);
+                    this.appendTextWithIcon(showLink, "eye", "Hide Lower (" + hiddenRows + ")");
+                    document.querySelectorAll(".mmd-hidden").forEach(node => {
+                        node.classList.remove("d-none");
+                    });
+                } else {
+                    delete event.target.dataset.show;
+                    clearDomNode(showLink);
+                    this.appendTextWithIcon(showLink, "eye", "Show Lower (" + hiddenRows + ")");
+                    document.querySelectorAll(".mmd-hidden").forEach(node => {
+                        node.classList.add("d-none");
+                    });
+                }
+            });
+            this.appendTextWithIcon(showLink, "eye", "Show Lower (" + hiddenRows + ")");
+            showButton.appendChild(showLink);
+            navBar.appendChild(showButton);
         }
     }
 
