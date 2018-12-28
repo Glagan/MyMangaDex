@@ -3,7 +3,7 @@
 
     "content_scripts": [{
         "js": [
-            "third_party/vanilla-notify.min.js",
+            "third_party/simpleNotification.min.js",
             "scripts/defaultOptions.js",
             "third_party/chrome-extension-async.js",
             "scripts/minified/sharedFunctions.js",

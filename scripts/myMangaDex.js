@@ -1,4 +1,4 @@
-const NOTIFY = {ERROR: "error", INFO: "info", SUCCESS: "success"};
+const NOTIFY = {ERROR: "error", INFO: "info", SUCCESS: "success", WARNING: "warning", MESSAGE: "message"};
 class MyMangaDex {
     constructor() {
         this.pageUrl = window.location.href;
@@ -152,9 +152,9 @@ class MyMangaDex {
                     "X-Requested-With": "XMLHttpRequest"
                 }
             });
-            this.notification(NOTIFY.SUCCESS, "Status on MangaDex updated");
+            this.notification(NOTIFY.SUCCESS, undefined, "Status on MangaDex updated");
         } catch (error) {
-            this.notification(NOTIFY.ERROR, "Error updating MDList");
+            this.notification(NOTIFY.ERROR, undefined, "Error updating MDList");
         }
     }
 
@@ -720,12 +720,10 @@ class MyMangaDex {
     notification(type, title, text=undefined, image=undefined, sticky=false) {
         if (this.options.showNotifications || (type == NOTIFY.ERROR && this.options.showErrors)) {
             let data = {
-                title: title,
-                text: text,
                 image: image,
                 sticky: sticky
             };
-            vNotify[type].call(null, data);
+            SimpleNotification[type](title, text, data);
         }
     }
 

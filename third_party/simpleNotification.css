@@ -1,0 +1,151 @@
+@keyframes fadeout {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes shorten {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0;
+    }
+}
+
+.gn-wrapper {
+    position: fixed;
+    overflow: hidden;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    z-index: 1080;
+}
+
+.gn-top-right,
+.gn-bottom-right {
+    align-items: flex-end;
+}
+.gn-top-left,
+.gn-bottom-left {
+    align-items: flex-start;
+}
+
+.gn-top-right {
+    top: 0;
+    right: 0;
+}
+
+.gn-top-left {
+    top: 0;
+    left: 0;
+}
+
+.gn-bottom-right {
+    bottom: 0;
+    right: 0;
+}
+
+.gn-bottom-left {
+    bottom: 0;
+    left: 0;
+}
+
+.gn-notification {
+    /*border: 1px solid black;*/
+    box-shadow: 1px 1px 3px black;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 1rem;
+    cursor: pointer;
+    animation-duration: 1000ms;
+    animation-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1);
+    animation-fill-mode: forwards;
+    pointer-events: all;
+    min-width: 20rem;
+    max-width: 30rem;
+}
+
+.gn-notification h1 {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+.gn-fadeout {
+    animation-name: fadeout;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
+.gn-content {
+    display: flex;
+    flex: 1;
+    align-content: space-between;
+    align-items: center;
+}
+
+.gn-content img {
+    max-width: 40%;
+    max-height: 20rem;
+    flex-shrink: 0;
+}
+
+.gn-content p {
+    max-width: 100%;
+    white-space: pre-line;
+}
+
+.gn-content img:only-child,
+.gn-content p:only-child {
+    max-width: 100%;
+}
+
+.gn-notification h1,
+.gn-content p {
+    padding: 0.5rem;
+    margin: 0;
+}
+
+.gn-lifespan {
+    display: block;
+    height: 3px;
+    width: 100%;
+    background-color: #4dd0e1;
+    transition-property: width;
+    transition-timing-function: linear;
+}
+
+.gn-extinguish {
+    animation-name: shorten;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
+.gn-success {
+    background-color: #689f38;
+    color: white;
+}
+
+.gn-info {
+    background-color: #0288d1;
+    color: white;
+}
+
+.gn-error {
+    background-color: #e53935;
+    color: white;
+}
+
+.gn-warning {
+    background-color: #ff8f00;
+    color: white;
+}
+
+.gn-message {
+    background-color: #333333;
+    color: white;
+}

@@ -61,11 +61,13 @@ async function loadOptions() {
     let data = await storageGet("options");
     // If there is nothing in the storage, default options
     if (data === undefined) {
-        vNotify.info({
-            title: "First time using MyMangaDex",
-            text: "It looks like it is your first time using MyMangaDex, for any help go to https://github.com/Glagan/MyMangaDex, and don't forget to look at the settings !",
-            sticky: true
-        });
+        SimpleNotification.info(
+            "First time using MyMangaDex",
+            "It looks like it is your first time using MyMangaDex, for any help go to https://github.com/Glagan/MyMangaDex, and don't forget to look at the settings !",
+            {
+                sticky: true
+            }
+        );
 
         await storageSet("options", defaultOptions);
         return JSON.parse(JSON.stringify(defaultOptions));
@@ -99,10 +101,10 @@ async function loadOptions() {
                 data.showErrors = defaultOptions.showErrors;
                 data.version = 1.9;
 
-                vNotify.info({
-                    title: "MyMangaDex as been updated to 1.9",
-                    text: "You can see the changelog on https://github.com/Glagan/MyMangaDex, new options have been added, you should check them out !"
-                });
+                SimpleNotificatin.info(
+                    "MyMangaDex as been updated to 1.9",
+                    "You can see the changelog on https://github.com/Glagan/MyMangaDex, new options have been added, you should check them out !"
+                );
             }
 
             if (data.version < 2.0) {
@@ -114,10 +116,10 @@ async function loadOptions() {
                 data.token = defaultOptions.token;
                 data.version = 2.0;
 
-                vNotify.info({
-                    title: "MyMangaDex as been updated to 2.0",
-                    text: "Online Save as been added, if you wish to use it you need to manually enable it. You can see the changelog on https://github.com/Glagan/MyMangaDex."
-                });
+                SimpleNotificatin.info(
+                    "MyMangaDex as been updated to 2.0",
+                    "Online Save as been added, if you wish to use it you need to manually enable it. You can see the changelog on https://github.com/Glagan/MyMangaDex."
+                );
             }
 
             await storageSet("options", data);
@@ -146,11 +148,13 @@ async function updateLocalStorage(manga, options) {
     });
     // Show a notification for updated last opened if there is no MyAnimeList id
     if (options.showNotifications && manga.myAnimeListId == 0 && manga.currentChapter.chapter > manga.lastMangaDexChapter) {
-        vNotify.success({
-            title: "Manga updated",
-            text: manga.name + " last open Chapter as been updated to " + manga.lastMangaDexChapter,
-            image: "https://mangadex.org/images/manga/" + manga.mangaDexId + ".thumb.jpg"
-        });
+        SimpleNotificatin.success(
+            "Manga updated",
+            manga.name + " last open Chapter as been updated to " + manga.lastMangaDexChapter,
+            {
+                image: "https://mangadex.org/images/manga/" + manga.mangaDexId + ".thumb.jpg"
+            }
+        );
     }
     // Update online
     if (options.onlineSave && options.isLoggedIn) {
@@ -186,10 +190,10 @@ async function updateLocalStorage(manga, options) {
 
         if (options.isLoggedIn == false) {
             if (options.showErrors) {
-                vNotify.error({
-                    title: "Couldn't save Online",
-                    text: "The Online Service might have a problem, or your credentials has been changed. Go to the options to update it."
-                });
+                SimpleNotification.error(
+                    "Couldn't save Online",
+                    "The Online Service might have a problem, or your credentials has been changed. Go to the options to update it."
+                );
             }
             await storageSet("options", options);
         }

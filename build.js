@@ -12,8 +12,8 @@ const [,, ...args] = process.argv;
 let files = {
     ".": ["options.html"],
     "third_party": [
-        "vanilla-notify.css",
-        "vanilla-notify.min.js"
+        "simpleNotification.min.css",
+        "simpleNotification.min.js"
     ],
     "scripts": {
         ".": ["defaultOptions.js"],
