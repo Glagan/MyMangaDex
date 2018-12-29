@@ -428,7 +428,7 @@ class MyMangaDex {
                 // Add a "Add to reading list" button
                 let quickAddReading = this.createQuickButton("Start Reading", 1);
                 // And a "Plan to read" button
-                let quickAddPTR = this.createQuickButton("Add to Plan to Read list", 6);
+                let quickAddPTR = this.createQuickButton("Add to Plan to Read list", 4);
                 // Append
                 this.informationsNode.appendChild(quickAddReading);
                 this.informationsNode.appendChild(document.createTextNode(" "));
