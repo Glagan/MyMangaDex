@@ -59,14 +59,13 @@ async function storageSet(key, data) {
  */
 async function loadOptions() {
     let data = await storageGet("options");
+    let mmdImage = "https://ramune.nikurasu.org/mymangadex/128.png";
     // If there is nothing in the storage, default options
     if (data === undefined) {
         SimpleNotification.info(
             "First time using MyMangaDex",
             "It looks like it is your first time using MyMangaDex, for any help go to https://github.com/Glagan/MyMangaDex, and don't forget to look at the settings !",
-            {
-                sticky: true
-            }
+            {sticky: true, position: "bottom-left", image: mmdImage}
         );
 
         await storageSet("options", defaultOptions);
@@ -101,9 +100,10 @@ async function loadOptions() {
                 data.showErrors = defaultOptions.showErrors;
                 data.version = 1.9;
 
-                SimpleNotificatin.info(
+                SimpleNotification.info(
                     "MyMangaDex as been updated to 1.9",
-                    "You can see the changelog on https://github.com/Glagan/MyMangaDex, new options have been added, you should check them out !"
+                    "You can see the changelog on https://github.com/Glagan/MyMangaDex, new options have been added, you should check them out !",
+                    {sticky: true, position: "bottom-left", image: mmdImage}
                 );
             }
 
@@ -116,9 +116,10 @@ async function loadOptions() {
                 data.token = defaultOptions.token;
                 data.version = 2.0;
 
-                SimpleNotificatin.info(
+                SimpleNotification.info(
                     "MyMangaDex as been updated to 2.0",
-                    "Online Save as been added, if you wish to use it you need to manually enable it. You can see the changelog on https://github.com/Glagan/MyMangaDex."
+                    "Online Save as been added, if you wish to use it you need to manually enable it. You can see the changelog on https://github.com/Glagan/MyMangaDex.",
+                    {sticky: true, position: "bottom-left", image: mmdImage}
                 );
             }
 
@@ -148,12 +149,10 @@ async function updateLocalStorage(manga, options) {
     });
     // Show a notification for updated last opened if there is no MyAnimeList id
     if (options.showNotifications && manga.myAnimeListId == 0 && manga.currentChapter.chapter > manga.lastMangaDexChapter) {
-        SimpleNotificatin.success(
+        SimpleNotification.success(
             "Manga updated",
             manga.name + " last open Chapter as been updated to " + manga.lastMangaDexChapter,
-            {
-                image: "https://mangadex.org/images/manga/" + manga.mangaDexId + ".thumb.jpg"
-            }
+            {position: "bottom-left", image: "https://mangadex.org/images/manga/" + manga.mangaDexId + ".thumb.jpg"}
         );
     }
     // Update online
@@ -192,7 +191,8 @@ async function updateLocalStorage(manga, options) {
             if (options.showErrors) {
                 SimpleNotification.error(
                     "Couldn't save Online",
-                    "The Online Service might have a problem, or your credentials has been changed. Go to the options to update it."
+                    "The Online Service might have a problem, or your credentials has been changed. Go to the options to update it.",
+                    {sticky: true, position: "bottom-left", image: "https://ramune.nikurasu.org/mymangadex/128b.png"}
                 );
             }
             await storageSet("options", options);

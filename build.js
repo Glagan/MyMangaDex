@@ -23,7 +23,7 @@ let files = {
             "sharedFunctions.js"
         ]
     },
-    "icons": ["mmd-48.png", "mmd-96.png", "mmd-128.png"],
+    "icons": ["128.png", "96.png", "48.png"],
     "css": ["mymangadex.css", "options.css"]
 };
 

@@ -13,9 +13,9 @@
 	],
 
 	"icons": {
-		"48": "icons/mmd-48.png",
-		"96": "icons/mmd-96.png",
-		"128": "icons/mmd-128.png"
+		"48": "icons/48.png",
+		"96": "icons/96.png",
+		"128": "icons/128.png"
 	},
 
 	"content_scripts": [{

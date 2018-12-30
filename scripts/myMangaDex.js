@@ -15,8 +15,8 @@ class MyMangaDex {
         };
         this.fetched = false;
         this.myAnimeListImage = "https://ramune.nikurasu.org/mymangadex/myanimelist.png";
-        this.mmdImage = "https://ramune.nikurasu.org/mymangadex/logo.png";
-        this.mmdCrossedImage = "https://ramune.nikurasu.org/mymangadex/no-logo.png";
+        this.mmdImage = "https://ramune.nikurasu.org/mymangadex/128.png";
+        this.mmdCrossedImage = "https://ramune.nikurasu.org/mymangadex/128b.png";
     }
 
     async start() {
@@ -58,7 +58,7 @@ class MyMangaDex {
         // init and set if it was redirected - redirected often means not in list or not approved
 
         if (data.url.indexOf("login.php") > -1) {
-            this.notification(NOTIFY.ERROR, "Not logged in", "Login on MyAnimeList!", this.myAnimeListImage);
+            this.notification(NOTIFY.ERROR, "Not logged in", "Login on MyAnimeList!", this.myAnimeListImage, true);
             this.loggedMyAnimeList = false;
         } else {
             // CSRF Token
@@ -125,7 +125,7 @@ class MyMangaDex {
                     await this.updateMangaDexList("manga_follow", this.manga.status);
                 }
             } else {
-                this.notification(NOTIFY.INFO, "Not updated", "The manga is still pending approval on MyAnimelist and can't be updated.", this.myAnimeListImage);
+                this.notification(NOTIFY.INFO, "Not updated", "The manga is still pending approval on MyAnimelist and can't be updated.", this.myAnimeListImage, true);
             }
         }
     }
@@ -722,6 +722,7 @@ class MyMangaDex {
     notification(type, title, text=undefined, image=undefined, sticky=false) {
         if (this.options.showNotifications || (type == NOTIFY.ERROR && this.options.showErrors)) {
             let data = {
+                position: "bottom-left",
                 image: image,
                 sticky: sticky
             };
