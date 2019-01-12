@@ -98,24 +98,24 @@ class MyMangaDex {
 
                 if (usePepper) {
                     if (this.manga.status == 6) {
-                        this.notification(NOTIFY.SUCCESS, "Added to Plan to Read", this.manga.name + " as been put in your endless Plan to read list !", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                        this.notification(NOTIFY.SUCCESS, "Added to Plan to Read", "**" + this.manga.name + "** as been put in your endless Plan to read list !", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
                     } else {
                         if ("started" in this.manga) {
                             delete this.manga.started;
-                            this.notification(NOTIFY.SUCCESS, "Manga updated", "You started reading " + this.manga.name, "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                            this.notification(NOTIFY.SUCCESS, "Manga updated", "You started reading **" + this.manga.name + "**", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
                             if ("start_today" in this.manga) {
                                 delete this.manga.start_today;
-                                this.notification(NOTIFY.SUCCESS, "Started manga", "The start date of " + this.manga.name + " was set to today.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                                this.notification(NOTIFY.SUCCESS, "Started manga", "The start date of **" + this.manga.name + "** was set to today.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
                             }
                         } else if (this.manga.lastMyAnimeListChapter > 0 && (this.manga.status != 2 || (this.manga.status == 2 && this.manga.is_rereading))) {
-                            this.notification(NOTIFY.SUCCESS, "Manga updated", this.manga.name + " as been updated to chapter " + this.manga.lastMyAnimeListChapter + ((this.manga.total_chapter > 0) ? " out of " + this.manga.total_chapter : ""), "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                            this.notification(NOTIFY.SUCCESS, "Manga updated", "**" + this.manga.name + "** as been updated to chapter " + this.manga.lastMyAnimeListChapter + ((this.manga.total_chapter > 0) ? " out of " + this.manga.total_chapter : ""), "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
                         }
 
                         if (this.manga.status == 2 && !this.manga.is_rereading) {
-                            this.notification(NOTIFY.SUCCESS, "Manga updated", this.manga.name + " was set as completed.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                            this.notification(NOTIFY.SUCCESS, "Manga updated", "**" + this.manga.name + "** was set as completed.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
                             if ("end_today" in this.manga) {
                                 delete this.manga.end_today;
-                                this.notification(NOTIFY.SUCCESS, "Manga completed", "The finish date of " + this.manga.name + " was set to today.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                                this.notification(NOTIFY.SUCCESS, "Manga completed", "The finish date of **" + this.manga.name + "** was set to today.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
                             }
                         }
                     }
@@ -142,8 +142,13 @@ class MyMangaDex {
         this.insertMyAnimeListInformations();
     }
 
-    // List of types: READING: 1, COMPLETED: 2, ON_HOLD: 3, PLAN_TO_READ: 4, DROPPED: 5, RE_READING: 6
+    // MAL status:  READING: 1, COMPLETED: 2, ON_HOLD: 3, PLAN_TO_READ: 6, DROPPED: 4, RE_READING: 1+is_rereading
+    // MD status:   READING: 1, COMPLETED: 2, ON_HOLD: 3, PLAN_TO_READ: 4, DROPPED: 5, RE_READING: 6
     async updateMangaDexList(func, type) {
+        // Convert MAL status to MD
+        if (type == 6) type = 4;
+        else if (type == 4) type = 5;
+        // Send the request
         let time = new Date().getTime();
         try {
             await fetch("https://mangadex.org/ajax/actions.ajax.php?function=" + func + "&id=" + this.manga.mangaDexId + "&type=" + type + "&_=" + time, {
@@ -434,7 +439,7 @@ class MyMangaDex {
                 this.informationsNode.appendChild(document.createTextNode(" "));
                 this.informationsNode.appendChild(quickAddPTR);
             }
-            this.notification(NOTIFY.SUCCESS, "Manga Deleted on MyAnimeList", undefined, this.myAnimeListImage);
+            this.notification(NOTIFY.SUCCESS, "Deleted", "The manga has been deleted on **MyAnimeList**.", this.myAnimeListImage);
             this.modalControl(false);
             this.highlightChapters();
         });
@@ -467,7 +472,7 @@ class MyMangaDex {
         // DATE START
         let months = [{value:"",text:""},{value:1,text:"Jan"},{value:2,text:"Feb"},{value:3,text:"Mar"},{value:4,text:"Apr"},{value:5,text:"May"},{value:6,text:"June"},{value:7,text:"Jul"},{value:8,text:"Aug"},{value:9,text:"Sep"},{value:10,text:"Oct"},{value:11,text:"Nov"},{value:12,text:"Dec"}];
         let days = [{value:""},{value:1},{value:2},{value:3},{value:4},{value:5},{value:6},{value:7},{value:8},{value:9},{value:10},{value:11},{value:12},{value:13},{value:14},{value:15},{value:16},{value:17},{value:18},{value:19},{value:20},{value:21},{value:22},{value:23},{value:24},{value:25},{value:26},{value:27},{value:28},{value:29},{value:30},{value:31}];
-        let years = [{value:""},{value:2018},{value:2017},{value:2016},{value:2015},{value:2014},{value:2013},{value:2012},{value:2011},{value:2010},{value:2009},{value:2008},{value:2007},{value:2006},{value:2005},{value:2004},{value:2003},{value:2002},{value:2001},{value:2000}];
+        let years = [{value:""},{value:2019},{value:2018},{value:2017},{value:2016},{value:2015},{value:2014},{value:2013},{value:2012},{value:2011},{value:2010},{value:2009},{value:2008},{value:2007},{value:2006},{value:2005},{value:2004},{value:2003},{value:2002},{value:2001},{value:2000}];
         let dateStart = this.addModalLabel(bodyContainer, "Start date");
         dateStart.className = "col px-0 my-auto form-inline input-group";
         this.addModalInput(dateStart, "select", "start_date.day", this.manga.start_date.day, {number: true, elements: days});
@@ -481,7 +486,7 @@ class MyMangaDex {
         startToday.addEventListener("click", () => {
             let today = new Date();
             document.querySelector("[data-mal='start_date.day']").value = today.getDate();
-            document.querySelector("[data-mal='start_date.month']").value = today.getMonth();
+            document.querySelector("[data-mal='start_date.month']").value = today.getMonth()+1;
             document.querySelector("[data-mal='start_date.year']").value = today.getFullYear();
         });
         appendStartToday.appendChild(startToday);
@@ -499,7 +504,7 @@ class MyMangaDex {
         endToday.addEventListener("click", () => {
             let today = new Date();
             document.querySelector("[data-mal='finish_date.day']").value = today.getDate();
-            document.querySelector("[data-mal='finish_date.month']").value = today.getMonth();
+            document.querySelector("[data-mal='finish_date.month']").value = today.getMonth()+1;
             document.querySelector("[data-mal='finish_date.year']").value = today.getFullYear();
         });
         appendEndToday.appendChild(endToday);
@@ -618,7 +623,7 @@ class MyMangaDex {
 
                 await this.updateMyAnimeList(false);
                 this.insertMyAnimeListInformations();
-                this.notification(NOTIFY.SUCCESS, "Re-reading", "You started re-reading " + this.manga.name, "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                this.notification(NOTIFY.SUCCESS, "Re-reading", "You started re-reading **" + this.manga.name + "**", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
 
                 if (this.options.updateMDList) {
                     await this.updateMangaDexList("manga_follow", 6);
@@ -661,7 +666,7 @@ class MyMangaDex {
         let data = await storageGet(this.manga.mangaDexId);
         // If there is no entry for mal link
         if (data === undefined) {
-            this.notification(NOTIFY.INFO, "No MyAnimeList ID in storage", "Searching on the manga page of " + this.manga.name + " to find a MyAnimeList id.", this.mmdImage);
+            this.notification(NOTIFY.INFO, "No MyAnimeList ID in storage", "Searching on the manga page of **" + this.manga.name + "** to find a MyAnimeList id.", this.mmdImage);
 
             // Fetch it from mangadex manga page
             try {

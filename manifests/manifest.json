@@ -27,7 +27,7 @@
 			"https://mangadex.org/titles*",
 			"https://mangadex.org/title*",
 			"https://mangadex.org/chapter/*",
-			"https://mangadex.org/search",
+			"https://mangadex.org/search*",
 			"https://mangadex.org/?page=search*",
 			"https://mangadex.org/?page=titles*",
 			"https://mangadex.org/featured",

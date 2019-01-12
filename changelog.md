@@ -11,6 +11,8 @@
 * Added an file select button for the **Import (MMD)**
 * Added support for the new */genre* page on MangaDex
 * Added a *Show Lower* button on chapter list pages to show hidden chapters
+* Fix MD list status when auto-updating it
+* Fix Date buttons in MAL modal
 
 ## 1.9.10 + 1.9.11
 
