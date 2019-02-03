@@ -13,6 +13,7 @@
 * Added a *Show Lower* button on chapter list pages to show hidden chapters
 * Fix MD list status when auto-updating it
 * Fix Date buttons in MAL modal
+* Fix MAL id detection
 
 ## 1.9.10 + 1.9.11
 

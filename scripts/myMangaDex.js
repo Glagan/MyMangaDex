@@ -917,7 +917,7 @@ class MyMangaDex {
         this.manga.name = document.querySelector("h6[class='card-header']").textContent.trim();
         this.manga.mangaDexId = /.+title\/(\d+)/.exec(this.pageUrl);
         // We always try to find the link, in case it was updated
-        let myAnimeListUrl = document.querySelector("img[src='/images/misc/mal.png'");
+        let myAnimeListUrl = document.querySelector("img[src$='/mal.png'");
         if (myAnimeListUrl !== null) {
             // Finish getting the mal link
             myAnimeListUrl = myAnimeListUrl.nextElementSibling.href;

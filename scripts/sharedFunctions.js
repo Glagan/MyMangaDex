@@ -121,6 +121,11 @@ async function loadOptions() {
                     "Online Save as been added, if you wish to use it you need to manually enable it. You can see the changelog on {{https://github.com/Glagan/MyMangaDex}}.",
                     {sticky: true, position: "bottom-left", image: mmdImage}
                 );
+                SimpleNotification.info(
+                    "Update Information",
+                    "The project is currently *done* and I don't really plan into adding new features.\r\nBut if you have a problem, I will still try to solve it, open an issue or message me (Github, Discord, Reddit).",
+                    {sticky: true, position: "bottom-left", image: mmdImage}
+                );
             }
 
             await storageSet("options", data);
