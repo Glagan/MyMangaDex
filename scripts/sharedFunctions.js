@@ -64,7 +64,7 @@ async function loadOptions() {
     if (data === undefined) {
         SimpleNotification.info(
             "First time using MyMangaDex",
-            "It looks like it is your first time using MyMangaDex, for any help go to {{https://github.com/Glagan/MyMangaDex}}, and don't forget to look at the settings !",
+            "It looks like it is your first time using MyMangaDex, for any help go on {{github:https://github.com/Glagan/MyMangaDex}}, and don't forget to look at the settings !",
             {sticky: true, position: "bottom-left", image: mmdImage}
         );
 
@@ -102,7 +102,7 @@ async function loadOptions() {
 
                 SimpleNotification.info(
                     "MyMangaDex as been updated to 1.9",
-                    "You can see the changelog on {{https://github.com/Glagan/MyMangaDex}}, new options have been added, you should check them out !",
+                    "You can see the changelog on {{github:https://github.com/Glagan/MyMangaDex}}, new options have been added, you should check them out !",
                     {sticky: true, position: "bottom-left", image: mmdImage}
                 );
             }
@@ -118,7 +118,7 @@ async function loadOptions() {
 
                 SimpleNotification.info(
                     "MyMangaDex as been updated to 2.0",
-                    "Online Save as been added, if you wish to use it you need to manually enable it. You can see the changelog on {{https://github.com/Glagan/MyMangaDex}}.",
+                    "Online Save as been added, if you wish to use it you need to manually enable it. You can see the changelog on {{github:https://github.com/Glagan/MyMangaDex}}.",
                     {sticky: true, position: "bottom-left", image: mmdImage}
                 );
                 SimpleNotification.info(
