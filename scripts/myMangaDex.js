@@ -59,9 +59,9 @@ class MyMangaDex {
 
         if (data.url.indexOf("login.php") > -1) {
             if (CHROME) {
-                this.notification(NOTIFY.ERROR, "Not logged in", "Login on MyAnimeList !", this.myAnimeListImage, true);
+                this.notification(NOTIFY.ERROR, "Not logged in", "Login {{here:https://myanimelist.net/login.php}} on MyAnimeList !", this.myAnimeListImage, true);
             } else {
-                this.notification(NOTIFY.ERROR, "Not logged in", "Login ({{https://myanimelist.net/login.php}}) on MyAnimeList !\r\nIf you see this error while logged in, see here {{https://github.com/Glagan/MyMangaDex/issues/5}}", this.myAnimeListImage, true);
+                this.notification(NOTIFY.ERROR, "Not logged in", "Login {{here:https://myanimelist.net/login.php}} on MyAnimeList !\r\nIf you see this error while logged in, see {{this issue:https://github.com/Glagan/MyMangaDex/issues/5}} on **Github**.", this.myAnimeListImage, true);
             }
             this.loggedMyAnimeList = false;
         } else {
