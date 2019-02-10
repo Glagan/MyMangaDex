@@ -1,14 +1,14 @@
 {
 	"manifest_version": 2,
 	"name": "MyMangaDex",
-	"version": "2.0.4",
+	"version": "2.0.5",
 	"author": "Glagan",
 
 	"description": "Automatically update your MyAnimeList manga list when reading on MangaDex.",
 
 	"permissions": [
 		"*://myanimelist.net/*",
-		"*://mangadex.org/*",
+		"*://*.mangadex.org/*",
 		"storage"
 	],
 
@@ -20,21 +20,21 @@
 
 	"content_scripts": [{
 		"matches": [
-			"https://mangadex.org/follows",
-			"https://mangadex.org/follows/manga/0/0/*",
-			"https://mangadex.org/follows/chapters/*",
-			"https://mangadex.org/manga*",
-			"https://mangadex.org/titles*",
-			"https://mangadex.org/title*",
-			"https://mangadex.org/chapter/*",
-			"https://mangadex.org/search*",
-			"https://mangadex.org/?page=search*",
-			"https://mangadex.org/?page=titles*",
-			"https://mangadex.org/featured",
-			"https://mangadex.org/group*",
-			"https://mangadex.org/genre*",
-			"https://mangadex.org/user*",
-			"https://mangadex.org/list*"
+			"https://*.mangadex.org/follows",
+			"https://*.mangadex.org/follows/manga/0/0/*",
+			"https://*.mangadex.org/follows/chapters/*",
+			"https://*.mangadex.org/manga*",
+			"https://*.mangadex.org/titles*",
+			"https://*.mangadex.org/title*",
+			"https://*.mangadex.org/chapter/*",
+			"https://*.mangadex.org/search*",
+			"https://*.mangadex.org/?page=search*",
+			"https://*.mangadex.org/?page=titles*",
+			"https://*.mangadex.org/featured",
+			"https://*.mangadex.org/group*",
+			"https://*.mangadex.org/genre*",
+			"https://*.mangadex.org/user*",
+			"https://*.mangadex.org/list*"
 		],
 		"css": ["third_party/simpleNotification.min.css", "css/mymangadex.css"]
 	}]

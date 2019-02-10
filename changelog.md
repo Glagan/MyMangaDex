@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.5
+
+* Added www subdomain of MangaDex
+
 ## 2.0
 
 * Online Save
