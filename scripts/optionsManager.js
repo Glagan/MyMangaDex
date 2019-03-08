@@ -518,7 +518,7 @@ class OptionsManager {
             });
             let text = await response.text();
             let domContent = this.HTMLParser.parseFromString(text, "text/html");
-            let links = domContent.getElementsByClassName("manga_title");
+            let links = domContent.querySelectorAll("a.manga_title");
             for (let i = 0; i < links.length; i++) {
                 this.mangaDexMangaList.push(parseInt(/\/title\/(\d+)\//.exec(links[i].href)[1]));
             }

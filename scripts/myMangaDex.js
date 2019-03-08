@@ -23,7 +23,7 @@ class MyMangaDex {
         this.options = await loadOptions();
 
         // Choose page
-        if (this.pageUrl.indexOf("org/follows") > -1 ||
+        if ((this.pageUrl.indexOf("org/follows") > -1 && this.pageUrl.indexOf("/manga/") == -1) ||
             (this.pageUrl.indexOf("org/group") > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || (this.pageUrl.indexOf("/manga/") == -1 && this.pageUrl.indexOf("/comments/") == -1))) ||
             (this.pageUrl.indexOf("org/user") > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || this.pageUrl.indexOf("/manga/") == -1))) {
             this.chaptersListPage();
@@ -34,6 +34,7 @@ class MyMangaDex {
             this.pageUrl.indexOf("org/titles") > -1 ||
             this.pageUrl.indexOf("org/genre") > -1 ||
             this.pageUrl.indexOf("org/list") > -1 ||
+            (this.pageUrl.indexOf("org/follows") > -1 && this.pageUrl.indexOf("/manga/") > -1) ||
             (this.pageUrl.indexOf("org/group") > -1 && this.pageUrl.indexOf("/manga/") > -1) ||
             (this.pageUrl.indexOf("org/user") > -1 && this.pageUrl.indexOf("/manga/") > -1)) {
             this.titlesListPage();
