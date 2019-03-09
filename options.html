@@ -27,7 +27,7 @@
                 <h1 class="text-container py-2 px-2"><i class="fas fa-palette"></i> Colors</h1>
             </div>
             <div class="col">
-                <div class="alert alert-info" role="alert">Colors that exist in <a href="http://www.color-hex.com/color-names.html" target="blank">HTML</a> are accepted but you can also use a value like <b>#RRGGBB</b>, <b>rgb(r,g,b)</b> or with alpha channel <b>rgba(r,g,b,a)</b>.</div>
+                <div class="alert alert-info">Colors that exist in <a href="http://www.color-hex.com/color-names.html" target="blank">HTML</a> are accepted but you can also use a value like <b>#RRGGBB</b>, <b>rgb(r,g,b)</b> or with alpha channel <b>rgba(r,g,b,a)</b>.</div>
                 <div class="form-group text-container p-2">
                     <label class="font-weight-bold">Last read color <a data-default="lastReadColor" class="btn btn-sm btn-secondary"><i
                                 class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
@@ -240,7 +240,7 @@
                 <div class="text-container p-2 mb-3">
                     <p>You can import your <strong>MyMangaDex</strong> data that you exported, paste your save or select your file save and click <strong>Import</strong>. Options <strong>are</strong> override.<br>
                     Merging your data will <i>merge</i> the saved opened chapters, and pick the highest last opened chapter for each manga.</p>
-                    <div class="alert alert-danger" role="alert">This will erase your <b>current</b> save, export it if you don't want to lose it.</div>
+                    <div class="alert alert-danger">This will erase your <b>current</b> save, export it if you don't want to lose it.</div>
                     <form id="save-import">
                         <textarea class="form-control" name="save" placeholder="Exported Save (JSON)"></textarea>
                         <div id="importInformations"></div>
@@ -259,8 +259,8 @@
             </div>
             <div class="col">
                 <div class="text-container p-2 mb-3">
-                    <p>Update your <b>MyAnimeList</b> manga list by updating or adding all titles on your MangaDex follow list that have a MyAnimeList id.</p>
-                    <div class="alert alert-info" role="alert">You can be extra careful and <a href="https://myanimelist.net/panel.php?go=export">export</a> your MyAnimeList before using this feature.</div>
+                    <p>Update your <b>MyAnimeList</b> manga list by updating or adding all titles on your <b>MangaDex</b> follow list that have a <b>MyAnimeList</b> id.</p>
+                    <div class="alert alert-info">You can be extra careful and <a href="https://myanimelist.net/panel.php?go=export">export</a> your MyAnimeList before using this feature.</div>
                     <form id="mal-export" class="text-center form-inline justify-content-md-center mx-auto">
                         <button type="submit" class="btn btn-primary mb-2">Export</button>
                     </form>
@@ -276,8 +276,9 @@
             </div>
             <div class="col">
                 <div class="text-container p-2 mb-3">
-                    <p>Update your <b>MangaDex</b> follow list with data from MyAnimeList. If <kbd>saveAllOpened</kbd> is enabled, a list of chapters is generated.</p>
-                    <div class="alert alert-danger" role="alert">This will erase your <b>current</b> save, export it if you don't want to lose it.</div>
+                    <p>Update your <b>MyMangaDex</b> last opened chapter with data from MyAnimeList for every title you follow on <b>MangaDex</b>. If <kbd>saveAllOpened</kbd> is enabled, a list of chapters is generated.</p>
+                    <div class="alert alert-info">This functionality doesn't add any manga to your <b>MangaDex</b> follow list, it only update <b>MyMangaDex</b> storage.</div>
+                    <div class="alert alert-danger">This will erase your <b>current</b> <i>MyMangaDex</i> save, export it if you don't want to lose it.</div>
                     <form id="mal-import" class="text-center form-inline justify-content-md-center mx-auto">
                         <div class="form-group mx-sm-3 mb-2 input-group">
                             <input type="text" class="form-control" name="username" placeholder="MyAnimeList username">
@@ -300,7 +301,7 @@
                 <div class="form-group text-container p-2">
                     <label class="font-weight-bold">Online Save <a data-default="onlineSave" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
                     <p>Online Save will update your data on a MMD Online Save instance, which you can find <a href="https://github.com/Glagan/MMD-Online-Save">here</a>. I propose a default one hosted on my site <a href="https://mmd.nikurasu.org">nikurasu</a>.</p>
-                    <div id="onlineServiceInfo" class="alert alert-info" role="alert">You can't currently host your own MMD Online Save for Firefox (working only on Chrome) since permissions don't allow me to make requests to a domain which isn't in the extension manifest, and I can't know what domain you will use.</div>
+                    <div id="onlineServiceInfo" class="alert alert-info">You can't currently host your own MMD Online Save for Firefox (working only on Chrome) since permissions don't allow me to make requests to a domain which isn't in the extension manifest, and I can't know what domain you will use.</div>
                     <p>You only need to set a Username and Password, then when you need to use your data on another computer or another device, log in and your data will be imported.</p>
                     <p>All data is still saved locally, and the extension only use local storage to retrieve data, you can disable online save and delete all of your saved data at any time.<br />
                     What Online Save do is updating your save online every time your save is updated locally.</p>
@@ -316,8 +317,8 @@
                 <div id="onlineOptions">
                     <!-- Logged in -->
                     <div id="loggedInPanel" class="text-container p-2 mb-3">
-                        <div class="alert alert-info" role="alert">You are currently <b>LOGGED IN</b>.</div>
-                        <div class="alert alert-danger" role="alert"><b>Import Online</b> will erase your local save, save it before if you don't want to lose it.<br>
+                        <div class="alert alert-info">You are currently <b>LOGGED IN</b>.</div>
+                        <div class="alert alert-danger"><b>Import Online</b> will erase your local save, save it before if you don't want to lose it.<br>
                         <b>Export Online</b> will erase your online save, you can download it before if you don't want to lose it.</div>
                         <div class="row no-gutters input-group">
                             <div class="col-sm-12 col-md-8 text-center">
@@ -331,15 +332,15 @@
                     </div>
                     <!-- Logged out -->
                     <div id="loggedOutPanel" class="text-container p-2 mb-3">
-                        <div class="alert alert-info" role="alert">You are currently <b>LOGGED OUT</b>.</div>
+                        <div class="alert alert-info">You are currently <b>LOGGED OUT</b>.</div>
                         <p>To connect, fill the following fields and press <b>Login</b> or <b>Register</b> if you don't have an account on this service.</p>
                         <div class="input-group justify-content-center">
                             <button class="btn btn-primary mr-2" data-button-protect="login"><i class="fas fa-sign-in-alt"></i> Login</button>
                             <button class="btn btn-primary" data-button-protect="register"><i class="fas fa-user-plus"></i> Register</button>
                         </div>
                     </div>
-                    <div id="onlineSuccess" class="alert alert-success" role="alert"></div>
-                    <div id="onlineError" class="alert alert-danger" role="alert"></div>
+                    <div id="onlineSuccess" class="alert alert-success"></div>
+                    <div id="onlineError" class="alert alert-danger"></div>
                     <!-- Values -->
                     <form id="onlineForm">
                         <div id="onlineURLPanel" class="form-group text-container p-2">
@@ -389,7 +390,7 @@
             <div class="col">
                 <div class="text-container p-2 mb-3">
                     <p>Delete all of your data. A new save will be created with default parameters.</p>
-                    <div class="alert alert-danger" role="alert">This will erase your <b>current</b> save, export it or save it online if you don't want to lose it. <b>Not reversible.</b></div>
+                    <div class="alert alert-danger">This will erase your <b>current</b> save, export it or save it online if you don't want to lose it. <b>Not reversible.</b></div>
                     <p><button id="delete-save" class="btn btn-danger font-2 d-block mx-auto">Delete</button></p>
             </div>
         </div>

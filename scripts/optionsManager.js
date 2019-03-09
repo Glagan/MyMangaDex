@@ -451,21 +451,25 @@ class OptionsManager {
             await this.listMyAnimeList(username, 0, true);
             if (Object.keys(this.myAnimeListMangaList).length == 0) {
                 this.flashBackground(false);
-                this.logAndScroll(LOG.DANGER, "Empty MAL manga list, aborting.");
+                this.logAndScroll(LOG.INFO, "Empty MyAnimeList manga list, try another username maybe ?");
             } else {
                 // Start fetching the data
-                await this.listMyAnimeList(username, Object.keys(this.myAnimeListMangaList).length);
                 await this.listMangaDex();
-                await this.updateLocalFromMDMAL();
-
-                this.flashBackground(true);
+                if (this.mangaDexMangaList.length > 0) {
+                    await this.listMyAnimeList(username, Object.keys(this.myAnimeListMangaList).length);
+                    await this.updateLocalFromMDMAL();
+                    this.flashBackground(true);
+                } else {
+                    this.logAndScroll(LOG.INFO, "No followed manga on MangaDex.");
+                    this.flashBackground(false);
+                }
             }
 
             // Done
             this.malBusy = false;
         } else {
             this.flashBackground(false);
-            console.error("Empty MAL username");
+            console.error("Empty MyAnimeList username");
         }
     }
 
