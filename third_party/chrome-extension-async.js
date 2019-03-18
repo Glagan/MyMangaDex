@@ -4,7 +4,7 @@
  * @license MIT */
 if (CHROME) {
     (function () {
-        'use strict';
+        "use strict";
 
         /** Wrap a function with a callback with a Promise.
          * @param {function} f The function to wrap, should be pattern: withCallback(arg1, arg2, ... argN, callback).
@@ -21,7 +21,7 @@ if (CHROME) {
 
                     // ... and the last arg is a function
                     const last = args[args.length - 1];
-                    if (typeof last === 'function') {
+                    if (typeof last === "function") {
                         // Trim the last callback arg if it's been passed
                         safeArgs = args.slice(0, args.length - 1);
                         callback = last;
@@ -74,7 +74,7 @@ if (CHROME) {
 
             for (let funcDef of apiMap) {
                 let funcName;
-                if (typeof funcDef === 'string')
+                if (typeof funcDef === "string")
                     funcName = funcDef;
                 else {
                     funcName = funcDef.n;
@@ -85,7 +85,7 @@ if (CHROME) {
                     continue;
 
                 const m = api[funcName];
-                if (typeof m === 'function')
+                if (typeof m === "function")
                     // This is a function, wrap in a promise
                     api[funcName] = promisify(m.bind(api), funcDef.cb);
                 else
@@ -109,14 +109,19 @@ if (CHROME) {
         }
 
         // StorageArea https://developer.chrome.com/extensions/storage#type-StorageArea
-        const knownInStorageArea = ['get', 'getBytesInUse', 'set', 'remove', 'clear'];
+        const knownInStorageArea = ["get", "getBytesInUse", "set", "remove", "clear"];
 
         /** Map of API functions that follow the callback pattern that we can 'promisify' */
         applyMaps({
             storage: [          // Todo: this should extend StorageArea.prototype instead
-                { n: 'sync', props: knownInStorageArea },
-                { n: 'local', props: knownInStorageArea },
-                { n: 'managed', props: knownInStorageArea }],
+                { n: "sync", props: knownInStorageArea },
+                { n: "local", props: knownInStorageArea },
+                { n: "managed", props: knownInStorageArea }],
+            runtime: [
+                'getBackgroundPage', 'openOptionsPage', 'setUninstallURL',
+                'restartAfterDelay', 'sendMessage',
+                'sendNativeMessage', 'getPlatformInfo', 'getPackageDirectoryEntry',
+                { n: "requestUpdateCheck", cb: (status, details) => { return { status, details }; } }],
         });
     })();
 }

@@ -6,8 +6,8 @@
             "third_party/simpleNotification.min.js",
             "scripts/defaultOptions.js",
             "third_party/chrome-extension-async.js",
-            "scripts/minified/sharedFunctions.js",
-            "scripts/minified/myMangaDex.js"
+            "scripts/sharedFunctions.js",
+            "scripts/myMangaDex.js"
         ]
     }]
 }

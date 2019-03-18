@@ -18,8 +18,8 @@
 		"js": [
 			"third_party/simpleNotification.min.js",
 			"scripts/defaultOptions.js",
-			"scripts/minified/sharedFunctions.js",
-			"scripts/minified/myMangaDex.js"
+			"scripts/sharedFunctions.js",
+			"scripts/myMangaDex.js"
 		]
 	}]
 }

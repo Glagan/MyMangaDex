@@ -482,23 +482,27 @@ class OptionsManager {
         this.logAndScroll(LOG.INFO, "Fetching MyAnimeList manga from " + offset + " to " + (offset + 300));
 
         try {
-            let response = await fetch("https://myanimelist.net/mangalist/" + username + "/load.json?offset=" + offset + "&status=7", {
-                method: "GET",
-                redirect: "follow",
-                credentials: "include"
+            let response = await browser.runtime.sendMessage({
+                action: "fetch",
+                url: "https://myanimelist.net/mangalist/" + username + "/load.json?offset=" + offset + "&status=7",
+                options: {
+                    method: "GET",
+                    redirect: "follow",
+                    credentials: "include"
+                },
+                isJson: true
             });
-            let data = await response.json();
-            if (data.hasOwnProperty("errors")) {
-                this.logAndScroll(LOG.DANGER, data.errors[0].message);
+            if (response.body.hasOwnProperty("errors")) {
+                this.logAndScroll(LOG.DANGER, response.body.errors[0].message);
             } else {
                 // Insert each manga fetched in the list
-                for (let manga of data) {
+                for (let manga of response.body) {
                     this.myAnimeListMangaList[parseInt(manga.manga_id)] = parseInt(manga.num_read_chapters);
                 }
 
                 if (!dummy) {
                     // If there is 300 items, we might have reached the list limit so we try again
-                    if (data.length == 300) {
+                    if (response.body.length == 300) {
                         await this.listMyAnimeList(username, offset + 300);
                     } else {
                         this.logAndScroll(LOG.SUCCESS, "Done fetching MyAnimeList manga.");
@@ -515,13 +519,16 @@ class OptionsManager {
         this.logAndScroll(LOG.INFO, "Fetching MangaDex follow page manga " + page + ((max_page > 1) ? " of " + max_page : ""));
 
         try {
-            let response = await fetch("https://mangadex.org/follows/manga/" + type + "/0/" + page + "/", {
-                method: "GET",
-                redirect: "follow",
-                credentials: "include"
+            let response = await browser.runtime.sendMessage({
+                action: "fetch",
+                url: "https://mangadex.org/follows/manga/" + type + "/0/" + page + "/",
+                options: {
+                    method: "GET",
+                    redirect: "follow",
+                    credentials: "include"
+                }
             });
-            let text = await response.text();
-            let domContent = this.HTMLParser.parseFromString(text, "text/html");
+            let domContent = this.HTMLParser.parseFromString(response.body, "text/html");
             let links = domContent.querySelectorAll("a.manga_title");
             for (let i = 0; i < links.length; i++) {
                 this.mangaDexMangaList.push(parseInt(/\/title\/(\d+)\//.exec(links[i].href)[1]));
@@ -567,12 +574,15 @@ class OptionsManager {
         });
 
         try {
-            let response = await fetch("https://mangadex.org/title/" + this.mangaDexMangaList[index], {
-                method: "GET",
-                cache: "no-cache"
+            let response = await browser.runtime.sendMessage({
+                action: "fetch",
+                url: "https://mangadex.org/title/" + this.mangaDexMangaList[index],
+                options: {
+                    method: "GET",
+                    cache: "no-cache"
+                }
             });
-            let text = await response.text();
-            let content = this.HTMLParser.parseFromString(text, "text/html");
+            let content = this.HTMLParser.parseFromString(response.body, "text/html");
             //
             let manga = {
                 mangaDexId: this.mangaDexMangaList[index],
@@ -585,7 +595,7 @@ class OptionsManager {
                 chapters: []
             };
             // Scan the manga page for the mal icon and mal url
-            let mangaName = content.querySelector("h6[class='card-header']").textContent.trim();
+            let mangaName = content.querySelector("h6.card-header").textContent.trim();
             let myAnimeListURL = content.querySelector("img[src='/images/misc/mal.png'");
             if (myAnimeListURL !== null) {
                 myAnimeListURL = myAnimeListURL.nextElementSibling;
@@ -688,12 +698,15 @@ class OptionsManager {
                 if (current == null) {
                     notSaved = true;
                     this.logAndScroll(LOG.INFO, "Trying to find a MyAnimeList id for #" + this.mangaDexMangaList[i]);
-                    let response = await fetch("https://mangadex.org/title/" + this.mangaDexMangaList[i], {
-                        method: "GET",
-                        cache: "no-cache"
+                    let response = await browser.runtime.sendMessage({
+                        action: "fetch",
+                        url: "https://mangadex.org/title/" + this.mangaDexMangaList[i],
+                        options: {
+                            method: "GET",
+                            cache: "no-cache"
+                        }
                     });
-                    let text = await response.text();
-                    let content = this.HTMLParser.parseFromString(text, "text/html");
+                    let content = this.HTMLParser.parseFromString(response.body, "text/html");
                     //
                     current = {
                         mal: 0,
@@ -773,20 +786,23 @@ class OptionsManager {
     }
 
     async fetchMyAnimeList(manga) {
-        let data = await fetch("https://myanimelist.net/ownlist/manga/" + manga.myAnimeListId + "/edit?hideLayout", {
-            method: "GET",
-            redirect: "follow",
-            cache: "no-cache",
-            credentials: "include"
+        let data = await browser.runtime.sendMessage({
+            action: "fetch",
+            url: "https://myanimelist.net/ownlist/manga/" + manga.myAnimeListId + "/edit?hideLayout",
+            options: {
+                method: "GET",
+                redirect: "follow",
+                cache: "no-cache",
+                credentials: "include"
+            }
         });
-        let text = await data.text();
 
         if (data.url.indexOf("login.php") > -1) {
             this.loggedMyAnimeList = false;
         } else {
             // CSRF Token
-            this.csrf = /'csrf_token'\scontent='(.{40})'/.exec(text)[1];
-            processMyAnimeListResponse(manga, text);
+            this.csrf = /'csrf_token'\scontent='(.{40})'/.exec(data.body)[1];
+            processMyAnimeListResponse(manga, data.body);
         }
     }
 
@@ -805,14 +821,18 @@ class OptionsManager {
         let {requestURL, body} = buildMyAnimeListBody(true, manga, this.csrf, status);
         // Send the POST request to update or add the manga
         try {
-            await fetch(requestURL, {
-                method: "POST",
-                body: body,
-                redirect: "follow",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+            await browser.runtime.sendMessage({
+                action: "fetch",
+                url: requestURL,
+                options: {
+                    method: "POST",
+                    body: body,
+                    redirect: "follow",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+                    }
                 }
             });
         } catch (error) {
@@ -916,27 +936,31 @@ class OptionsManager {
 
         // Send a request to the "login" route /user
         try {
-            let response = await fetch(onlineURL + "user", {
-                method: "GET",
-                headers: {
-                    "Accept": "application/json",
-                    "X-Auth-Name": username,
-                    "X-Auth-Pass": password
-                }
+            let response = await browser.runtime.sendMessage({
+                action: "fetch",
+                url: onlineURL + "user",
+                options: {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json",
+                        "X-Auth-Name": username,
+                        "X-Auth-Pass": password
+                    }
+                },
+                isJson: true
             });
-            let text = await response.json();
 
             // Check headers and get token if correct
             if (response.status == 200) {
                 this.options.onlineURL = onlineURL;
                 this.options.username = username;
                 this.options.isLoggedIn = true;
-                this.options.token = text.token;
-                this.handleOnlineSuccess(text);
+                this.options.token = response.body.token;
+                this.handleOnlineSuccess(response.body);
                 this.saveOptions();
                 this.toggleOnlinePanels();
             } else {
-                this.handleOnlineError(text);
+                this.handleOnlineError(response.body);
             }
         } catch (error) {
             this.handleOnlineError(error);
@@ -955,26 +979,30 @@ class OptionsManager {
 
         // Send a request to the /user route
         try {
-            let response = await fetch(onlineURL + "user", {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json; charset=utf-8"
+            let response = await browser.runtime.sendMessage({
+                action: "fetch",
+                url: onlineURL + "user",
+                options: {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json; charset=utf-8"
+                    },
+                    body: JSON.stringify(body)
                 },
-                body: JSON.stringify(body)
+                isJson: true
             });
-            let text = await response.json();
 
             if (response.status == 201) {
                 this.options.onlineURL = onlineURL;
                 this.options.username = body.username;
                 this.options.isLoggedIn = true;
-                this.options.token = text.token;
-                this.handleOnlineSuccess(text);
+                this.options.token = response.body.token;
+                this.handleOnlineSuccess(response.body);
                 this.saveOptions();
                 this.toggleOnlinePanels();
             } else {
-                this.handleOnlineError(text);
+                this.handleOnlineError(response.body);
             }
         } catch (error) {
             this.handleOnlineError(error);
@@ -1001,21 +1029,25 @@ class OptionsManager {
         this.hideOnlineMessage();
 
         try {
-            let response = await fetch(this.options.onlineURL + "user/self/title", {
-                method: "GET",
-                headers: {
-                    "Accept": "application/json",
-                    "X-Auth-Token": this.options.token
-                }
+            let response = await browser.runtime.sendMessage({
+                action: "fetch",
+                url: this.options.onlineURL + "user/self/title",
+                options: {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json",
+                        "X-Auth-Token": this.options.token
+                    }
+                },
+                isJson: true
             });
-            let text = await response.json();
 
             if (response.status == 200) {
                 // Clear storage
                 browser.storage.local.clear();
                 // Build titles
                 let titles = {};
-                text.titles.forEach(element => {
+                response.body.titles.forEach(element => {
                     titles[element.md_id] = {
                         mal: element.mal_id,
                         last: element.last,
@@ -1027,7 +1059,7 @@ class OptionsManager {
                 this.saveOptions();
                 this.handleOnlineSuccess("Titles imported.");
             } else {
-                this.handleOnlineError(text);
+                this.handleOnlineError(response.body);
             }
         } catch (error) {
             this.handleOnlineError(error);
@@ -1054,21 +1086,25 @@ class OptionsManager {
 
         // Send the request
         try {
-            let response = await fetch(this.options.onlineURL + "user/self/title", {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json; charset=utf-8",
-                    "X-Auth-Token": this.options.token
+            let response = await browser.runtime.sendMessage({
+                action: "fetch",
+                url: this.options.onlineURL + "user/self/title",
+                options: {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json; charset=utf-8",
+                        "X-Auth-Token": this.options.token
+                    },
+                    body: JSON.stringify(body)
                 },
-                body: JSON.stringify(body)
+                isJson: true
             });
-            let text = await response.json();
 
             if (response.status == 200) {
-                this.handleOnlineSuccess(text);
+                this.handleOnlineSuccess(response.body);
             } else {
-                this.handleOnlineError(text);
+                this.handleOnlineError(response.body);
             }
         } catch (error) {
             this.handleOnlineError(error);
@@ -1095,15 +1131,19 @@ class OptionsManager {
 
         // Send a simple DELETE request
         try {
-            let response = await fetch(this.options.onlineURL + "user/self", {
-                method: "DELETE",
-                headers: {
-                    "Accept": "application/json",
-                    "X-Auth-Name": this.options.username,
-                    "X-Auth-Pass": password
-                }
+            let response = await browser.runtime.sendMessage({
+                action: "fetch",
+                url: this.options.onlineURL + "user/self",
+                options: {
+                    method: "DELETE",
+                    headers: {
+                        "Accept": "application/json",
+                        "X-Auth-Name": this.options.username,
+                        "X-Auth-Pass": password
+                    }
+                },
+                isJson: true
             });
-            let text = await response.json();
 
             if (response.status == 200) {
                 // Delete in the options
@@ -1113,11 +1153,11 @@ class OptionsManager {
                 // Delete the form too
                 this.onlineForm.username.value = "";
                 // Save
-                this.handleOnlineSuccess(text);
+                this.handleOnlineSuccess(response.body);
                 this.saveOptions();
                 this.toggleOnlinePanels();
             } else {
-                this.handleOnlineError(text);
+                this.handleOnlineError(response.body);
             }
         } catch (error) {
             this.handleOnlineError(error);
@@ -1145,24 +1185,28 @@ class OptionsManager {
         };
 
         try {
-            let response = await fetch(this.options.onlineURL + "user/self", {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json; charset=utf-8",
-                    "X-Auth-Name": this.options.username,
-                    "X-Auth-Pass": oldPassword
+            let response = await browser.runtime.sendMessage({
+                action: "fetch",
+                url: this.options.onlineURL + "user/self",
+                options: {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json; charset=utf-8",
+                        "X-Auth-Name": this.options.username,
+                        "X-Auth-Pass": oldPassword
+                    },
+                    body: JSON.stringify(body)
                 },
-                body: JSON.stringify(body)
+                isJson: true
             });
-            let text = await response.json();
 
             if (response.status == 200) {
-                this.options.token = text.token;
-                this.handleOnlineSuccess(text);
+                this.options.token = response.body.token;
+                this.handleOnlineSuccess(response.body);
                 this.saveOptions();
             } else {
-                this.handleOnlineError(text);
+                this.handleOnlineError(response.body);
             }
         } catch (error) {
             this.handleOnlineError(error);
@@ -1176,24 +1220,28 @@ class OptionsManager {
         if (!password) return;
 
         try {
-            let response = await fetch(this.options.onlineURL + "user/self/token/refresh", {
-                method: "GET",
-                headers: {
-                    "Accept": "application/json",
-                    "X-Auth-Name": this.options.username,
-                    "X-Auth-Pass": password
-                }
+            let response = await browser.runtime.sendMessage({
+                action: "fetch",
+                url: this.options.onlineURL + "user/self/token/refresh",
+                options: {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json",
+                        "X-Auth-Name": this.options.username,
+                        "X-Auth-Pass": password
+                    }
+                },
+                isJson: true
             });
-            let text = await response.json();
 
             if (response.status == 200) {
                 // Update in the options
-                this.options.token = text.token;
+                this.options.token = response.body.token;
                 // Save
                 this.handleOnlineSuccess("Token updated.");
                 this.saveOptions();
             } else {
-                this.handleOnlineError(text);
+                this.handleOnlineError(response.body);
             }
         } catch (error) {
             this.handleOnlineError(error);
@@ -1207,23 +1255,27 @@ class OptionsManager {
         if (!password) return;
 
         try {
-            let response = await fetch(this.options.onlineURL + "user/self/token", {
-                method: "GET",
-                headers: {
-                    "Accept": "application/json",
-                    "X-Auth-Name": this.options.username,
-                    "X-Auth-Pass": password
-                }
+            let response = await browser.runtime.sendMessage({
+                action: "fetch",
+                url: this.options.onlineURL + "user/self/token",
+                options: {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json",
+                        "X-Auth-Name": this.options.username,
+                        "X-Auth-Pass": password
+                    }
+                },
+                isJson: true
             });
-            let text = await response.json();
 
             // Check headers and get token if correct
             if (response.status == 200) {
-                this.options.token = text.token;
+                this.options.token = response.body.token;
                 this.handleOnlineSuccess("Token received.");
                 this.saveOptions();
             } else {
-                this.handleOnlineError(text);
+                this.handleOnlineError(response.body);
             }
         } catch (error) {
             this.handleOnlineError(error);
@@ -1232,18 +1284,22 @@ class OptionsManager {
 
     async downloadOnline() {
         try {
-            let response = await fetch(this.options.onlineURL + "user/self/title", {
-                method: "GET",
-                headers: {
-                    "Accept": "application/json",
-                    "X-Auth-Token": this.options.token
-                }
+            let response = await browser.runtime.sendMessage({
+                action: "fetch",
+                url: this.options.onlineURL + "user/self/title",
+                options: {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json",
+                        "X-Auth-Token": this.options.token
+                    }
+                },
+                isJson: true
             });
-            let text = await response.json();
             let body = {
                 options: JSON.parse(JSON.stringify(this.options))
             };
-            text.titles.forEach(element => {
+            response.body.titles.forEach(element => {
                 body[element.md_id] = {
                     mal: element.mal_id,
                     last: element.last,
@@ -1256,7 +1312,7 @@ class OptionsManager {
                 this.downloadOnlineButton.click();
                 this.downloadOnlineButton.href = "";
             } else {
-                this.handleOnlineError(text);
+                this.handleOnlineError(response.body);
             }
         } catch (error) {
             this.handleOnlineError(error);

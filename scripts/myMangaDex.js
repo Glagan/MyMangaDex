@@ -48,16 +48,17 @@ class MyMangaDex {
     // START HELP
 
     async fetchMyAnimeList() {
-        let data = await fetch("https://myanimelist.net/ownlist/manga/" + this.manga.myAnimeListId + "/edit?hideLayout", {
-            method: "GET",
-            redirect: "follow",
-            cache: "no-cache",
-            credentials: "include"
+        let data = await browser.runtime.sendMessage({
+            action: "fetch",
+            url: "https://myanimelist.net/ownlist/manga/" + this.manga.myAnimeListId + "/edit?hideLayout",
+            options: {
+                method: "GET",
+                cache: "no-cache",
+                credentials: "include",
+            }
         });
-        let text = await data.text();
         this.fetched = true;
         // init and set if it was redirected - redirected often means not in list or not approved
-
         if (data.url.indexOf("login.php") > -1) {
             if (CHROME) {
                 this.notification(NOTIFY.ERROR, "Not logged in", "Login {{here:https://myanimelist.net/login.php}} on MyAnimeList !", this.myAnimeListImage, true);
@@ -67,8 +68,8 @@ class MyMangaDex {
             this.loggedMyAnimeList = false;
         } else {
             // CSRF Token
-            this.csrf = /'csrf_token'\scontent='(.{40})'/.exec(text)[1];
-            processMyAnimeListResponse(this.manga, text);
+            this.csrf = /'csrf_token'\scontent='(.{40})'/.exec(data.body)[1];
+            processMyAnimeListResponse(this.manga, data.body);
         }
     }
 
@@ -90,14 +91,18 @@ class MyMangaDex {
                 let {requestURL, body} = buildMyAnimeListBody(usePepper, this.manga, this.csrf, setStatus);
 
                 // Send the POST request to update the manga
-                await fetch(requestURL, {
-                    method: "POST",
-                    body: body,
-                    redirect: "follow",
-                    credentials: "include",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+                await browser.runtime.sendMessage({
+                    action: "fetch",
+                    url: requestURL,
+                    options: {
+                        method: "POST",
+                        body: body,
+                        redirect: "follow",
+                        credentials: "include",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+                        }
                     }
                 });
 
@@ -156,12 +161,16 @@ class MyMangaDex {
         // Send the request
         let time = new Date().getTime();
         try {
-            await fetch("https://mangadex.org/ajax/actions.ajax.php?function=" + func + "&id=" + this.manga.mangaDexId + "&type=" + type + "&_=" + time, {
-                method: "GET",
-                redirect: "follow",
-                credentials: "include",
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest"
+            await browser.runtime.sendMessage({
+                action: "fetch",
+                url: "https://mangadex.org/ajax/actions.ajax.php?function=" + func + "&id=" + this.manga.mangaDexId + "&type=" + type + "&_=" + time,
+                options: {
+                    method: "GET",
+                    redirect: "follow",
+                    credentials: "include",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
                 }
             });
             this.notification(NOTIFY.SUCCESS, undefined, "Status on MangaDex updated");
@@ -425,13 +434,17 @@ class MyMangaDex {
         deleteEntry.className = "btn btn-danger";
         deleteEntry.textContent = "Delete on MyAnimeList";
         deleteEntry.addEventListener("click", async () => {
-            await fetch("https://myanimelist.net/ownlist/manga/" + this.manga.myAnimeListId + "/delete", {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: "csrf_token=" + this.csrf
+            await browser.runtime.sendMessage({
+                action: "fetch",
+                url: "https://myanimelist.net/ownlist/manga/" + this.manga.myAnimeListId + "/delete",
+                options: {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: "csrf_token=" + this.csrf
+                }
             });
             if (this.informationsNode != undefined) {
                 clearDomNode(this.informationsNode);
@@ -675,13 +688,16 @@ class MyMangaDex {
 
             // Fetch it from mangadex manga page
             try {
-                let data = await fetch("https://mangadex.org/title/" + this.manga.mangaDexId, {
-                    method: "GET",
-                    cache: "no-cache"
+                let data = await browser.runtime.sendMessage({
+                    action: "fetch",
+                    url: "https://mangadex.org/title/" + this.manga.mangaDexId,
+                    options: {
+                        method: "GET",
+                        cache: "no-cache"
+                    }
                 });
-                let text = await data.text();
                 // Scan the manga page for the mal icon and mal url
-                let myAnimeListURL = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(text);
+                let myAnimeListURL = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(data.body);
                 // If regex is empty, there is no mal link, can't do anything
                 if (myAnimeListURL === null) {
                     this.notification(NOTIFY.ERROR, "No MyAnimeList id found", "You will need to go on the manga page if one is added.\nLast open chapters are still saved.", this.mmdCrossedImage, true);
@@ -919,7 +935,7 @@ class MyMangaDex {
     }
 
     async titlePage() {
-        this.manga.name = document.querySelector("h6[class='card-header']").textContent.trim();
+        this.manga.name = document.querySelector("h6.card-header").textContent.trim();
         this.manga.mangaDexId = /.+title\/(\d+)/.exec(this.pageUrl);
         // We always try to find the link, in case it was updated
         let myAnimeListUrl = document.querySelector("img[src$='/mal.png'");
@@ -1041,11 +1057,15 @@ class MyMangaDex {
                         if (this.manga.chapterId != newChapterId) {
                             // Fetch the chapter info from the MangaDex API
                             this.manga.chapterId = newChapterId;
-                            let data = await fetch("https://mangadex.org/api/chapter/" + this.manga.chapterId);
-                            data = await data.json();
-                            if (data.status !== "delayed") {
-                                this.manga.currentChapter.chapter = parseFloat(data.chapter);
-                                this.manga.currentChapter.volume = parseInt(data.volume) || 0;
+                            let data = await browser.runtime.sendMessage({
+                                action: "fetch",
+                                url: "https://mangadex.org/api/chapter/" + this.manga.chapterId,
+                                isJson: true
+                            });
+
+                            if (data.body.status !== "delayed") {
+                                this.manga.currentChapter.chapter = parseFloat(data.body.chapter);
+                                this.manga.currentChapter.volume = parseInt(data.body.volume) || 0;
 
                                 // Update the Database and maybe MyAnimeList
                                 if (this.myAnimeListChecked && this.manga.myAnimeListId > 0) {

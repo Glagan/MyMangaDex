@@ -16,11 +16,12 @@ let files = {
         "simpleNotification.min.js"
     ],
     "scripts": {
-        ".": ["defaultOptions.js"],
-        "minified": [
+        ".": [
+            "background.js",
+            "defaultOptions.js",
             "myMangaDex.js",
             "optionsManager.js",
-            "sharedFunctions.js"
+            "sharedFunctions.js",
         ]
     },
     "icons": ["128.png", "96.png", "48.png"],
@@ -37,21 +38,7 @@ if (args[0] == "firefox" || args[0] == "f") {
 }
 
 // Options
-let minify = true;
 let webExt = true;
-
-// If we don't minify we don't use the "minified" subfolder for scripts
-if (args.includes("--no-minify")) {
-    minify = false;
-    files.scripts = {
-        ".": [
-            "defaultOptions.js",
-            "myMangaDex.js",
-            "optionsManager.js",
-            "sharedFunctions.js",
-        ]
-    };
-}
 
 // Don't build the web-ext artifact
 if (args.includes("--no-web-ext")) {
@@ -128,12 +115,6 @@ if (["firefox", "chrome"].includes(browser)) {
     bundleManifestStream.write(JSON.stringify(mainManifest));
     bundleManifestStream.cork();
     bundleManifestStream.end();
-
-    // Minify script
-    if (minify) {
-        console.log("Minifying scripts");
-        execSync("minify");
-    }
 
     // Copy files
     console.log("Copying files");

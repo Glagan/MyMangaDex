@@ -1,14 +1,15 @@
 {
 	"manifest_version": 2,
 	"name": "MyMangaDex",
-	"version": "2.0.7",
+	"version": "2.0.8",
 	"author": "Glagan",
 
 	"description": "Automatically update your MyAnimeList manga list when reading on MangaDex.",
 
 	"permissions": [
-		"*://myanimelist.net/*",
-		"*://*.mangadex.org/*",
+		"https://myanimelist.net/ownlist/manga/*",
+		"https://myanimelist.net/mangalist/*",
+		"https://*.mangadex.org/*",
 		"storage"
 	],
 
@@ -16,6 +17,10 @@
 		"48": "icons/48.png",
 		"96": "icons/96.png",
 		"128": "icons/128.png"
+	},
+
+	"background": {
+		"scripts": ["scripts/background.js"]
 	},
 
 	"content_scripts": [{

@@ -173,15 +173,20 @@ async function updateLocalStorage(manga, options) {
         };
         // Send the request
         try {
-            let response = await fetch(options.onlineURL + "user/self/title/" + manga.mangaDexId, {
-                method: "POST",
-                mode: "cors",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json; charset=utf-8",
-                    "X-Auth-Token": options.token
+            let response = await browser.runtime.sendMessage({
+                action: "fetch",
+                url: options.onlineURL + "user/self/title/" + manga.mangaDexId,
+                options: {
+                    method: "POST",
+                    mode: "cors",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json; charset=utf-8",
+                        "X-Auth-Token": options.token
+                    },
+                    body: JSON.stringify(body)
                 },
-                body: JSON.stringify(body)
+                isJson: true
             });
 
             if (response.status != 200) {
