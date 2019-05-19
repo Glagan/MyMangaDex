@@ -1,14 +1,13 @@
 {
 	"manifest_version": 2,
 	"name": "MyMangaDex",
-	"version": "2.0.8",
+	"version": "2.0.9",
 	"author": "Glagan",
 
 	"description": "Automatically update your MyAnimeList manga list when reading on MangaDex.",
 
 	"permissions": [
-		"https://myanimelist.net/ownlist/manga/*",
-		"https://myanimelist.net/mangalist/*",
+		"https://*.myanimelist.net/*",
 		"https://*.mangadex.org/*",
 		"storage"
 	],

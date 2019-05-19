@@ -55,6 +55,7 @@ class MyMangaDex {
                 method: "GET",
                 cache: "no-cache",
                 credentials: "include",
+                redirect: "follow",
             }
         });
         this.fetched = true;
@@ -63,7 +64,11 @@ class MyMangaDex {
             if (CHROME) {
                 this.notification(NOTIFY.ERROR, "Not logged in", "Login {{here:https://myanimelist.net/login.php}} on MyAnimeList !", this.myAnimeListImage, true);
             } else {
-                this.notification(NOTIFY.ERROR, "Not logged in", "Login {{here:https://myanimelist.net/login.php}} on MyAnimeList !\r\nIf you see this error while logged in, see {{this issue:https://github.com/Glagan/MyMangaDex/issues/5}} on **Github**.", this.myAnimeListImage, true);
+                this.notification(NOTIFY.ERROR, "Not logged in",
+                    [
+                        "Login {{here:https://myanimelist.net/login.php}} on MyAnimeList !\r\n",
+                        "If you see this error while logged in, see {{this issue:https://github.com/Glagan/MyMangaDex/issues/5}} on **Github**.",
+                    ].join(""), this.myAnimeListImage, true);
             }
             this.loggedMyAnimeList = false;
         } else {
