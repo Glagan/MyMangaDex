@@ -83,7 +83,8 @@ class MyMangaDex {
             if (this.manga.is_approved) {
                 // If the current chapter is higher than the last read one
                 // Use Math.floor on the current chapter to avoid updating even tough it's the same if this is a sub chapter
-                if (usePepper &&
+                if (!this.options.saveOnlyHigher &&
+                    usePepper &&
                     this.manga.lastMyAnimeListChapter > 0 &&
                     (this.manga.currentChapter.chapter == 0 ||
                     Math.floor(this.manga.currentChapter.chapter) <= this.manga.lastMyAnimeListChapter)
@@ -194,7 +195,7 @@ class MyMangaDex {
         }
 
         return {
-            volume: parseInt(node.getAttribute("data-volume")) || 0,
+            volume: Math.floor(node.getAttribute("data-volume")) || 0,
             chapter: parseFloat(chapter) || 1
         };
     }
@@ -209,7 +210,7 @@ class MyMangaDex {
         }
 
         return {
-            volume: parseInt(regexResult[1]) || 0,
+            volume: Math.floor(regexResult[1]) || 0,
             chapter: parseFloat(regexResult[2] + "" + regexResult[3])
         };
     }
@@ -284,7 +285,7 @@ class MyMangaDex {
             let element = chaptersList[i];
             let chapterVolume = this.getVolumeChapterFromNode(element.firstElementChild.firstElementChild);
 
-            if (this.manga.lastMyAnimeListChapter == parseInt(chapterVolume.chapter)) {
+            if (this.manga.lastMyAnimeListChapter == Math.floor(chapterVolume.chapter)) {
                 element.style.backgroundColor = this.options.lastReadColor;
             } else if (this.manga.lastMangaDexChapter == chapterVolume.chapter) {
                 element.style.backgroundColor = this.options.lastOpenColors[0];
@@ -559,11 +560,11 @@ class MyMangaDex {
                 if ("type" in option && option.type == "checkbox") {
                     this.manga[option.dataset.mal] = option.checked;
                 } else if (keys.length == 2) {
-                    this.manga[keys[0]][keys[1]] = parseInt(option.value) || option.value;
+                    this.manga[keys[0]][keys[1]] = Math.floor(option.value) || option.value;
                 } else if (keys == "status") {
-                    status = (option.value != "") ? parseInt(option.value) : option.value;
+                    status = (option.value != "") ? Math.floor(option.value) : option.value;
                 } else {
-                    this.manga[option.dataset.mal] = ("number" in option.dataset && option.value != "") ? parseInt(option.value) : option.value;
+                    this.manga[option.dataset.mal] = ("number" in option.dataset && option.value != "") ? Math.floor(option.value) : option.value;
                 }
             });
 
@@ -664,9 +665,9 @@ class MyMangaDex {
         this.informationsNode.appendChild(status);
         // Other "useful" informations
         this.informationsNode.appendChild(document.createElement("br"));
-        this.appendTextWithIcon(this.informationsNode, "book", "Volume " + this.manga.last_volume + ((parseInt(this.manga.total_volume) > 0) ? " out of " + this.manga.total_volume : ""));
+        this.appendTextWithIcon(this.informationsNode, "book", "Volume " + this.manga.last_volume + ((Math.floor(this.manga.total_volume) > 0) ? " out of " + this.manga.total_volume : ""));
         this.informationsNode.appendChild(document.createElement("br"));
-        this.appendTextWithIcon(this.informationsNode, "bookmark", "Chapter " + this.manga.lastMyAnimeListChapter + ((parseInt(this.manga.total_chapter) > 0) ? " out of " + this.manga.total_chapter : "") + ((this.manga.is_rereading) ? " - Re-reading" : ""));
+        this.appendTextWithIcon(this.informationsNode, "bookmark", "Chapter " + this.manga.lastMyAnimeListChapter + ((Math.floor(this.manga.total_chapter) > 0) ? " out of " + this.manga.total_chapter : "") + ((this.manga.is_rereading) ? " - Re-reading" : ""));
         this.informationsNode.appendChild(document.createElement("br"));
         if (this.manga.start_date.year != "") {
             this.appendTextWithIcon(this.informationsNode, "calendar-alt", "Start date " + this.manga.start_date.year + "/" + this.manga.start_date.month + "/" + this.manga.start_date.day);
@@ -708,7 +709,7 @@ class MyMangaDex {
                     this.notification(NOTIFY.ERROR, "No MyAnimeList id found", "You will need to go on the manga page if one is added.\nLast open chapters are still saved.", this.mmdCrossedImage, true);
                 } else {
                     // If there is a mal link, add it and save it in local storage
-                    this.manga.myAnimeListId = parseInt(/.+\/(\d+)/.exec(myAnimeListURL[1])[1]);
+                    this.manga.myAnimeListId = Math.floor(/.+\/(\d+)/.exec(myAnimeListURL[1])[1]);
                 }
             } catch (error) {
                 this.notification(NOTIFY.ERROR, "Error fetching MangaDex title page", undefined, this.mmdCrossedImage);
@@ -884,7 +885,7 @@ class MyMangaDex {
 
             // If it's a row with a name
             if (chapter.firstElementChild.childElementCount > 0) {
-                let mangaDexId = parseInt(/\/title\/(\d+)\//.exec(chapter.firstElementChild.firstElementChild.href)[1]);
+                let mangaDexId = Math.floor(/\/title\/(\d+)\//.exec(chapter.firstElementChild.firstElementChild.href)[1]);
                 let chaptersCopy = JSON.parse(JSON.stringify(chapters));
                 chaptersCopy.forEach(element => {
                     element.row = chaptersList[element.row];
@@ -948,7 +949,7 @@ class MyMangaDex {
             // Finish getting the mal link
             myAnimeListUrl = myAnimeListUrl.nextElementSibling.href;
             // Get MAL id of the manga from the mal link
-            this.manga.myAnimeListId = parseInt(/.+\/(\d+)/.exec(myAnimeListUrl)[1]);
+            this.manga.myAnimeListId = Math.floor(/.+\/(\d+)/.exec(myAnimeListUrl)[1]);
         } else {
             this.manga.myAnimeListId = 0;
         }
@@ -956,10 +957,10 @@ class MyMangaDex {
         if (this.manga.mangaDexId === null) {
             let dropdown = document.getElementById("1");
             if (dropdown !== null) {
-                this.manga.mangaDexId = parseInt(dropdown.dataset.mangaId);
+                this.manga.mangaDexId = Math.floor(dropdown.dataset.mangaId);
             }
         } else {
-            this.manga.mangaDexId = parseInt(this.manga.mangaDexId[1]);
+            this.manga.mangaDexId = Math.floor(this.manga.mangaDexId[1]);
         }
 
         // Fetch the manga information from the local storage
@@ -1049,8 +1050,8 @@ class MyMangaDex {
         this.manga.name = /.*\((.+)\)/.exec(chapter)[1];
 
         chapter = document.querySelector("meta[property='og:image']").content;
-        this.manga.mangaDexId = parseInt(/manga\/(\d+)\.thumb.+/.exec(chapter)[1]);
-        this.manga.chapterId = parseInt(document.querySelector("meta[name='app']").dataset.chapterId);
+        this.manga.mangaDexId = Math.floor(/manga\/(\d+)\.thumb.+/.exec(chapter)[1]);
+        this.manga.chapterId = Math.floor(document.querySelector("meta[name='app']").dataset.chapterId);
 
         // Detect which reader we're using - if we're not legacy we have to check when changing chapter
         if (document.getElementsByClassName("card-header").length == 0) {
@@ -1058,7 +1059,7 @@ class MyMangaDex {
                 for (var mutation of mutationsList) {
                     if (mutation.type == "attributes") {
                         // If the new id is different - check for the first load
-                        let newChapterId = parseInt(document.querySelector(".chapter-title").dataset.chapterId);
+                        let newChapterId = Math.floor(document.querySelector(".chapter-title").dataset.chapterId);
                         if (this.manga.chapterId != newChapterId) {
                             // Fetch the chapter info from the MangaDex API
                             this.manga.chapterId = newChapterId;
@@ -1070,7 +1071,7 @@ class MyMangaDex {
 
                             if (data.body.status !== "delayed") {
                                 this.manga.currentChapter.chapter = parseFloat(data.body.chapter);
-                                this.manga.currentChapter.volume = parseInt(data.body.volume) || 0;
+                                this.manga.currentChapter.volume = Math.floor(data.body.volume) || 0;
 
                                 // Update the Database and maybe MyAnimeList
                                 if (this.myAnimeListChecked && this.manga.myAnimeListId > 0) {
