@@ -83,12 +83,9 @@ class MyMangaDex {
             if (this.manga.is_approved) {
                 // If the current chapter is higher than the last read one
                 // Use Math.floor on the current chapter to avoid updating even tough it's the same if this is a sub chapter
-                if (!this.options.saveOnlyHigher &&
-                    usePepper &&
-                    this.manga.lastMyAnimeListChapter > 0 &&
-                    (this.manga.currentChapter.chapter == 0 ||
-                    Math.floor(this.manga.currentChapter.chapter) <= this.manga.lastMyAnimeListChapter)
-                ) {
+                let isHigher = (this.manga.lastMyAnimeListChapter > 0 &&
+                            Math.floor(this.manga.currentChapter.chapter) > this.manga.lastMyAnimeListChapter);
+                if (usePepper && !isHigher && this.options.saveOnlyHigher) {
                     this.notification(NOTIFY.INFO, "Not updated", "Last read chapter on MyAnimelist is higher or equal to the current chapter and wasn't updated.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
                     return;
                 }
