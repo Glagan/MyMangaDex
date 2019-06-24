@@ -9,7 +9,7 @@ Updating your manga one by one, by hand, when you have hundreds of them and read
 
 ## How to Install
 
-You can install it from the [Google Chrome Web Store](https://chrome.google.com/webstore/detail/mymangadex/ihejddjcdmdppiimegmknbcaiebklajl) or the [Firefox add-ons site](https://addons.mozilla.org/en/firefox/addon/mymangadex/) (Also working on Firefox for Android).  
+You can install it from the [Google Chrome Web Store](https://chrome.google.com/webstore/detail/mymangadex/ihejddjcdmdppiimegmknbcaiebklajl) or the [Firefox add-ons site](https://addons.mozilla.org/en/firefox/addon/mymangadex/) (Also *working* on Firefox for Android).  
 
 ## Requirements
 
@@ -44,6 +44,10 @@ All chapters you opened and the last read chapter are also highlighted in the ch
 Apart from the automatic MyAnimeList update, the same modal of the Manga page is added, to easily update all informations of an entry.  
 The extension can also automatically update your MangaDexList when required, for example when you start reading a manga or when you complete it... This option is disabled by default, you need to enable it in the options.
 
+### History page
+
+MyMangaDex can remember more than your last 10 read chapters and display all of them.
+
 ### MAL Import
 
 The import from MAL feature set the last read chapter of every manga you follow on MangaDex using your MyAnimeList data.
@@ -73,6 +77,7 @@ I only store the least possible data:
 * The MyAnimeList id for each manga
 * A list of all opened chapters for each manga
 * The list of options used to customize colors and other parameters
+* If you have the ``Update History page`` option enabled, the name, chapter ID, MangaDex ID and the volume/chapter are saved.
 
 You can disable the option to save all opened chapters, and all of the data can be easily exported using the **Export (MMD)** in the options.
 
