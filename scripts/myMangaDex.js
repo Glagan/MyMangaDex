@@ -853,7 +853,7 @@ class MyMangaDex {
                 chapter: this.manga.chapterId,
             };
         } else {
-            let index = this.history.list.indexOf(this.mangaDexId);
+            let index = this.history.list.indexOf(this.manga.mangaDexId);
             if (index >= 0) {
                 this.history.list.splice(index, 1);
             }

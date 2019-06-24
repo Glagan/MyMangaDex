@@ -71,7 +71,7 @@ async function loadOptions() {
         await storageSet("options", defaultOptions);
         return JSON.parse(JSON.stringify(defaultOptions));
     } else {
-        // If options < last
+        // Version updates
         if (data.version < defaultOptions.version) {
             // I saw people using using 1.6.3 ??? So just in case...
             if (data.version < 1.7) {
@@ -141,7 +141,21 @@ async function loadOptions() {
             }
 
             await storageSet("options", data);
-        } // Easy to add updates here, on another if and push the promise in the updates array
+            await storageSet("history", { list: [] });
+        }
+
+        // Subversion updates
+        if (data.version == defaultOptions.version && data.subVersion != defaultOptions.subVersion) {
+            if (data.version == 2.1) {
+                if (data.subVersion == undefined || data.subVersion < 1) {
+                    data.subVersion = 1;
+                    if ((await storageGet("history")) == undefined) {
+                        await storageSet("history", { list: [] });
+                    }
+                }
+            }
+            await storageSet("options", data);
+        }
 
         // Sub version option fix
         if (data.showNoMal === undefined) {
