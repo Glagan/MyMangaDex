@@ -121,10 +121,22 @@ async function loadOptions() {
                     "Online Save as been added, if you wish to use it you need to manually enable it. You can see the changelog on {{github:https://github.com/Glagan/MyMangaDex}}.",
                     {sticky: true, position: "bottom-left", image: mmdImage}
                 );
+            }
+
+            if (data.version < 2.1) {
+                data.updateHistoryPage = defaultOptions.updateHistoryPage; // New options to default
+                data.historySize = defaultOptions.historySize;
+                data.version = 2.1;
+
+                SimpleNotification.info(
+                    "MyMangaDex as been updated to 2.1",
+                    "Fix for new **MyAnimeList** entries and the {{history:https://mangadex.org/history}} page now display more than your last 10 chapters if you want.\nYou can see the changelog on {{github:https://github.com/Glagan/MyMangaDex}}.",
+                    { sticky: true, position: "bottom-left", image: mmdImage }
+                );
                 SimpleNotification.info(
                     "Update Information",
-                    "The project is currently *done* and I don't really plan into adding new features.\r\nBut if you have a problem, I will still try to solve it, open an issue or message me (Github, Discord, Reddit).",
-                    {sticky: true, position: "bottom-left", image: mmdImage}
+                    "The project is currently *done* and I don't really plan into adding new features.\r\nBut if you have a problem or a suggestion, I can still look into it, open an issue or message me (Github, Discord or {{Reddit:https://old.reddit.com/message/compose?to=Glagan}}).",
+                    { sticky: true, position: "bottom-left", image: mmdImage }
                 );
             }
 

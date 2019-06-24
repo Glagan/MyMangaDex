@@ -116,9 +116,14 @@ class OptionsManager {
             if (this.downloadSaveButton.dataset.busy === undefined) {
                 this.downloadSaveButton.dataset.busy = true;
                 let data = await storageGet(null);
-                this.downloadSaveButton.href = "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-                this.downloadSaveButton.click();
-                this.downloadSaveButton.href = "";
+                let downloadLink = document.createElement("a");
+                downloadLink.style.display = "none";
+                document.body.appendChild(downloadLink);
+                downloadLink.download = "mdsync.json";
+                downloadLink.target = "_blank";
+                downloadLink.href = ["data:application/json;charset=utf-8,", encodeURIComponent(JSON.stringify(data))].join("");
+                downloadLink.click();
+                downloadLink.remove();
                 delete this.downloadSaveButton.dataset.busy;
             }
         });
@@ -365,6 +370,7 @@ class OptionsManager {
         // Set the default options
         try {
             await storageSet("options", defaultOptions);
+            await storageSet("history", { list: [] });
             this.options = JSON.parse(JSON.stringify(defaultOptions)); // Deep copy default
             this.flashBackground(true);
             this.restoreOptions();
@@ -1080,7 +1086,7 @@ class OptionsManager {
         // Build titles list
         let titles = await storageGet(null);
         Object.keys(titles).forEach(key => {
-            if (key == "options") return;
+            if (key == "options" || key == "history") return;
             body.titles[key] = titles[key];
         });
 

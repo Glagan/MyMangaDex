@@ -21,6 +21,8 @@ let defaultOptions = {
     saveOnlyHigher: true,
     saveAllOpened: true,
     maxChapterSaved: 100,
+    updateHistoryPage: false,
+    historySize: 100,
     updateMDList: false,
     showTooltips: true,
     highlightChapters: true,
@@ -32,5 +34,5 @@ let defaultOptions = {
     username: "",
     isLoggedIn: false,
     token: "",
-    version: 2.0
+    version: 2.1
 };

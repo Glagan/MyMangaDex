@@ -115,6 +115,25 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group text-container p-2">
+                    <label class="font-weight-bold">Bigger MangaDex history <a data-default="updateHistoryPage" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+                    <p class="d-none d-xl-block">Save your last read chapters and display them in the <a href="https://mangadex.org/history" rel="noreferrer noopener">History</a> page.</p>
+                    <div data-option="updateHistoryPage" data-type="checkbox" class="col px-0 my-auto input-group">
+                        <div class="input-group-prepend">
+                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+                        </div>
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group text-container p-2">
+                    <label class="font-weight-bold">MangaDex history size <a data-default="historySize" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+                    <p class="d-none d-xl-block">The size of your MangaDex <a href="https://mangadex.org/history" rel="noreferrer noopener">History</a>. (If <b>Bigger MangaDex history</b> is activated)</p>
+                    <div class="px-0">
+                        <input data-option="historySize" data-type="number" type="number" min="1" max="200" class="form-control" />
+                    </div>
+                </div>
             </div>
         </div>
         <!-- Chapter List Page -->
