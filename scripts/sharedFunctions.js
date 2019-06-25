@@ -3,10 +3,9 @@
  * See <https://github.com/Glagan/MyMangaDex> for more informations
  */
 
- /**
+/**
  * source: https: //stackoverflow.com/a/34491287/7794671
  * Count the number of properties of an object to test if it's empty
- * Could add more tests but it was enough for this extension
  * @param {Object} obj The object to test
  */
 function isEmpty(obj) {
@@ -34,8 +33,10 @@ async function storageGet(key) {
             res = await browser.storage.local.get((key === null) ? null : key);
             return (key === null) ? res : res[key];
         }
-    } catch(error) {
+    } catch (error) {
+        console.error(browser.runtime.lastError);
         console.error(error);
+        return undefined;
     }
 }
 
@@ -48,8 +49,10 @@ async function storageGet(key) {
 async function storageSet(key, data) {
     try {
         return await browser.storage.local.set((key === null) ? data : {[key]:data});
-    } catch(error) {
+    } catch (error) {
+        console.error(browser.runtime.lastError);
         console.error(error);
+        return undefined;
     }
 }
 
@@ -147,12 +150,16 @@ async function loadOptions() {
         // Subversion updates
         if (data.version == defaultOptions.version && data.subVersion != defaultOptions.subVersion) {
             if (data.version == 2.1) {
+                // Fix for history in 2.1.1
                 if (data.subVersion == undefined || data.subVersion < 1) {
                     data.subVersion = 1;
                     if ((await storageGet("history")) == undefined) {
                         await storageSet("history", { list: [] });
                     }
                 }
+
+                // Nothing in 2.1.2
+                data.subVersion = 2;
             }
             await storageSet("options", data);
         }

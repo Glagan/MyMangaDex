@@ -119,7 +119,7 @@ class OptionsManager {
                 let downloadLink = document.createElement("a");
                 downloadLink.style.display = "none";
                 document.body.appendChild(downloadLink);
-                downloadLink.download = "mdsync.json";
+                downloadLink.download = "mymangadex_export.json";
                 downloadLink.target = "_blank";
                 downloadLink.href = ["data:application/json;charset=utf-8,", encodeURIComponent(JSON.stringify(data))].join("");
                 downloadLink.click();

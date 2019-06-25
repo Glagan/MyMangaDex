@@ -85,8 +85,9 @@ class MyMangaDex {
             if (this.manga.is_approved) {
                 // If the current chapter is higher than the last read one
                 // Use Math.floor on the current chapter to avoid updating even tough it's the same if this is a sub chapter
-                let isHigher = (Math.floor(this.manga.currentChapter.chapter) > this.manga.lastMyAnimeListChapter);
-                if (usePepper && !isHigher && this.options.saveOnlyHigher) {
+                let realChapter = Math.floor(this.manga.currentChapter.chapter);
+                let isHigher = (realChapter > this.manga.lastMyAnimeListChapter);
+                if (usePepper && !isHigher && (this.options.saveOnlyHigher || realChapter == this.manga.lastMyAnimeListChapter)) {
                     this.notification(NOTIFY.INFO, "Not updated", "Last read chapter on MyAnimelist is higher or equal to the current chapter and wasn't updated.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
                     return;
                 }
@@ -842,7 +843,7 @@ class MyMangaDex {
 
     async saveCurrentInHistory() {
         this.history = await this.history;
-        if (this.history == undefined) {
+        if (this.history == undefined || this.history == null || isEmpty(this.history)) {
             this.history = { list: [] };
         }
         if (this.history[this.manga.mangaDexId] == undefined) {
@@ -1124,7 +1125,7 @@ class MyMangaDex {
         // We can use the info on the page if we don't change chapter while reading
         let chapter = document.querySelector("meta[property='og:title']").content;
         this.manga.currentChapter = this.getVolumeChapterFromString(chapter);
-        this.manga.name = /\s*\((.+)\)/.exec(chapter)[1];
+        this.manga.name = /Volume\s*\d*\s*,\s(.+),.+\sManga/.exec(document.querySelector("meta[name='keywords']").content)[1];
 
         chapter = document.querySelector("meta[property='og:image']").content;
         this.manga.mangaDexId = Math.floor(/manga\/(\d+)\.thumb.+/.exec(chapter)[1]);
