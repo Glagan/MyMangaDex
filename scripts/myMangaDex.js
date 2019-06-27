@@ -113,7 +113,7 @@ class MyMangaDex {
 
                 if (usePepper) {
                     if (this.manga.status == 6) {
-                        this.notification(NOTIFY.SUCCESS, "Added to Plan to Read", "**" + this.manga.name + "** as been put in your endless Plan to read list !", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                        this.notification(NOTIFY.SUCCESS, "Added to Plan to Read", "**" + this.manga.name + "** has been put in your endless Plan to read list !", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
                     } else {
                         if ("started" in this.manga) {
                             delete this.manga.started;
@@ -123,7 +123,7 @@ class MyMangaDex {
                                 this.notification(NOTIFY.SUCCESS, "Started manga", "The start date of **" + this.manga.name + "** was set to today.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
                             }
                         } else if (this.manga.lastMyAnimeListChapter > 0 && (this.manga.status != 2 || (this.manga.status == 2 && this.manga.is_rereading))) {
-                            this.notification(NOTIFY.SUCCESS, "Manga updated", "**" + this.manga.name + "** as been updated to chapter " + this.manga.lastMyAnimeListChapter + ((this.manga.total_chapter > 0) ? " out of " + this.manga.total_chapter : ""), "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                            this.notification(NOTIFY.SUCCESS, "Manga updated", "**" + this.manga.name + "** has been updated to chapter " + this.manga.lastMyAnimeListChapter + ((this.manga.total_chapter > 0) ? " out of " + this.manga.total_chapter : ""), "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
                         }
 
                         if (this.manga.status == 2 && !this.manga.is_rereading) {
