@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1
+
+* Added support for the /history page on MangaDex
+
 ## 2.0.5
 
 * Added www subdomain of MangaDex

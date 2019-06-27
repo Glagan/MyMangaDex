@@ -276,6 +276,7 @@ class MyMangaDex {
     }
 
     highlightChapters() {
+        if (!this.options.highlightChapters) return;
         // Chapters list displayed
         let chaptersList = document.querySelector(".chapter-container").children;
 

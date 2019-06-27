@@ -158,8 +158,8 @@ async function loadOptions() {
                     }
                 }
 
-                // Nothing in 2.1.2
-                data.subVersion = 2;
+                // Nothing in > 2.1.1
+                data.subVersion = defaultOptions.subVersion;
             }
             await storageSet("options", data);
         }
