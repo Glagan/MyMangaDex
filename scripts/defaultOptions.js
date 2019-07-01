@@ -19,6 +19,7 @@ let defaultOptions = {
     openedChaptersColor: "rgba(102, 75, 180, 0.6)",
     hideLowerChapters: true,
     saveOnlyHigher: true,
+    saveOnlyNext: false,
     saveAllOpened: true,
     maxChapterSaved: 100,
     updateHistoryPage: false,
@@ -35,5 +36,5 @@ let defaultOptions = {
     isLoggedIn: false,
     token: "",
     version: 2.1,
-    subVersion: 3
+    subVersion: 4
 };

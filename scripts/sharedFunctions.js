@@ -158,7 +158,11 @@ async function loadOptions() {
                     }
                 }
 
-                // Nothing in > 2.1.1
+                // Added saveOnlyNext in 2.1.4
+                if (data.subVersion < 4) {
+                    data.saveOnlyNext = false;
+                }
+
                 data.subVersion = defaultOptions.subVersion;
             }
             await storageSet("options", data);

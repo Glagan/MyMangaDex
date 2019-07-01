@@ -92,6 +92,13 @@ class MyMangaDex {
                     return;
                 }
 
+                let isNext = (realChapter == this.manga.lastMyAnimeListChapter || (realChapter == this.manga.lastMyAnimeListChapter+1 ||
+                    (!this.options.saveOnlyHigher && realChapter == this.manga.lastMyAnimeListChapter-1)));
+                if (usePepper && this.options.saveOnlyNext && this.manga.lastMyAnimeListChapter > 0 && !isNext) {
+                    this.notification(NOTIFY.INFO, "Not updated", "The current chapter is not the next one and it wasn't updated on MyAnimelist.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                    return;
+                }
+
                 let oldStatus = this.manga.status;
                 let {requestURL, body} = buildMyAnimeListBody(usePepper, this.manga, this.csrf, setStatus);
 

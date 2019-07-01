@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.4
+
+* Added saveOnlyNext option
+
 ## 2.1
 
 * Added support for the /history page on MangaDex
