@@ -86,12 +86,11 @@ You can disable the option to save all opened chapters, and all of the data can 
 ## Debug installation
 
 You can also install the extension from this repository, but the extension **will** be uninstalled when Firefox is closed and the data **could** be deleted at the same time, Chrome will keep the extension installed.  
-Before you actually install it, you have to build it, using ``node build <browser>``, ``rimraf``, ``web-ext`` and ``babel-minify`` are required.
+Before you actually install it, you have to build it, using ``node build <browser>``, ``rimraf`` and ``web-ext`` are required.
 
-There is 2 parameters you can set:
+There is 1 parameter you can set:
 
-1. ``--no-minify`` to skip minifying files, don't forget to use the correct file path
-2. ``--no-web-ext`` to skip building the extension with ``web-ext build``
+1. ``--no-web-ext`` to skip building the extension with ``web-ext build``
 
 ### Firefox
 
@@ -118,3 +117,9 @@ There is 2 parameters you can set:
 
 * Extension inspired from [MAL-Sync](https://github.com/lolamtisch/MALSync).
 * [Import favorites from KissManga to MangaDex](https://old.reddit.com/r/manga/comments/8qebu4/import_kissmanga_bookmarks_to_mangadex/)
+
+## TODO
+
+* Update rating from MangaDex rating
+    * Fetch /title/id to get informations
+* Update only if the manga as a status on MangaDex

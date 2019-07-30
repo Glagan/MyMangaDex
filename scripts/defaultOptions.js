@@ -23,6 +23,7 @@ let defaultOptions = {
     saveAllOpened: true,
     maxChapterSaved: 100,
     updateHistoryPage: false,
+    updateOnlyInList: false,
     historySize: 100,
     updateMDList: false,
     showTooltips: true,

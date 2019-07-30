@@ -163,6 +163,10 @@ async function loadOptions() {
                     data.saveOnlyNext = false;
                 }
 
+                if (data.subVersion < 5) {
+                    data.updateOnlyInList = false;
+                }
+
                 data.subVersion = defaultOptions.subVersion;
             }
             await storageSet("options", data);
