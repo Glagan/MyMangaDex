@@ -65,11 +65,11 @@ async function loadOptions() {
     let mmdImage = "https://ramune.nikurasu.org/mymangadex/128.png";
     // If there is nothing in the storage, default options
     if (data === undefined) {
-        SimpleNotification.info(
-            "First time using MyMangaDex",
-            "It looks like it is your first time using MyMangaDex, for any help go on {{github:https://github.com/Glagan/MyMangaDex}}, and don't forget to look at the settings !",
-            {sticky: true, position: "bottom-left", image: mmdImage}
-        );
+        SimpleNotification.info({
+            title: "First time using MyMangaDex",
+            image: mmdImage,
+            text: "It looks like it is your first time using MyMangaDex, for any help go on {{github|https://github.com/Glagan/MyMangaDex}}, and don't forget to look at the settings !"
+        }, { sticky: true, position: "bottom-left" });
 
         await storageSet("options", defaultOptions);
         return JSON.parse(JSON.stringify(defaultOptions));
@@ -103,11 +103,11 @@ async function loadOptions() {
                 data.showErrors = defaultOptions.showErrors;
                 data.version = 1.9;
 
-                SimpleNotification.info(
-                    "MyMangaDex as been updated to 1.9",
-                    "You can see the changelog on {{github:https://github.com/Glagan/MyMangaDex}}, new options have been added, you should check them out !",
-                    {sticky: true, position: "bottom-left", image: mmdImage}
-                );
+                SimpleNotification.info({
+                    title: "MyMangaDex as been updated to 1.9",
+                    image: mmdImage,
+                    text: "You can see the changelog on {{github|https://github.com/Glagan/MyMangaDex}}, new options have been added, you should check them out !",
+                }, { sticky: true, position: "bottom-left" });
             }
 
             if (data.version < 2.0) {
@@ -119,11 +119,11 @@ async function loadOptions() {
                 data.token = defaultOptions.token;
                 data.version = 2.0;
 
-                SimpleNotification.info(
-                    "MyMangaDex as been updated to 2.0",
-                    "Online Save as been added, if you wish to use it you need to manually enable it. You can see the changelog on {{github:https://github.com/Glagan/MyMangaDex}}.",
-                    {sticky: true, position: "bottom-left", image: mmdImage}
-                );
+                SimpleNotification.info({
+                    title: "MyMangaDex as been updated to 2.0",
+                    image: mmdImage,
+                    text: "Online Save as been added, if you wish to use it you need to manually enable it. You can see the changelog on {{github|https://github.com/Glagan/MyMangaDex}}.",
+                }, { sticky: true, position: "bottom-left" });
             }
 
             if (data.version < 2.1) {
@@ -131,16 +131,16 @@ async function loadOptions() {
                 data.historySize = defaultOptions.historySize;
                 data.version = 2.1;
 
-                SimpleNotification.info(
-                    "MyMangaDex as been updated to 2.1",
-                    "Fix for new **MyAnimeList** entries and the {{history:https://mangadex.org/history}} page now display more than your last 10 chapters if you want.\nYou can see the changelog on {{github:https://github.com/Glagan/MyMangaDex}}.",
-                    { sticky: true, position: "bottom-left", image: mmdImage }
-                );
-                SimpleNotification.info(
-                    "Update Information",
-                    "The project is currently *done* and I don't really plan into adding new features.\r\nBut if you have a problem or a suggestion, I can still look into it, open an issue or message me (Github, Discord or {{Reddit:https://old.reddit.com/message/compose?to=Glagan}}).",
-                    { sticky: true, position: "bottom-left", image: mmdImage }
-                );
+                SimpleNotification.info({
+                    title: "MyMangaDex as been updated to 2.1",
+                    image: mmdImage,
+                    text: "Fix for new **MyAnimeList** entries and the {{history|https://mangadex.org/history}} page now display more than your last 10 chapters if you want.\nYou can see the changelog on {{github:https://github.com/Glagan/MyMangaDex}}.",
+                }, { sticky: true, position: "bottom-left" });
+                SimpleNotification.info({
+                    title: "Update Information",
+                    image: mmdImage,
+                    text: "If you have a problem or a suggestion, open an issue or message me (Github, Discord or {{Reddit|https://old.reddit.com/message/compose?to=Glagan}}).",
+                }, { sticky: true, position: "bottom-left" });
             }
 
             await storageSet("options", data);
@@ -195,11 +195,11 @@ async function updateLocalStorage(manga, options) {
     });
     // Show a notification for updated last opened if there is no MyAnimeList id
     if (options.showNotifications && manga.myAnimeListId == 0 && manga.currentChapter.chapter > manga.lastMangaDexChapter) {
-        SimpleNotification.success(
-            "Manga updated",
-            manga.name + " last open Chapter as been updated to " + manga.lastMangaDexChapter,
-            {position: "bottom-left", image: "https://mangadex.org/images/manga/" + manga.mangaDexId + ".thumb.jpg"}
-        );
+        SimpleNotification.success({
+            title: "Manga updated",
+            image: "https://mangadex.org/images/manga/" + manga.mangaDexId + ".thumb.jpg",
+            text: manga.name + " last open Chapter as been updated to " + manga.lastMangaDexChapter,
+        }, { position: "bottom-left" });
     }
     // Update online
     if (options.onlineSave && options.isLoggedIn) {
@@ -240,11 +240,11 @@ async function updateLocalStorage(manga, options) {
 
         if (options.isLoggedIn == false) {
             if (options.showErrors) {
-                SimpleNotification.error(
-                    "Couldn't save Online",
-                    "The Online Service might have a problem, or your credentials has been changed. Go to the options to update it.",
-                    {sticky: true, position: "bottom-left", image: "https://ramune.nikurasu.org/mymangadex/128b.png"}
-                );
+                SimpleNotification.error({
+                    title: "Couldn't save Online",
+                    image: "https://ramune.nikurasu.org/mymangadex/128b.png",
+                    text: "The Online Service might have a problem, or your credentials has been changed. Go to the options to update it.",
+                }, { sticky: true, position: "bottom-left" });
             }
             await storageSet("options", options);
         }

@@ -64,12 +64,12 @@ class MyMangaDex {
         // init and set if it was redirected - redirected often means not in list or not approved
         if (data.url.indexOf("login.php") > -1) {
             if (CHROME) {
-                this.notification(NOTIFY.ERROR, "Not logged in", "Login {{here:https://myanimelist.net/login.php}} on MyAnimeList !", this.myAnimeListImage, true);
+                this.notification(NOTIFY.ERROR, "Not logged in", "Login {{here|https://myanimelist.net/login.php}} on MyAnimeList !", this.myAnimeListImage, true);
             } else {
                 this.notification(NOTIFY.ERROR, "Not logged in",
                     [
-                        "Login {{here:https://myanimelist.net/login.php}} on MyAnimeList !\r\n",
-                        "If you see this error while logged in, see {{this issue:https://github.com/Glagan/MyMangaDex/issues/5}} on **Github**.",
+                        "Login {{here|https://myanimelist.net/login.php}} on MyAnimeList !\r\n",
+                        "If you see this error while logged in, see {{this issue|https://github.com/Glagan/MyMangaDex/issues/5}} on **Github**.",
                     ].join(""), this.myAnimeListImage, true);
             }
             this.loggedMyAnimeList = false;
@@ -122,7 +122,7 @@ class MyMangaDex {
 
                 if (usePepper) {
                     if (this.manga.status == 6) {
-                        this.notification(NOTIFY.SUCCESS, "Added to Plan to Read", "**" + this.manga.name + "** has been put in your endless Plan to read list !", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                        this.notification(NOTIFY.SUCCESS, "Plan to Read", "**" + this.manga.name + "** has been put in your endless Plan to read list !", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
                     } else {
                         if ("started" in this.manga) {
                             delete this.manga.started;
@@ -466,7 +466,7 @@ class MyMangaDex {
                 // Add a "Add to reading list" button
                 let quickAddReading = this.createQuickButton("Start Reading", 1);
                 // And a "Plan to read" button
-                let quickAddPTR = this.createQuickButton("Add to Plan to Read list", 4);
+                let quickAddPTR = this.createQuickButton("Add to Plan to Read list", 6);
                 // Append
                 this.informationsNode.appendChild(quickAddReading);
                 this.informationsNode.appendChild(document.createTextNode(" "));
@@ -758,12 +758,15 @@ class MyMangaDex {
 
     notification(type, title, text=undefined, image=undefined, sticky=false) {
         if (this.options.showNotifications || (type == NOTIFY.ERROR && this.options.showErrors)) {
-            let data = {
+            let options = {
                 position: "bottom-left",
-                image: image,
                 sticky: sticky
             };
-            SimpleNotification[type](title, text, data);
+            SimpleNotification[type]({
+                title: title,
+                image: image,
+                text: text
+            }, options);
         }
     }
 

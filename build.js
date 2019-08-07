@@ -29,7 +29,7 @@ let files = {
 };
 
 // What browser to bundle for
-let browser;
+let browser = "firefox";
 if (args[0] == "firefox" || args[0] == "f") {
     browser = "firefox";
 } else if (args[0] == "chrome" || args[0] == "c") {
