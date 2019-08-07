@@ -1,8 +1,3 @@
-/*
- * Simple Tooltip
- * Handcrafted with love :)
- */
-
 .mmd-tooltip {
     display: block;
     position: absolute;
@@ -34,5 +29,10 @@
 
 .mmd-ptr {
     background-color: rgb(91, 192, 222) !important;
+}
+
+.mmd-background-info {
+    background-color: rgba(2, 136, 209, 0.2);
+    color: white;
 }
 

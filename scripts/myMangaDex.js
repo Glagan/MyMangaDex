@@ -1127,8 +1127,8 @@ class MyMangaDex {
             }
         } else {
             let noIDMessage = document.createElement("span");
-            noIDMessage.className = "alert-info p-1 rounded";
-            noIDMessage.textContent = "No MyAnimeList found. When one is added, MyMangaDex will find it, don't worry.";
+            noIDMessage.textContent = "No MyAnimeList found. When one is added, MyMangaDex will find it if you visit this page again.";
+            informationsRow.classList.add("mmd-background-info");
             this.informationsNode.appendChild(noIDMessage);
         }
         this.highlightChapters();
