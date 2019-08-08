@@ -31,7 +31,6 @@ let defaultOptions = {
     highlightChapters: true,
     showNotifications: true,
     showErrors: true,
-    showNoMal: true,
     onlineSave: false,
     onlineURL: "https://mmd.nikurasu.org/api/",
     username: "",

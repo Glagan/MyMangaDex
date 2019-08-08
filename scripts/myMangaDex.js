@@ -80,7 +80,7 @@ class MyMangaDex {
         }
     }
 
-    async updateMyAnimeList(usePepper=true, setStatus=1, force=false) {
+    async updateManga(usePepper=true, setStatus=1, force=false) {
         if (this.loggedMyAnimeList) {
             if (this.manga.is_approved) {
                 // If the current chapter is higher than the last read one
@@ -97,7 +97,7 @@ class MyMangaDex {
                                 value: "Update", type: "success",
                                 onClick: (notification) => {
                                     notification.close();
-                                    this.updateMyAnimeList(usePepper, setStatus, true);
+                                    this.updateManga(usePepper, setStatus, true);
                                 }
                             }, {
                                 value: "Close", type: "error",
@@ -126,7 +126,7 @@ class MyMangaDex {
                                 value: "Update", type: "success",
                                 onClick: (notification) => {
                                     notification.close();
-                                    this.updateMyAnimeList(usePepper, setStatus, true);
+                                    this.updateManga(usePepper, setStatus, true);
                                 }
                             }, {
                                 value: "Close", type: "error",
@@ -192,6 +192,17 @@ class MyMangaDex {
                 this.notification(NOTIFY.INFO, "Not updated", "The manga is still pending approval on MyAnimelist and can't be updated.", this.myAnimeListImage, true);
             }
         }
+
+        // We add the current chapter to the list of opened chapters if the option is on
+        if (this.options.saveAllOpened && this.manga.currentChapter) {
+            this.insertChapter(this.manga.currentChapter.chapter);
+        }
+        // Update local storage - after, it doesn't really matter
+        await updateLocalStorage(this.manga, this.options);
+        // Update History
+        if (this.options.updateHistoryPage && this.history) {
+            this.saveCurrentInHistory();
+        }
     }
 
     async quickAddOnMyAnimeList(status) {
@@ -202,7 +213,7 @@ class MyMangaDex {
         if (!this.fetched) {
             await this.fetchMyAnimeList();
         }
-        await this.updateMyAnimeList(true, status);
+        await this.updateManga(true, status, true);
         this.insertMyAnimeListInformations();
     }
 
@@ -617,7 +628,7 @@ class MyMangaDex {
                 }
             });
 
-            await this.updateMyAnimeList(false, status);
+            await this.updateManga(false, status, true);
             if (this.informationsNode != undefined) {
                 this.insertMyAnimeListInformations();
             }
@@ -694,10 +705,10 @@ class MyMangaDex {
                 this.manga.last_volume = 0;
                 this.manga.is_rereading = 1;
 
-                await this.updateMyAnimeList(false);
+                await this.updateManga(false);
                 this.insertMyAnimeListInformations();
                 this.notification(NOTIFY.SUCCESS, "Re-reading", "You started re-reading **" + this.manga.name + "**", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
-
+                // Update MangaDex to *Reading*
                 if (this.options.updateMDList) {
                     await this.updateMangaDexList("manga_follow", 6);
                 }
@@ -826,17 +837,6 @@ class MyMangaDex {
             for (let chapter in chapters) {
                 let currentChapter = chapters[chapter].currentChapter.chapter;
                 let currentRow = chapters[chapter].row;
-
-                if (chapter == lastRow && this.options.showNoMal && manga.mal == 0) {
-                    let flag = currentRow.querySelector(".chapter-list-flag.col-auto.text-center.order-lg-4");
-                    let noMal = flag.firstElementChild.cloneNode();
-                    noMal.src = "https://i.imgur.com/n5mQIuH.png";
-                    noMal.classList.remove("flag");
-                    noMal.alt = "No MyAnimeList ID.";
-                    noMal.title = noMal.alt;
-                    flag.appendChild(noMal);
-                }
-
                 // We delete the row if it's lower and one first - or first but all are lower
                 if (currentChapter > manga.last && this.options.highlightChapters) {
                     if (sawLastChapter) {
@@ -1207,23 +1207,9 @@ class MyMangaDex {
 
                             if (!delayed) {
                                 this.manga.currentChapter = currentChapter;
-
-                                // Update the Database and maybe MyAnimeList
+                                // Update the local storage and maybe MyAnimeList
                                 if (this.myAnimeListChecked && this.manga.myAnimeListId > 0) {
-                                    this.updateMyAnimeList();
-                                }
-
-                                // We add the current chapter to the list of opened chapters if the option is on
-                                if (this.options.saveAllOpened) {
-                                    this.insertChapter(this.manga.currentChapter.chapter);
-                                }
-
-                                // Update local storage - after, it doesn't really matter
-                                await updateLocalStorage(this.manga, this.options);
-
-                                // Update History
-                                if (this.options.updateHistoryPage) {
-                                    this.saveCurrentInHistory();
+                                    this.updateManga();
                                 }
                             } else {
                                 this.notification(NOTIFY.ERROR, "Chapter Delayed", "The chapter was not updated and saved since it is delayed on MangaDex.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
@@ -1249,17 +1235,9 @@ class MyMangaDex {
             if (this.manga.myAnimeListId > 0) {
                 await this.fetchMyAnimeList();
                 if (this.manga.exist && this.manga.is_approved) {
-                    await this.updateMyAnimeList();
+                    await this.updateManga();
                     this.insertMyAnimeListButton(document.querySelector(".reader-controls-actions.col-auto.row.no-gutters.p-1").lastElementChild);
                 }
-            }
-
-            // Update local storage - after, it doesn't really matter
-            await updateLocalStorage(this.manga, this.options);
-
-            // Update History
-            if (this.options.updateHistoryPage) {
-                this.saveCurrentInHistory();
             }
         } else {
             this.notification(NOTIFY.ERROR, "Chapter Delayed", "The chapter was not updated and saved since it is delayed on MangaDex.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");

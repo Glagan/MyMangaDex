@@ -160,21 +160,15 @@ async function loadOptions() {
 
                 if (data.subVersion < 6) {
                     data.saveOnlyNext = false; //.4
-                    data.updateOnlyInList = false;
+                    data.updateOnlyInList = false; // .5
                     data.confirmChapter = true;
+                    data.showNoMal = undefined;
                 }
 
                 data.subVersion = defaultOptions.subVersion;
             }
             await storageSet("options", data);
         }
-
-        // Sub version option fix
-        if (data.showNoMal === undefined) {
-            data.showNoMal = defaultOptions.showNoMal;
-            await storageSet("options", data);
-        }
-
         return data;
     }
 }
