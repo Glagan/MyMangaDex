@@ -160,7 +160,7 @@ async function loadOptions() {
 
                 if (data.subVersion < 6) {
                     data.saveOnlyNext = false; //.4
-                    data.updateOnlyInList = false; // .5
+                    data.updateOnlyInList = false;
                     data.confirmChapter = true;
                 }
 
