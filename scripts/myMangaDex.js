@@ -112,7 +112,7 @@ class MyMangaDex {
                                     notification.close();
                                 }
                             }]
-                        }, { position: "bottom-left", closeOnClick: false, sticky: true });
+                        }, { position: "bottom-left", closeOnClick: false, duration: 10000 });
                     } else {
                         this.notification(NOTIFY.INFO, "Not updated", "Last read chapter on MyAnimelist is higher or equal to the current chapter and wasn't updated.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
                     }
@@ -1228,9 +1228,11 @@ class MyMangaDex {
         let delayed = (document.getElementsByClassName("alert alert-danger text-center m-auto").length > 0);
         await this.searchMyAnimeListID();
         if (!delayed) {
-            // Update MyAnimeList
             await this.fetchMyAnimeList();
             await this.updateManga();
+            if (this.manga.exist && this.manga.is_approved) {
+                this.insertMyAnimeListButton(document.querySelector(".reader-controls-actions.col-auto.row.no-gutters.p-1").lastElementChild);
+            }
         } else {
             this.notification(NOTIFY.ERROR, "Chapter Delayed", "The chapter was not updated and saved since it is delayed on MangaDex.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
         }
