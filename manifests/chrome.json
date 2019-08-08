@@ -1,6 +1,4 @@
 {
-    "options_page": "options.html",
-
     "content_scripts": [{
         "js": [
             "third_party/simpleNotification.min.js",

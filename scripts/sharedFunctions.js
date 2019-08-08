@@ -66,87 +66,22 @@ async function loadOptions() {
     // If there is nothing in the storage, default options
     if (data === undefined) {
         SimpleNotification.info({
-            title: "First time using MyMangaDex",
+            title: "First Time",
             image: mmdImage,
-            text: "It looks like it is your first time using MyMangaDex, for any help go on {{github|https://github.com/Glagan/MyMangaDex}}, and don't forget to look at the settings !"
+            text: "It looks like it is your first time using MyMangaDex, for any help go on {{github|https://github.com/Glagan/MyMangaDex}}.\nDon't forget to look at the **Options** !",
+            buttons: {
+                value: "Open Options",
+                type: "message",
+                onClick: (n) => {
+                    n.close();
+                    browser.runtime.sendMessage({ action: "openOptions" });
+                }
+            }
         }, { sticky: true, position: "bottom-left" });
 
         await storageSet("options", defaultOptions);
         return JSON.parse(JSON.stringify(defaultOptions));
     } else {
-        // Version updates
-        if (data.version < defaultOptions.version) {
-            // I saw people using using 1.6.3 ??? So just in case...
-            if (data.version < 1.7) {
-                data.auto_md_list = false;
-            }
-
-            if (data.version < 1.8) {
-                // Options object rework
-                data = {
-                    lastReadColor: data.colors.last_read,
-                    lowerChaptersColor: data.colors.lower_chapter,
-                    lastOpenColors: data.colors.last_open,
-                    openedChaptersColor: data.colors.opened_chapters,
-                    hideLowerChapters: data.hide_lower,
-                    saveOnlyHigher: data.last_only_higher,
-                    saveAllOpened: data.save_all_opened,
-                    maxChapterSaved: data.max_save_opened,
-                    updateMDList: data.auto_md_list,
-                    showTooltips: true // New options to default
-                };
-            }
-
-            if (data.version < 1.9) {
-                data.highlightChapters = defaultOptions.highlightChapters;
-                data.showNotifications = defaultOptions.showNotifications;
-                data.showErrors = defaultOptions.showErrors;
-                data.version = 1.9;
-
-                SimpleNotification.info({
-                    title: "MyMangaDex as been updated to 1.9",
-                    image: mmdImage,
-                    text: "You can see the changelog on {{github|https://github.com/Glagan/MyMangaDex}}, new options have been added, you should check them out !",
-                }, { sticky: true, position: "bottom-left" });
-            }
-
-            if (data.version < 2.0) {
-                data.onlineSave = defaultOptions.onlineSave; // New options to default
-                data.onlineURL = defaultOptions.onlineURL;
-                data.username = defaultOptions.username;
-                data.password = defaultOptions.password;
-                data.isLoggedIn = defaultOptions.isLoggedIn;
-                data.token = defaultOptions.token;
-                data.version = 2.0;
-
-                SimpleNotification.info({
-                    title: "MyMangaDex as been updated to 2.0",
-                    image: mmdImage,
-                    text: "Online Save as been added, if you wish to use it you need to manually enable it. You can see the changelog on {{github|https://github.com/Glagan/MyMangaDex}}.",
-                }, { sticky: true, position: "bottom-left" });
-            }
-
-            if (data.version < 2.1) {
-                data.updateHistoryPage = defaultOptions.updateHistoryPage; // New options to default
-                data.historySize = defaultOptions.historySize;
-                data.version = 2.1;
-
-                SimpleNotification.info({
-                    title: "MyMangaDex as been updated to 2.1",
-                    image: mmdImage,
-                    text: "Fix for new **MyAnimeList** entries and the {{history|https://mangadex.org/history}} page now display more than your last 10 chapters if you want.\nYou can see the changelog on {{github:https://github.com/Glagan/MyMangaDex}}.",
-                }, { sticky: true, position: "bottom-left" });
-                SimpleNotification.info({
-                    title: "Update Information",
-                    image: mmdImage,
-                    text: "If you have a problem or a suggestion, open an issue or message me (Github, Discord or {{Reddit|https://old.reddit.com/message/compose?to=Glagan}}).",
-                }, { sticky: true, position: "bottom-left" });
-            }
-
-            await storageSet("options", data);
-            await storageSet("history", { list: [] });
-        }
-
         // Subversion updates
         if (data.version == defaultOptions.version && data.subVersion != defaultOptions.subVersion) {
             if (data.version == 2.1) {
@@ -157,17 +92,90 @@ async function loadOptions() {
                         await storageSet("history", { list: [] });
                     }
                 }
-
-                if (data.subVersion < 6) {
+                if (data.subVersion < 5) {
                     data.saveOnlyNext = false; //.4
                     data.updateOnlyInList = false; // .5
-                    data.confirmChapter = true;
-                    data.showNoMal = undefined;
                 }
-
-                data.subVersion = defaultOptions.subVersion;
+                data.subVersion = 5;
             }
             await storageSet("options", data);
+        }
+
+        // Version updates
+        if (data.version < defaultOptions.version) {
+            if (data.version < 2.0) {
+                data.onlineSave = defaultOptions.onlineSave; // New options to default
+                data.onlineURL = defaultOptions.onlineURL;
+                data.username = defaultOptions.username;
+                data.password = defaultOptions.password;
+                data.isLoggedIn = defaultOptions.isLoggedIn;
+                data.token = defaultOptions.token;
+                data.version = 2.0;
+
+                SimpleNotification.info({
+                    title: "MyMangaDex Update",
+                    image: mmdImage,
+                    text: "Online Save as been added, if you wish to use it you need to manually enable it.\nYou can see the changelog on {{github|https://github.com/Glagan/MyMangaDex}}.",
+                    buttons: {
+                        value: "Open Options",
+                        type: "message",
+                        onClick: (n) => {
+                            n.close();
+                            browser.runtime.sendMessage({ action: "openOptions" });
+                        }
+                    }
+                }, { sticky: true, position: "bottom-left" });
+            }
+
+            if (data.version < 2.1) {
+                data.updateHistoryPage = defaultOptions.updateHistoryPage; // New options to default
+                data.historySize = defaultOptions.historySize;
+                data.version = 2.1;
+
+                SimpleNotification.info({
+                    title: "MyMangaDex Update",
+                    image: mmdImage,
+                    text: "Fix for new **MyAnimeList** entries and the {{history|https://mangadex.org/history}} page now display more than your last 10 chapters if you want.\nYou can see the changelog on {{github:https://github.com/Glagan/MyMangaDex}}.",
+                    buttons: {
+                        value: "Open Options",
+                        type: "message",
+                        onClick: (n) => {
+                            n.close();
+                            browser.runtime.sendMessage({ action: "openOptions" });
+                        }
+                    }
+                }, { sticky: true, position: "bottom-left" });
+                SimpleNotification.info({
+                    title: "Update Information",
+                    image: mmdImage,
+                    text: "If you have a problem or a suggestion, open an issue or message me (Github, Discord or {{Reddit|https://old.reddit.com/message/compose?to=Glagan}}).",
+                }, { sticky: true, position: "bottom-left" });
+            }
+
+            if (data.version < 2.2) {
+                data.confirmChapter = defaultOptions.confirmChapter;
+                data.updateOnlyInList = defaultOptions.updateOnlyInList;
+                data.showNoMal = undefined;
+                data.version = 2.2;
+                data.subVersion = 0;
+
+                SimpleNotification.info({
+                    title: "MyMangaDex Update",
+                    image: mmdImage,
+                    text: "You can now **Confirm Updates** that would be rejected (lower chapter) and update a title only if it's in your **MangaDex** list.\nYou can enable these options... in the **options**.\nIf you have a problem, don't forget: **Github**, **Reddit** or **Discord**.",
+                    buttons: {
+                        value: "Open Options",
+                        type: "message",
+                        onClick: (n) => {
+                            n.close();
+                            browser.runtime.sendMessage({ action: "openOptions" });
+                        }
+                    }
+                }, { sticky: true, position: "bottom-left" });
+            }
+
+            await storageSet("options", data);
+            await storageSet("history", { list: [] });
         }
         return data;
     }

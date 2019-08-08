@@ -10,10 +10,6 @@
 		}
 	},
 
-	"options_ui": {
-		"page": "options.html"
-	},
-
 	"content_scripts": [{
 		"js": [
 			"third_party/simpleNotification.min.js",
