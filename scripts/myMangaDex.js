@@ -80,15 +80,35 @@ class MyMangaDex {
         }
     }
 
-    async updateMyAnimeList(usePepper = true, setStatus = 1) {
+    async updateMyAnimeList(usePepper=true, setStatus=1, force=false) {
         if (this.loggedMyAnimeList) {
             if (this.manga.is_approved) {
                 // If the current chapter is higher than the last read one
                 // Use Math.floor on the current chapter to avoid updating even tough it's the same if this is a sub chapter
                 let realChapter = Math.floor(this.manga.currentChapter.chapter);
                 let isHigher = (realChapter == 0 || realChapter > this.manga.lastMyAnimeListChapter);
-                if (usePepper && !isHigher && (this.options.saveOnlyHigher || realChapter == this.manga.lastMyAnimeListChapter)) {
-                    this.notification(NOTIFY.INFO, "Not updated", "Last read chapter on MyAnimelist is higher or equal to the current chapter and wasn't updated.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                if (!force && usePepper && !isHigher && (this.options.saveOnlyHigher || realChapter == this.manga.lastMyAnimeListChapter)) {
+                    if (this.options.confirmChapter) {
+                        SimpleNotification.info({
+                            title: "Not updated",
+                            image: "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg",
+                            text: "Last read chapter on MyAnimelist is higher or equal to the current chapter and wasn't updated.\nYou can update it anyway or ignore this notification.",
+                            buttons: [{
+                                value: "Update", type: "success",
+                                onClick: (notification) => {
+                                    notification.close();
+                                    this.updateMyAnimeList(usePepper, setStatus, true);
+                                }
+                            }, {
+                                value: "Close", type: "error",
+                                onClick: (notification) => {
+                                    notification.close();
+                                }
+                            }]
+                        }, { position: "bottom-left", closeOnClick: false, sticky: true });
+                    } else {
+                        this.notification(NOTIFY.INFO, "Not updated", "Last read chapter on MyAnimelist is higher or equal to the current chapter and wasn't updated.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                    }
                     return;
                 }
 
@@ -96,8 +116,28 @@ class MyMangaDex {
                     realChapter == this.manga.lastMyAnimeListChapter ||
                     (realChapter == this.manga.lastMyAnimeListChapter+1 ||
                     (!this.options.saveOnlyHigher && realChapter == this.manga.lastMyAnimeListChapter-1)));
-                if (usePepper && this.options.saveOnlyNext && this.manga.lastMyAnimeListChapter > 0 && !isNext) {
-                    this.notification(NOTIFY.INFO, "Not updated", "The current chapter is not the next one and it wasn't updated on MyAnimelist.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                if (!force && usePepper && this.options.saveOnlyNext && this.manga.lastMyAnimeListChapter > 0 && !isNext) {
+                    if (this.options.confirmChapter) {
+                        SimpleNotification.info({
+                            title: "Not updated",
+                            image: "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg",
+                            text: "The current chapter is not the next one and it wasn't updated on **MyAnimelist**.\nYou can update it anyway or ignore this notification.",
+                            buttons: [{
+                                value: "Update", type: "success",
+                                onClick: (notification) => {
+                                    notification.close();
+                                    this.updateMyAnimeList(usePepper, setStatus, true);
+                                }
+                            }, {
+                                value: "Close", type: "error",
+                                onClick: (notification) => {
+                                    notification.close();
+                                }
+                            }]
+                        }, { position: "bottom-left", closeOnClick: false, sticky: true });
+                    } else {
+                        this.notification(NOTIFY.INFO, "Not updated", "The current chapter is not the next one and it wasn't updated on **MyAnimelist**.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                    }
                     return;
                 }
 

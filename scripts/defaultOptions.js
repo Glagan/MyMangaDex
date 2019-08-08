@@ -20,6 +20,7 @@ let defaultOptions = {
     hideLowerChapters: true,
     saveOnlyHigher: true,
     saveOnlyNext: false,
+    confirmChapter: true,
     saveAllOpened: true,
     maxChapterSaved: 100,
     updateHistoryPage: false,

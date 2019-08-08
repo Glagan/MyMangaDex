@@ -158,13 +158,10 @@ async function loadOptions() {
                     }
                 }
 
-                // Added saveOnlyNext in 2.1.4
-                if (data.subVersion < 4) {
-                    data.saveOnlyNext = false;
-                }
-
-                if (data.subVersion < 5) {
-                    data.updateOnlyInList = false;
+                if (data.subVersion < 6) {
+                    data.saveOnlyNext = false; //.4
+                    data.updateOnlyInList = false; // .5
+                    data.confirmChapter = true;
                 }
 
                 data.subVersion = defaultOptions.subVersion;

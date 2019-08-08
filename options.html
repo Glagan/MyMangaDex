@@ -199,7 +199,7 @@
             </div>
             <div class="col">
                 <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Save chapter only if it's higher <a data-default="saveOnlyHigher" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+                    <label class="font-weight-bold">Save higher chapters only <a data-default="saveOnlyHigher" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
                     <p class="d-none d-xl-block">If this option is enabled, your MyAnimeList will be updated to the chapter you are reading, whether or not it is higher than your current last read chapter.</p>
                     <div data-option="saveOnlyHigher" data-type="checkbox" class="col px-0 my-auto input-group">
                         <div class="input-group-prepend">
@@ -214,6 +214,18 @@
                     <label class="font-weight-bold">Save only next chapter <a data-default="saveOnlyNext" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
                     <p class="d-none d-xl-block">Update MyAnimeList only if the chapter you are reading is a following chapter of your last read chapter.</p>
                     <div data-option="saveOnlyNext" data-type="checkbox" class="col px-0 my-auto input-group">
+                        <div class="input-group-prepend">
+                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+                        </div>
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group text-container p-2">
+                    <label class="font-weight-bold">Confirm to update chapter <a data-default="confirmChapter" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+                    <p class="d-none d-xl-block">Show a notification with a confirm button when reading a chapter higher than your previous chapter (with <b>Save only next chapter</b>), or a lower chapter (<b>Save higher chapters only</b>).</p>
+                    <div data-option="confirmChapter" data-type="checkbox" class="col px-0 my-auto input-group">
                         <div class="input-group-prepend">
                             <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
                         </div>
