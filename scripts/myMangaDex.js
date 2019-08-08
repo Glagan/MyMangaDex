@@ -50,6 +50,10 @@ class MyMangaDex {
     // START HELP
 
     async fetchMyAnimeList() {
+        if (this.manga.myAnimeListId < 1) {
+            this.fetched = false;
+            return;
+        }
         let data = await browser.runtime.sendMessage({
             action: "fetch",
             url: "https://myanimelist.net/ownlist/manga/" + this.manga.myAnimeListId + "/edit?hideLayout",
@@ -68,7 +72,7 @@ class MyMangaDex {
             } else {
                 this.notification(NOTIFY.ERROR, "Not logged in",
                     [
-                        "Login {{here|https://myanimelist.net/login.php}} on MyAnimeList !\r\n",
+                        "Login {{here|https://myanimelist.net/login.php}} on MyAnimeList !\n",
                         "If you see this error while logged in, see {{this issue|https://github.com/Glagan/MyMangaDex/issues/5}} on **Github**.",
                     ].join(""), this.myAnimeListImage, true);
             }
@@ -81,7 +85,10 @@ class MyMangaDex {
     }
 
     async updateManga(usePepper=true, setStatus=1, force=false) {
-        if (this.loggedMyAnimeList) {
+        if (this.fetched &&
+            this.loggedMyAnimeList &&
+            this.manga.myAnimeListId > 0 &&
+            this.manga.exist) {
             if (this.manga.is_approved) {
                 // If the current chapter is higher than the last read one
                 // Use Math.floor on the current chapter to avoid updating even tough it's the same if this is a sub chapter
@@ -751,7 +758,6 @@ class MyMangaDex {
         // If there is no entry for mal link
         if (data === undefined) {
             this.notification(NOTIFY.INFO, "No MyAnimeList ID in storage", "Searching on the manga page of **" + this.manga.name + "** to find a MyAnimeList id.", this.mmdImage);
-
             // Fetch it from mangadex manga page
             let data = await browser.runtime.sendMessage({
                 action: "fetch",
@@ -776,7 +782,6 @@ class MyMangaDex {
             this.manga.lastMangaDexChapter = data.last;
             this.manga.chapters = data.chapters || [];
         }
-
         // When we know everything
         this.myAnimeListChecked = true;
     }
@@ -1207,10 +1212,7 @@ class MyMangaDex {
 
                             if (!delayed) {
                                 this.manga.currentChapter = currentChapter;
-                                // Update the local storage and maybe MyAnimeList
-                                if (this.myAnimeListChecked && this.manga.myAnimeListId > 0) {
-                                    this.updateManga();
-                                }
+                                this.updateManga();
                             } else {
                                 this.notification(NOTIFY.ERROR, "Chapter Delayed", "The chapter was not updated and saved since it is delayed on MangaDex.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
                             }
@@ -1226,19 +1228,9 @@ class MyMangaDex {
         let delayed = (document.getElementsByClassName("alert alert-danger text-center m-auto").length > 0);
         await this.searchMyAnimeListID();
         if (!delayed) {
-            // We add the current chapter to the list of opened chapters if the option is on
-            if (this.options.saveAllOpened) {
-                this.insertChapter(this.manga.currentChapter.chapter);
-            }
-
             // Update MyAnimeList
-            if (this.manga.myAnimeListId > 0) {
-                await this.fetchMyAnimeList();
-                if (this.manga.exist && this.manga.is_approved) {
-                    await this.updateManga();
-                    this.insertMyAnimeListButton(document.querySelector(".reader-controls-actions.col-auto.row.no-gutters.p-1").lastElementChild);
-                }
-            }
+            await this.fetchMyAnimeList();
+            await this.updateManga();
         } else {
             this.notification(NOTIFY.ERROR, "Chapter Delayed", "The chapter was not updated and saved since it is delayed on MangaDex.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
         }
