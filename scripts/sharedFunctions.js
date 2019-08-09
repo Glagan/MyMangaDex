@@ -328,18 +328,22 @@ function buildMyAnimeListBody(usePepper, manga, csrf, status = 1) {
         // Set the start only if it's not already set and if we don't add it to PTR and if it was in ptr or not in the list
         if (!manga.in_list && manga.status != 6 && manga.start_date.year == "") {
             let MyDate = new Date();
-            manga.start_date.year = MyDate.getFullYear();
-            manga.start_date.month = MyDate.getMonth() + 1;
-            manga.start_date.day = MyDate.getDate();
+            manga.start_date = {
+                year: MyDate.getFullYear(),
+                month: MyDate.getMonth() + 1,
+                day: MyDate.getDate()
+            }
             manga.start_today = true;
         }
 
         // Set the finish date if it's the last chapter and not set
         if (manga.status == 2 && manga.finish_date.year == "") {
             let MyDate = new Date();
-            manga.finish_date.year = MyDate.getFullYear();
-            manga.finish_date.month = MyDate.getMonth() + 1;
-            manga.finish_date.day = MyDate.getDate();
+            manga.finish_date = {
+                year: MyDate.getFullYear(),
+                month: MyDate.getMonth() + 1,
+                day: MyDate.getDate()
+            };
             manga.end_today = true;
         }
 
