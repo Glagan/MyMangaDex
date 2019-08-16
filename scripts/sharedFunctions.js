@@ -172,10 +172,23 @@ async function loadOptions() {
                         }
                     }
                 }, { sticky: true, position: "bottom-left" });
+
+                SimpleNotification.info({
+                    title: "Online Save Update",
+                    image: mmdImage,
+                    text: "**MyMangaDex** online save has been updated and now save your **options** and your **history** (if enabled).\nIf you have **any** problem, same as the previous notification.",
+                    buttons: {
+                        value: "Open Options",
+                        type: "message",
+                        onClick: (n) => {
+                            n.close();
+                            browser.runtime.sendMessage({ action: "openOptions" });
+                        }
+                    }
+                }, { sticky: true, position: "bottom-left" });
             }
 
             await storageSet("options", data);
-            await storageSet("history", { list: [] });
         }
         return data;
     }
