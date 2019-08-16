@@ -351,6 +351,11 @@ class OptionsManager {
             });
             // Save
             await storageSet("options", this.options);
+            // Online
+            if (this.options.onlineSave &&
+                this.options.isLoggedIn) {
+                this.saveOnlineOptions();
+            }
             this.flashBackground(true);
         } catch (error) {
             console.error(error);
@@ -423,6 +428,8 @@ class OptionsManager {
         } else {
             this.importInformations.textContent = "Entries in the save: " + (Object.keys(importedData).length - 1);
         }
+        // Log out of online save
+        this.toggleOnlinePanels(importedData.options.isLoggedIn);
         await storageSet(null, importedData);
 
         // Load options to check for updates
@@ -963,7 +970,8 @@ class OptionsManager {
                 this.options.isLoggedIn = true;
                 this.options.token = response.body.token;
                 this.handleOnlineSuccess(response.body);
-                this.saveOptions();
+                await storageSet("options", this.options);
+                this.flashBackground("bg-success");
                 this.toggleOnlinePanels();
             } else {
                 this.handleOnlineError(response.body);
@@ -1037,7 +1045,7 @@ class OptionsManager {
         try {
             let response = await browser.runtime.sendMessage({
                 action: "fetch",
-                url: this.options.onlineURL + "user/self/title",
+                url: this.options.onlineURL + "user/self/export",
                 options: {
                     method: "GET",
                     headers: {
@@ -1052,22 +1060,50 @@ class OptionsManager {
                 // Clear storage
                 browser.storage.local.clear();
                 // Build titles
-                let titles = {};
+                let data = {
+                    options: response.body.options,
+                    history: {
+                        list: response.body.history.list
+                    }
+                };
+                // Replace Online Save options
+                if (data.options == null || data.options == '') {
+                    data.options = JSON.parse(JSON.stringify(this.options));
+                } else {
+                    data.options.token = this.options.token;
+                    data.options.isLoggedIn = true;
+                    data.options.onlineURL = this.options.onlineURL;
+                    data.options.username = this.options.username;
+                    data.options.onlineSave = true;
+                }
                 response.body.titles.forEach(element => {
-                    titles[element.md_id] = {
+                    data[element.md_id] = {
                         mal: element.mal_id,
                         last: element.last,
                         chapters: element.chapters
                     };
                 });
-                storageSet(null, titles); // Only one query
-                // Restore options
-                this.saveOptions();
+                response.body.history.titles.forEach(title => {
+                    data.history[title.md_id] = {
+                        name: title.name,
+                        id: title.md_id,
+                        progress: parseFloat(title.progress),
+                        chapter: Math.floor(title.chapter)
+                    };
+                });
+                await storageSet(null, data);
+                // Load options to check for updates
+                this.options = await loadOptions(); // TODO: Fix missing keys ?
+                console.log(this.options);
+                // Update UI
+                await this.restoreOptions();
+                this.flashBackground(true);
                 this.handleOnlineSuccess("Titles imported.");
             } else {
                 this.handleOnlineError(response.body);
             }
         } catch (error) {
+            console.error(error);
             this.handleOnlineError(error);
         }
     }
@@ -1076,10 +1112,10 @@ class OptionsManager {
         this.hideOnlineMessage();
 
         let body = {
+            options: JSON.parse(JSON.stringify(this.options)),
             titles: {},
-            options: {
-                "saveAllOpened": this.options.saveAllOpened,
-                "maxChapterSaved": this.options.maxChapterSaved
+            history: {
+                list: []
             }
         };
 
@@ -1089,12 +1125,28 @@ class OptionsManager {
             if (key == "options" || key == "history") return;
             body.titles[key] = titles[key];
         });
+        // History
+        if (this.options.updateHistoryPage) {
+            let history = await storageGet("history");
+            body.history.list = history.list;
+            body.history.titles = {};
+            Object.keys(history).forEach(id => {
+                if (id != 'list') {
+                    history.titles[id] = {
+                        md_id: id,
+                        name: history[id].name,
+                        progress: history[id].progress,
+                        chapter: history[id].chapter,
+                    };
+                }
+            });
+        }
 
         // Send the request
         try {
             let response = await browser.runtime.sendMessage({
                 action: "fetch",
-                url: this.options.onlineURL + "user/self/title",
+                url: this.options.onlineURL + "user/self/import",
                 options: {
                     method: "POST",
                     headers: {
@@ -1292,7 +1344,7 @@ class OptionsManager {
         try {
             let response = await browser.runtime.sendMessage({
                 action: "fetch",
-                url: this.options.onlineURL + "user/self/title",
+                url: this.options.onlineURL + "user/self/export",
                 options: {
                     method: "GET",
                     headers: {
@@ -1302,18 +1354,37 @@ class OptionsManager {
                 },
                 isJson: true
             });
-            let body = {
-                options: JSON.parse(JSON.stringify(this.options))
-            };
-            response.body.titles.forEach(element => {
-                body[element.md_id] = {
-                    mal: element.mal_id,
-                    last: element.last,
-                    chapters: element.chapters
-                };
-            });
-
             if (response.status == 200) {
+                let body = {
+                    options: response.body.options,
+                    history: {
+                        list: response.body.history.list
+                    }
+                };
+                if (body.options == null || body.options == '') {
+                    body.options = JSON.parse(JSON.stringify(this.options));
+                } else {
+                    body.options.token = this.options.token;
+                    body.options.isLoggedIn = true;
+                    body.options.onlineURL = this.options.onlineURL;
+                    body.options.username = this.options.username;
+                    body.options.onlineSave = true;
+                }
+                response.body.titles.forEach(element => {
+                    body[element.md_id] = {
+                        mal: element.mal_id,
+                        last: element.last,
+                        chapters: element.chapters
+                    };
+                });
+                response.body.history.titles.forEach(title => {
+                    body.history[title.md_id] = {
+                        name: title.name,
+                        id: title.md_id,
+                        progress: parseFloat(title.progress),
+                        chapter: Math.floor(title.chapter)
+                    };
+                });
                 this.downloadOnlineButton.href = "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(body));
                 this.downloadOnlineButton.click();
                 this.downloadOnlineButton.href = "";
@@ -1321,6 +1392,31 @@ class OptionsManager {
                 this.handleOnlineError(response.body);
             }
         } catch (error) {
+            console.error(error);
+            this.handleOnlineError(error);
+        }
+    }
+
+    async saveOnlineOptions() {
+        try {
+            await browser.runtime.sendMessage({
+                action: "fetch",
+                url: this.options.onlineURL + "user/self/options",
+                options: {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json; charset=utf-8",
+                        "X-Auth-Token": this.options.token
+                    },
+                    body: JSON.stringify({
+                        options: this.options
+                    })
+                },
+                isJson: true
+            });
+        } catch (error) {
+            console.error(error);
             this.handleOnlineError(error);
         }
     }

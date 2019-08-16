@@ -211,6 +211,11 @@ async function updateLocalStorage(manga, options) {
                 "maxChapterSaved": options.maxChapterSaved
             }
         };
+        if (options.updateHistoryPage &&
+            manga.name && manga.chapter_id) {
+            body.title_name = manga.name;
+            body.chapter = manga.chapter;
+        }
         // Send the request
         try {
             let response = await browser.runtime.sendMessage({

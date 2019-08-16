@@ -106,7 +106,6 @@ class MyMangaDex {
     }
 
     async updateManga(usePepper=true, setStatus=1, force=false) {
-        console.log(this.manga.finish_date);
         if (this.fetched &&
             this.loggedMyAnimeList &&
             this.manga.myAnimeListId > 0 &&
