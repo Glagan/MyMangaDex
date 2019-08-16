@@ -199,7 +199,7 @@
                     </div>
                 </div>
                 <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Save only next chapter <a data-default="saveOnlyNext" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+                    <label class="font-weight-bold">Save next chapter only <a data-default="saveOnlyNext" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
                     <p class="d-none d-xl-block">Update MyAnimeList only if the chapter you are reading is a following chapter of your last read chapter.</p>
                     <div data-option="saveOnlyNext" data-type="checkbox" class="col px-0 my-auto input-group">
                         <div class="input-group-prepend">
@@ -212,7 +212,7 @@
                 </div>
                 <div class="form-group text-container p-2">
                     <label class="font-weight-bold">Confirm to update chapter <a data-default="confirmChapter" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Show a notification with a confirm button when reading a chapter higher than your previous chapter (with <b>Save only next chapter</b>), or a lower chapter (<b>Save higher chapters only</b>).</p>
+                    <p class="d-none d-xl-block">Show a notification with a confirm button when reading a chapter higher than your previous chapter (with <b>Save next chapter only</b>), or a lower chapter (<b>Save higher chapters only</b>).</p>
                     <div data-option="confirmChapter" data-type="checkbox" class="col px-0 my-auto input-group">
                         <div class="input-group-prepend">
                             <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
@@ -243,7 +243,8 @@
                 </div>
                 <div class="form-group text-container p-2">
                     <label class="font-weight-bold">Update only if in MangaDex list <a data-default="updateOnlyInList" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Update <b>MyAnimeList</b> only if the title have a status on <b>MangaDex</b> (<i>Disable</i> the update <b>MangaDex</b> status option).</p>
+                    <p class="d-none d-xl-block">Update <b>MyAnimeList</b> only if the title have a status on <b>MangaDex</b>.<br />
+                    A confirm button to still update the title can be displayed if <b>Confirm to update chapter</b> is enabled.</p>
                     <div data-option="updateOnlyInList" data-type="checkbox" class="col px-0 my-auto input-group">
                         <div class="input-group-prepend">
                             <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>

@@ -170,6 +170,9 @@ class MyMangaDex {
                 }
 
                 let oldStatus = this.manga.status;
+                if (this.mangaDexScore > 0) {
+                    this.manga.score = this.mangaDexScore;
+                }
                 let {requestURL, body} = buildMyAnimeListBody(usePepper, this.manga, this.csrf, setStatus);
 
                 // Send the POST request to update the manga
@@ -811,10 +814,15 @@ class MyMangaDex {
             // Get the manga status on MangaDex
             this.mangaDexLoggedIn = !/You need to log in to use this function\./.exec(data.body);
             this.mangaDexStatus = false;
+            this.mangaDexScore = 0;
             if (this.mangaDexLoggedIn) {
                 let status = /disabled dropdown-item manga_follow_button.+?<\/span>\s*(.+?)<\/a>/.exec(data.body);
                 if (status) {
                     this.mangaDexStatus = status[1].trim();
+                }
+                let scoreRegex = /class='\s*disabled\s*dropdown-item\s*manga_rating_button'\s*id='(\d+)'/.exec(data.body);
+                if (scoreRegex) {
+                    this.mangaDexScore = scoreRegex[1];
                 }
             }
         }
@@ -1131,6 +1139,17 @@ class MyMangaDex {
             }
         } else {
             this.manga.mangaDexId = Math.floor(this.manga.mangaDexId[1]);
+        }
+        this.mangaDexLoggedIn = (document.querySelector('button[disabled][title="You need to log in to use this function."]') == null);
+        this.mangaDexStatus = false;
+        this.mangaDexScore = 0;
+        if (this.mangaDexLoggedIn) {
+            let mangaDexStatus = document.querySelector('.disabled.dropdown-item.manga_follow_button');
+            this.mangaDexStatus = (mangaDexStatus) ? mangaDexStatus.textContent.trim() : false;
+            let mangaDexScore = document.querySelector('.disabled.dropdown-item.manga_rating_button')
+            if (mangaDexScore) {
+                this.mangaDexScore = Math.floor(mangaDexScore.id);
+            }
         }
 
         // Fetch the manga information from the local storage
