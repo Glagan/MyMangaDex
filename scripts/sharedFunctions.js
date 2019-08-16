@@ -208,13 +208,15 @@ async function updateLocalStorage(manga, options) {
             last: manga.lastMangaDexChapter,
             options: {
                 "saveAllOpened": options.saveAllOpened,
-                "maxChapterSaved": options.maxChapterSaved
+                "maxChapterSaved": options.maxChapterSaved,
+                "updateHistoryPage": options.updateHistoryPage
             }
         };
         if (options.updateHistoryPage &&
-            manga.name && manga.chapter_id) {
+            manga.name != undefined &&
+            manga.chapterId != undefined) {
             body.title_name = manga.name;
-            body.chapter = manga.chapter;
+            body.chapter = manga.chapterId;
         }
         // Send the request
         try {
@@ -247,7 +249,15 @@ async function updateLocalStorage(manga, options) {
                 SimpleNotification.error({
                     title: "Couldn't save Online",
                     image: "https://ramune.nikurasu.org/mymangadex/128b.png",
-                    text: "The Online Service might have a problem, or your credentials has been changed. Go to the options to update it.",
+                    text: "The Online Service might have a problem, or your credentials has been changed.\nYou have been **logged out*, go to the options to log in again.",
+                    buttons: {
+                        value: "Open Options",
+                        type: "message",
+                        onClick: (n) => {
+                            n.close();
+                            browser.runtime.sendMessage({ action: "openOptions" });
+                        }
+                    }
                 }, { sticky: true, position: "bottom-left" });
             }
             await storageSet("options", options);
