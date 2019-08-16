@@ -1094,7 +1094,6 @@ class OptionsManager {
                 await storageSet(null, data);
                 // Load options to check for updates
                 this.options = await loadOptions(); // TODO: Fix missing keys ?
-                console.log(this.options);
                 // Update UI
                 await this.restoreOptions();
                 this.flashBackground(true);

@@ -4,28 +4,106 @@
 const fs = require("fs");
 const { exec, execSync } = require("child_process");
 const rimraf = require("rimraf");
+const Terser = require("terser");
 
 // Args
 const [,, ...args] = process.argv;
 
+let manifest = {
+    manifest_version: 2,
+    name: "MyMangaDex",
+    version: "2.2",
+    author: "Glagan",
+
+    description: "Automatically update your MyAnimeList manga list when reading on MangaDex.",
+
+    permissions: [
+        "https://*.myanimelist.net/*",
+        "https://*.mangadex.org/*",
+        "*://*.nikurasu.org/api/*",
+        "storage"
+    ],
+
+    icons: {
+        48: "icons/48.png",
+        96: "icons/96.png",
+        128: "icons/128.png"
+    },
+
+    background: {
+        scripts: [ "scripts/background.js" ]
+    },
+
+    options_ui: {
+        page: "options.html",
+        open_in_tab: true
+    },
+
+    content_scripts: [{
+        matches: [
+            "https://*.mangadex.org/follows",
+            "https://*.mangadex.org/follows/manga/0/0/*",
+            "https://*.mangadex.org/follows/chapters/*",
+            "https://*.mangadex.org/manga*",
+            "https://*.mangadex.org/titles*",
+            "https://*.mangadex.org/title*",
+            "https://*.mangadex.org/chapter/*",
+            "https://*.mangadex.org/search*",
+            "https://*.mangadex.org/?page=search*",
+            "https://*.mangadex.org/?page=titles*",
+            "https://*.mangadex.org/featured",
+            "https://*.mangadex.org/group*",
+            "https://*.mangadex.org/genre*",
+            "https://*.mangadex.org/user*",
+            "https://*.mangadex.org/list*",
+            "https://*.mangadex.org/history"
+        ],
+        js: [
+            "scripts/MyMangaDex.js"
+        ],
+        css: [
+            "third_party/simpleNotification.min.css",
+            "css/mymangadex.css"
+        ]
+    }]
+};
+
 // Files to copy
 let files = {
-    ".": ["options.html"],
-    "third_party": [
-        "simpleNotification.min.css",
-        "simpleNotification.min.js"
+    ".": [
+        "options.html"
     ],
-    "scripts": {
-        ".": [
-            "background.js",
-            "defaultOptions.js",
-            "myMangaDex.js",
-            "optionsManager.js",
-            "sharedFunctions.js",
-        ]
-    },
-    "icons": ["128.png", "96.png", "48.png"],
-    "css": ["mymangadex.css", "options.css"]
+    "third_party": [
+        "simpleNotification.min.css"
+    ],
+    "icons": [
+        "128.png",
+        "96.png",
+        "48.png"
+    ],
+    "css": [
+        "mymangadex.css",
+        "options.css"
+    ]
+};
+
+// Scripts to make
+let scripts = {
+    "MyMangaDex.js": [
+        "third_party/SimpleNotification.min.js",
+        "scripts/defaultOptions.js",
+        "scripts/sharedFunctions.js",
+        "scripts/myMangaDex.js",
+    ],
+    "Options.js": [
+        "third_party/SimpleNotification.min.js",
+        "scripts/defaultOptions.js",
+        "scripts/sharedFunctions.js",
+        "scripts/optionsManager.js"
+    ],
+    "background.js": [
+        "scripts/background.js"
+    ]
 };
 
 // What browser to bundle for
@@ -34,34 +112,21 @@ if (args[0] == "firefox" || args[0] == "f") {
     browser = "firefox";
 } else if (args[0] == "chrome" || args[0] == "c") {
     browser = "chrome";
-    files.third_party.push("chrome-extension-async.js");
 }
 
-// Options
-let webExt = true;
-
-// Don't build the web-ext artifact
-if (args.includes("--no-web-ext")) {
-    webExt = false;
-}
-
-// Used to merge manifests
-function deepMerge(first, toMerge) {
-    for (let property in toMerge) {
-        if (first[property] !== undefined && Array.isArray(first[property])) {
-            toMerge[property].forEach((value, key) => {
-                if (typeof value === "object") {
-                    deepMerge(first[property][key], value);
-                } else {
-                    first[property].push(value);
-                }
-            });
-        } else if (first[property] !== undefined && typeof first[property] === "object") {
-            deepMerge(first[property], toMerge[property]);
-        } else {
-            first[property] = toMerge[property];
+// Browser specific elements
+if (browser == "firefox") {
+    // Add gecko id
+    manifest.applications = {
+        gecko: {
+            id: "mymangadex@glagan",
+            strict_min_version: "61.0"
         }
-    }
+    };
+} else if (browser == "chrome") {
+    // Add chrome async
+    scripts["MyMangaDex.js"].splice(2, 0, "third_party/chrome-extension-async.js");
+    scripts["Options.js"].splice(2, 0, "third_party/chrome-extension-async.js");
 }
 
 // Used to import files
@@ -94,50 +159,56 @@ function deepFileCopy(files, destFolder, baseFolder="") {
 
 if (["firefox", "chrome"].includes(browser)) {
     // Create temp folder for the bundle
-    console.log("Creating temp directory");
+    console.log("Creating tmp. directory");
     let makeFolder = browser + "Build";
     if (fs.existsSync(makeFolder)) {
         rimraf.sync(makeFolder);
     }
     fs.mkdirSync(makeFolder);
-
-    // Merge manifests
-    console.log("Merging manifests");
-    let mainManifest = fs.readFileSync("manifests/manifest.json", "utf-8");
-    mainManifest = JSON.parse(mainManifest);
-    let browserManifest = fs.readFileSync("manifests/" + browser + ".json");
-    browserManifest = JSON.parse(browserManifest);
-    deepMerge(mainManifest, browserManifest);
-    console.log("Building version %s", mainManifest.version);
+    fs.mkdirSync(makeFolder + "/scripts");
 
     // Write new manifest
-    let bundleManifestStream = fs.createWriteStream(makeFolder + "/manifest.json", {flags: "w+"});
-    bundleManifestStream.write(JSON.stringify(mainManifest));
+    console.log("Building version %s", manifest.version);
+    let bundleManifestStream = fs.createWriteStream(makeFolder + "/manifest.json", { flags: "w+" });
+    bundleManifestStream.write(JSON.stringify(manifest));
     bundleManifestStream.cork();
     bundleManifestStream.end();
+
+    // Make scripts
+    console.log("Making minified scripts");
+    Object.keys(scripts).forEach(name => {
+        console.log("Making", name);
+        let scriptConcatContent = [];
+        scripts[name].forEach(filename => {
+            scriptConcatContent.push(fs.readFileSync(filename, "utf-8"));
+        });
+        const minified = Terser.minify(scriptConcatContent, {
+            ie8: false
+        });
+        let scriptFileStream = fs.createWriteStream(makeFolder + "/scripts/" + name, { flags: "w+" });
+        scriptFileStream.write(minified.code);
+        scriptFileStream.cork();
+        scriptFileStream.end();
+    });
 
     // Copy files
     console.log("Copying files");
     deepFileCopy(files, makeFolder + "/", "");
 
-    if (webExt) {
-        exec("web-ext build", {cwd: makeFolder}, (error, stdout, stderr) => {
-            if (error) {
-                console.error(`Build error: ${error}`);
-                return;
-            }
+    exec("web-ext build", {cwd: makeFolder}, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Build error: ${error}`);
+            return;
+        }
 
-            if (!fs.existsSync("builds")) {
-                fs.mkdirSync("builds");
-            }
-            console.log("Moving zip archive to 'builds'");
-            fs.renameSync(makeFolder + "/web-ext-artifacts/mymangadex-" + mainManifest.version + ".zip", "builds/mymangadex-" + mainManifest.version + "_" + browser + ".zip");
+        if (!fs.existsSync("builds")) {
+            fs.mkdirSync("builds");
+        }
+        console.log("Moving zip archive to 'builds'");
+        fs.renameSync(makeFolder + "/web-ext-artifacts/mymangadex-" + manifest.version + ".zip", "builds/mymangadex-" + manifest.version + "_" + browser + ".zip");
 
-            console.log("Done");
-        });
-    } else {
         console.log("Done");
-    }
+    });
 } else {
     console.error("Unrecognized browser to bundle for.");
 }
