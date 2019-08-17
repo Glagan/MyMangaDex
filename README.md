@@ -86,7 +86,12 @@ You can disable the option to save all opened chapters, and all of the data can 
 ## Debug installation
 
 You can also install the extension from this repository, but the extension **will** be uninstalled when Firefox is closed and the data **could** be deleted at the same time, Chrome will keep the extension installed.  
-Before you actually install it, you have to build it, using ``node build <browser>``, ``rimraf``, ``babel-minify`` and ``web-ext`` are required.
+Before you actually install it, you have to build it, using ``node build <browser>``, ``rimraf``, ``terser`` and ``web-ext`` are required.
+
+Options:
+
+* ``-no-minify``: Don't use **terser** to minify scripts.
+* ``-debug``: Add a global try catch block.
 
 ### Firefox
 

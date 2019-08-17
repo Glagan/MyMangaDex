@@ -1087,13 +1087,16 @@ class OptionsManager {
                     data.history[title.md_id] = {
                         name: title.name,
                         id: title.md_id,
-                        progress: parseFloat(title.progress),
+                        progress: {
+                            volume: Math.floor(title.progress.volume),
+                            chapter: parseFloat(title.progress.progress)
+                        },
                         chapter: Math.floor(title.chapter)
                     };
                 });
                 await storageSet(null, data);
                 // Load options to check for updates
-                this.options = await loadOptions(); // TODO: Fix missing keys ?
+                this.options = await loadOptions();
                 // Update UI
                 await this.restoreOptions();
                 this.flashBackground(true);
@@ -1114,7 +1117,8 @@ class OptionsManager {
             options: JSON.parse(JSON.stringify(this.options)),
             titles: {},
             history: {
-                list: []
+                list: [],
+                titles: {}
             }
         };
 
@@ -1127,18 +1131,19 @@ class OptionsManager {
         // History
         if (this.options.updateHistoryPage) {
             let history = await storageGet("history");
-            body.history.list = history.list;
-            body.history.titles = {};
-            Object.keys(history).forEach(id => {
-                if (id != 'list') {
-                    history.titles[id] = {
-                        md_id: id,
-                        name: history[id].name,
-                        progress: history[id].progress,
-                        chapter: history[id].chapter,
-                    };
-                }
-            });
+            if (history) {
+                body.history.list = history.list;
+                Object.keys(history).forEach(id => {
+                    if (id != 'list') {
+                        body.history.titles[id] = {
+                            md_id: id,
+                            name: history[id].name,
+                            progress: history[id].progress,
+                            chapter: history[id].chapter,
+                        };
+                    }
+                });
+            }
         }
 
         // Send the request
@@ -1209,6 +1214,7 @@ class OptionsManager {
                 this.options.token = "";
                 // Delete the form too
                 this.onlineForm.username.value = "";
+                this.onlineForm.password.value = "";
                 // Save
                 this.handleOnlineSuccess(response.body);
                 this.saveOptions();

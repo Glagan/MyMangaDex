@@ -98,6 +98,27 @@ async function loadOptions() {
                 }
                 data.subVersion = 5;
             }
+            if (data.version == 2.2) {
+                // Fix imported history wrong progress
+                if (data.subVersion < 1) {
+                    let history = await storageGet("history");
+                    if (history) {
+                        Object.keys(history).forEach(md_id => {
+                            if (md_id == 'list') return;
+                            if (typeof history[md_id].progress != 'object') {
+                                history[md_id].progress = {
+                                    volume: 0,
+                                    chapter: history[md_id].progress
+                                };
+                            }
+                        });
+                    } else {
+                        history = { list: [] };
+                    }
+                    await storageSet("history", history);
+                }
+                data.subVersion = 1;
+            }
             await storageSet("options", data);
         }
 
@@ -221,13 +242,14 @@ async function updateLocalStorage(manga, options) {
             last: manga.lastMangaDexChapter,
             options: {
                 "saveAllOpened": options.saveAllOpened,
-                "maxChapterSaved": options.maxChapterSaved,
-                "updateHistoryPage": options.updateHistoryPage
+                "maxChapterSaved": options.maxChapterSaved
             }
         };
         if (options.updateHistoryPage &&
             manga.name != undefined &&
-            manga.chapterId != undefined) {
+            manga.chapterId > 0) {
+            body.options.updateHistoryPage = true;
+            body.volume = manga.currentChapter.volume;
             body.title_name = manga.name;
             body.chapter = manga.chapterId;
         }
@@ -262,7 +284,7 @@ async function updateLocalStorage(manga, options) {
                 SimpleNotification.error({
                     title: "Couldn't save Online",
                     image: "https://ramune.nikurasu.org/mymangadex/128b.png",
-                    text: "The Online Service might have a problem, or your credentials has been changed.\nYou have been **logged out*, go to the options to log in again.",
+                    text: "The Online Service might have a problem, or your credentials has been changed.\nYou have been **logged out**, go to the options to log in again.",
                     buttons: {
                         value: "Open Options",
                         type: "message",

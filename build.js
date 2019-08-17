@@ -12,7 +12,7 @@ const [,, ...args] = process.argv;
 let manifest = {
     manifest_version: 2,
     name: "MyMangaDex",
-    version: "2.2",
+    version: "2.2.1",
     author: "Glagan",
 
     description: "Automatically update your MyAnimeList manga list when reading on MangaDex.",
@@ -114,6 +114,19 @@ if (args[0] == "firefox" || args[0] == "f") {
     browser = "chrome";
 }
 
+// Options
+let noMinify = false;
+if (args.indexOf('-no-minify') >= 0) {
+    noMinify = true;
+}
+let debug = false;
+if (args.indexOf('-debug') >= 0) {
+    debug = true;
+}
+
+console.log("Building for", browser);
+console.log("Options: no-minify[" + noMinify + "] debug[" + debug + "]\n");
+
 // Browser specific elements
 if (browser == "firefox") {
     // Add gecko id
@@ -182,9 +195,19 @@ if (["firefox", "chrome"].includes(browser)) {
         scripts[name].forEach(filename => {
             scriptConcatContent.push(fs.readFileSync(filename, "utf-8"));
         });
-        const minified = Terser.minify(scriptConcatContent, {
-            ie8: false
-        });
+        let minified = 0;
+        if (noMinify) {
+            minified = { code: scriptConcatContent.join("\n") };
+        } else {
+            minified = Terser.minify(scriptConcatContent, {
+                ie8: false
+            });
+        }
+        if (debug) {
+            minified.code = [
+                "try {\n", minified.code, "\n} catch(e) {\n\tconsole.error(e);\n}"
+            ].join("")
+        }
         let scriptFileStream = fs.createWriteStream(makeFolder + "/scripts/" + name, { flags: "w+" });
         scriptFileStream.write(minified.code);
         scriptFileStream.cork();

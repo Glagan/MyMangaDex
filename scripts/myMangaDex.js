@@ -785,7 +785,7 @@ class MyMangaDex {
         let data = await storageGet(this.manga.mangaDexId);
         // If there is no entry for mal link
         if (data === undefined) {
-            this.notification(NOTIFY.INFO, "No MyAnimeList ID in storage", "Searching on the manga page of **" + this.manga.name + "** to find a MyAnimeList id.", this.mmdImage);
+            this.notification(NOTIFY.INFO, "No MyAnimeList ID", "Searching on the manga page of **" + this.manga.name + "** to find a MyAnimeList id.", this.mmdImage);
         } else {
             // Get the mal id from the local storage
             this.manga.myAnimeListId = data.mal;
@@ -805,8 +805,8 @@ class MyMangaDex {
             // Scan the manga page for the mal icon and mal url
             let myAnimeListURL = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(data.body);
             // If regex is empty, there is no mal link, can't do anything
-            if (data === undefined && myAnimeListURL === null) {
-                this.notification(NOTIFY.ERROR, "No MyAnimeList id found", "You will need to go on the manga page if one is added.\nLast open chapters are still saved.", this.mmdCrossedImage, true);
+            if (data == undefined || myAnimeListURL == null) {
+                this.notification(NOTIFY.ERROR, "No MyAnimeList ID", "You will need to go on the manga page if one is added.\nLast open chapters are still saved.", this.mmdCrossedImage, true);
             } else {
                 // If there is a mal link, add it and save it in local storage
                 this.manga.myAnimeListId = Math.floor(/.+\/(\d+)/.exec(myAnimeListURL[1])[1]);
@@ -971,6 +971,9 @@ class MyMangaDex {
     }
 
     chapterStringFromObject(chapter) {
+        if (typeof chapter != "object") {
+            return ["Chapter ", chapter].join("");
+        }
         let string = [];
         if (chapter.volume > 0) {
             string.push("Vol. ", chapter.volume, " ");
