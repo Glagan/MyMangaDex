@@ -236,7 +236,7 @@ class MyMangaDex {
         await updateLocalStorage(this.manga, this.options);
         // Update History
         if (this.options.updateHistoryPage && this.history) {
-            this.saveCurrentInHistory();
+            this.saveTitleInHistory(this.manga);
         }
     }
 
@@ -942,25 +942,25 @@ class MyMangaDex {
         return quickButton;
     }
 
-    async saveCurrentInHistory() {
+    async saveTitleInHistory(manga) {
         this.history = await this.history;
         if (this.history == undefined || this.history == null || isEmpty(this.history)) {
             this.history = { list: [] };
         }
-        if (this.history[this.manga.mangaDexId] == undefined) {
-            this.history[this.manga.mangaDexId] = {
-                name: this.manga.name,
-                id: this.manga.mangaDexId
+        if (this.history[manga.mangaDexId] == undefined) {
+            this.history[manga.mangaDexId] = {
+                name: manga.name,
+                id: manga.mangaDexId
             };
         } else {
-            let index = this.history.list.indexOf(this.manga.mangaDexId);
+            let index = this.history.list.indexOf(manga.mangaDexId);
             if (index >= 0) {
                 this.history.list.splice(index, 1);
             }
         }
-        this.history[this.manga.mangaDexId].progress = this.manga.currentChapter;
-        this.history[this.manga.mangaDexId].chapter = this.manga.chapterId;
-        this.history.list.push(this.manga.mangaDexId);
+        this.history[manga.mangaDexId].progress = manga.currentChapter;
+        this.history[manga.mangaDexId].chapter = manga.chapterId;
+        this.history.list.push(manga.mangaDexId);
         if (this.history.list.length > this.options.historySize) {
             let diff = this.history.list.length-this.options.historySize;
             for (let i = 0; i < diff; i++) {
@@ -1347,15 +1347,26 @@ class MyMangaDex {
         let container = document.getElementById("history");
         let infoNode = container.querySelector("p");
         infoNode.textContent = ["Your last ", this.options.historySize, " read titles are listed below."].join("");
-        // Load history, abort if empty
-        let history = await storageGet("history");
-        if (history == undefined) {
-            history = { list: [] };
-            return await storageSet("history", history);
+        // Load history
+        this.history = await storageGet("history");
+        if (this.history == undefined) {
+            this.history = { list: [] };
+            await storageSet("history", this.history);
         }
+        // Add current elements to the history - first one is inserted last
+        let mdTitles = Array.from(document.querySelectorAll(".large_logo.rounded.position-relative.mx-1.my-2")).reverse();
+        mdTitles.forEach(node => {
+            let chapterLink = node.querySelector("a[href^='/chapter/']");
+            let title = {
+                mangaDexId: Math.floor(/\/manga\/(\d+)\/.+./.exec(node.querySelector("a[href^='/manga/']").href)[1]),
+                name: node.querySelector(".manga_title").textContent,
+                chapterId: Math.floor(/\/chapter\/(\d+)/.exec(chapterLink.href)[1]),
+                currentChapter: this.getVolumeChapterFromString(chapterLink.textContent)
+            };
+        });
         // Display additionnal history
-        for (let i = history.list.length-1; i >= 0; i--) {
-            let entry = history[history.list[i]];
+        for (let i = this.history.list.length-1; i >= 0; i--) {
+            let entry = this.history[this.history.list[i]];
             let exist = container.querySelector(["a[href^='/manga/", entry.id, "']"].join(""));
             if (!exist) {
                 let entryNode = this.buildHistoryEntryNode(entry);
