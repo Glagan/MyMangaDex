@@ -805,9 +805,10 @@ class MyMangaDex {
             // Scan the manga page for the mal icon and mal url
             let myAnimeListURL = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(data.body);
             // If regex is empty, there is no mal link, can't do anything
-            if (data == undefined || myAnimeListURL == null) {
+            if (data == undefined && myAnimeListURL == null) {
                 this.notification(NOTIFY.ERROR, "No MyAnimeList ID", "You will need to go on the manga page if one is added.\nLast open chapters are still saved.", this.mmdCrossedImage, true);
-            } else {
+            }
+            if (myAnimeListURL != undefined) {
                 // If there is a mal link, add it and save it in local storage
                 this.manga.myAnimeListId = Math.floor(/.+\/(\d+)/.exec(myAnimeListURL[1])[1]);
             }
@@ -949,9 +950,7 @@ class MyMangaDex {
         if (this.history[this.manga.mangaDexId] == undefined) {
             this.history[this.manga.mangaDexId] = {
                 name: this.manga.name,
-                id: this.manga.mangaDexId,
-                progress: this.manga.currentChapter,
-                chapter: this.manga.chapterId,
+                id: this.manga.mangaDexId
             };
         } else {
             let index = this.history.list.indexOf(this.manga.mangaDexId);
@@ -959,6 +958,8 @@ class MyMangaDex {
                 this.history.list.splice(index, 1);
             }
         }
+        this.history[this.manga.mangaDexId].progress = this.manga.currentChapter;
+        this.history[this.manga.mangaDexId].chapter = this.manga.chapterId;
         this.history.list.push(this.manga.mangaDexId);
         if (this.history.list.length > this.options.historySize) {
             let diff = this.history.list.length-this.options.historySize;
@@ -971,6 +972,7 @@ class MyMangaDex {
     }
 
     chapterStringFromObject(chapter) {
+        if (chapter == null || chapter == undefined) return "Chapter Unknown";
         if (typeof chapter != "object") {
             return ["Chapter ", chapter].join("");
         }
