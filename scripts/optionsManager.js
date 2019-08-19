@@ -1089,7 +1089,7 @@ class OptionsManager {
                         id: title.md_id,
                         progress: {
                             volume: Math.floor(title.progress.volume),
-                            chapter: parseFloat(title.progress.progress)
+                            chapter: parseFloat(title.progress.chapter)
                         },
                         chapter: Math.floor(title.chapter)
                     };
