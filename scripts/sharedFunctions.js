@@ -64,7 +64,7 @@ async function loadOptions() {
     let data = await storageGet("options");
     let mmdImage = "https://ramune.nikurasu.org/mymangadex/128.png";
     // If there is nothing in the storage, default options
-    if (data === undefined) {
+    if (data === undefined || typeof data != "object" || isEmpty(data)) {
         SimpleNotification.info({
             title: "First Time",
             image: mmdImage,
@@ -78,108 +78,20 @@ async function loadOptions() {
                 }
             }
         }, { sticky: true, position: "bottom-left" });
-
         await storageSet("options", defaultOptions);
         return JSON.parse(JSON.stringify(defaultOptions));
     } else {
-        // Subversion updates
-        if (data.version == defaultOptions.version && data.subVersion != defaultOptions.subVersion) {
-            if (data.version == 2.1) {
-                // Fix for history in 2.1.1
-                if (data.subVersion == undefined || data.subVersion < 1) {
-                    data.subVersion = 1;
-                    if ((await storageGet("history")) == undefined) {
-                        await storageSet("history", { list: [] });
-                    }
-                }
-                if (data.subVersion < 5) {
-                    data.saveOnlyNext = false; //.4
-                    data.updateOnlyInList = false; // .5
-                }
-                data.subVersion = 5;
+        // Make sure all keys are present
+        let fixed = false;
+        Object.keys(defaultOptions).forEach(key => {
+            if (!data.hasOwnProperty(key)) {
+                data[key] = defaultOptions[key];
+                fixed = true;
             }
-            if (data.version == 2.2) {
-                // Fix imported history wrong progress
-                if (data.subVersion < 1) {
-                    let history = await storageGet("history");
-                    if (history) {
-                        Object.keys(history).forEach(md_id => {
-                            if (md_id == 'list') return;
-                            if (typeof history[md_id].progress != 'object') {
-                                history[md_id].progress = {
-                                    volume: 0,
-                                    chapter: history[md_id].progress
-                                };
-                            }
-                        });
-                    } else {
-                        history = { list: [] };
-                    }
-                    await storageSet("history", history);
-                }
-                data.subVersion = 1;
-            }
-            await storageSet("options", data);
-        }
-
+        });
         // Version updates
         if (data.version < defaultOptions.version) {
-            if (data.version < 2.0) {
-                data.onlineSave = defaultOptions.onlineSave; // New options to default
-                data.onlineURL = defaultOptions.onlineURL;
-                data.username = defaultOptions.username;
-                data.password = defaultOptions.password;
-                data.isLoggedIn = defaultOptions.isLoggedIn;
-                data.token = defaultOptions.token;
-                data.version = 2.0;
-
-                SimpleNotification.info({
-                    title: "MyMangaDex Update",
-                    image: mmdImage,
-                    text: "Online Save as been added, if you wish to use it you need to manually enable it.\nYou can see the changelog on {{github|https://github.com/Glagan/MyMangaDex}}.",
-                    buttons: {
-                        value: "Open Options",
-                        type: "message",
-                        onClick: (n) => {
-                            n.close();
-                            browser.runtime.sendMessage({ action: "openOptions" });
-                        }
-                    }
-                }, { sticky: true, position: "bottom-left" });
-            }
-
-            if (data.version < 2.1) {
-                data.updateHistoryPage = defaultOptions.updateHistoryPage; // New options to default
-                data.historySize = defaultOptions.historySize;
-                data.version = 2.1;
-
-                SimpleNotification.info({
-                    title: "MyMangaDex Update",
-                    image: mmdImage,
-                    text: "Fix for new **MyAnimeList** entries and the {{history|https://mangadex.org/history}} page now display more than your last 10 chapters if you want.\nYou can see the changelog on {{github:https://github.com/Glagan/MyMangaDex}}.",
-                    buttons: {
-                        value: "Open Options",
-                        type: "message",
-                        onClick: (n) => {
-                            n.close();
-                            browser.runtime.sendMessage({ action: "openOptions" });
-                        }
-                    }
-                }, { sticky: true, position: "bottom-left" });
-                SimpleNotification.info({
-                    title: "Update Information",
-                    image: mmdImage,
-                    text: "If you have a problem or a suggestion, open an issue or message me (Github, Discord or {{Reddit|https://old.reddit.com/message/compose?to=Glagan}}).",
-                }, { sticky: true, position: "bottom-left" });
-            }
-
             if (data.version < 2.2) {
-                data.confirmChapter = defaultOptions.confirmChapter;
-                data.updateOnlyInList = defaultOptions.updateOnlyInList;
-                data.showNoMal = undefined;
-                data.version = 2.2;
-                data.subVersion = 0;
-
                 SimpleNotification.info({
                     title: "MyMangaDex Update",
                     image: mmdImage,
@@ -208,7 +120,40 @@ async function loadOptions() {
                     }
                 }, { sticky: true, position: "bottom-left" });
             }
-
+        }
+        // Fix the save on version updates
+        if ((data.version != defaultOptions.version) ||
+            (data.version == defaultOptions.version && data.subVersion != defaultOptions.subVersion)) {
+            // Fix history wrong progress
+            let history = await storageGet("history");
+            if (history) {
+                Object.keys(history).forEach(md_id => {
+                    if (md_id == 'list') return;
+                    if (history[md_id]) {
+                        if (history[md_id].progress == null) {
+                            history[md_id].progress = {
+                                volume: 0,
+                                chapter: 0
+                            };
+                        } else if (typeof history[md_id].progress != 'object') {
+                            history[md_id].progress = {
+                                volume: 0,
+                                chapter: history[md_id].progress
+                            };
+                        }
+                    } else {
+                        history[md_id] = undefined;
+                    }
+                });
+            } else {
+                history = { list: [] };
+            }
+            await storageSet("history", history);
+            data.version = defaultOptions.version;
+            data.subVersion = defaultOptions.subVersion;
+            fixed = true;
+        }
+        if (fixed) {
             await storageSet("options", data);
         }
         return data;
@@ -278,7 +223,6 @@ async function updateLocalStorage(manga, options) {
             options.isLoggedIn = false;
             console.error(error);
         }
-
         if (options.isLoggedIn == false) {
             if (options.showErrors) {
                 SimpleNotification.error({

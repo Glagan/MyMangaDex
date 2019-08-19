@@ -1355,7 +1355,8 @@ class MyMangaDex {
         }
         // Add current elements to the history - first one is inserted last
         let mdTitles = Array.from(document.querySelectorAll(".large_logo.rounded.position-relative.mx-1.my-2")).reverse();
-        mdTitles.forEach(node => {
+        for (let i = 0, max = mdTitles.length; i < max; i++) {
+            let node = mdTitles[i];
             let chapterLink = node.querySelector("a[href^='/chapter/']");
             let title = {
                 mangaDexId: Math.floor(/\/manga\/(\d+)\/.+./.exec(node.querySelector("a[href^='/manga/']").href)[1]),
@@ -1363,7 +1364,8 @@ class MyMangaDex {
                 chapterId: Math.floor(/\/chapter\/(\d+)/.exec(chapterLink.href)[1]),
                 currentChapter: this.getVolumeChapterFromString(chapterLink.textContent)
             };
-        });
+            await this.saveTitleInHistory(title);
+        }
         // Display additionnal history
         for (let i = this.history.list.length-1; i >= 0; i--) {
             let entry = this.history[this.history.list[i]];
