@@ -335,7 +335,7 @@ class MyMangaDex {
         tooltip.style.top = parentRect.y + (parentRect.height / 2) + window.scrollY - (rowRect.height / 2) + "px";
     }
 
-    tooltip(node, id, data=undefined) {
+    tooltip(node, id, chapters=[]) {
         // Create tooltip
         let tooltip = document.createElement("div");
         tooltip.className = "mmd-tooltip loading";
@@ -350,14 +350,14 @@ class MyMangaDex {
         tooltip.appendChild(tooltipThumb);
 
         // Append the chapters if there is
-        if (this.options.saveAllOpened && data !== undefined && data.chapters !== undefined && data.chapters.length > 0) {
+        if (this.options.saveAllOpened && chapters.length > 0) {
             tooltip.classList.add("has-chapters"); // Add a border below the image
 
             let chaptersContainer = document.createElement("div");
             chaptersContainer.className = "mmd-tooltip-content";
-            let max = Math.min(5, data.chapters.length);
+            let max = Math.min(5, chapters.length);
             for (let i = 0; i < max; i++) {
-                this.appendTextWithIcon(chaptersContainer, "eye", data.chapters[i]);
+                this.appendTextWithIcon(chaptersContainer, "eye", chapters[i]);
                 chaptersContainer.appendChild(document.createElement("br"));
             }
             tooltip.appendChild(chaptersContainer);
@@ -1146,6 +1146,12 @@ class MyMangaDex {
          * Highlight
          */
         if (this.options.highlightChapters) {
+            let paintRow = (row, color) => {
+                let max = row.childElementCount;
+                for (let i = 0; i < max; i++) {
+                    row.children[i].style.backgroundColor = color;
+                }
+            };
             let colors = this.options.lastOpenColors, lastColor = colors.length, currentColor = 0;
             for (let i = 0; i < lastChapter; i++) {
                 let group = groups[i];
@@ -1162,22 +1168,22 @@ class MyMangaDex {
                         chapter.node.classList.add("has-fast-in-transition");
                         if (titleInformations[group.titleId].last < chapter.value &&
                             chapter.value < Math.floor(titleInformations[group.titleId].last) + 2) {
-                            chapter.node.style.backgroundColor = this.options.nextChapterColor;
+                            paintRow(chapter.node, this.options.nextChapterColor);
                             group.selected = j;
                             outerColor = this.options.nextChapterColor;
                         } else if (titleInformations[group.titleId].last < chapter.value) {
-                            chapter.node.style.backgroundColor = this.options.higherChaptersColor;
+                            paintRow(chapter.node, this.options.higherChaptersColor);
                         } else if (titleInformations[group.titleId].last > chapter.value) {
-                            chapter.node.style.backgroundColor = this.options.lowerChaptersColor;
+                            paintRow(chapter.node, this.options.lowerChaptersColor);
                         } else if (titleInformations[group.titleId].last == chapter.value) {
-                            chapter.node.style.backgroundColor = colors[currentColor];
+                            paintRow(chapter.node, colors[currentColor]);
                             group.selected = j;
                         }
                     }
                     if (group.selected > 0) {
                         for (let j = 0; j < chapterCount; j++) {
                             if (j == group.selected || group.chapters[j].hidden || group.chapters[j].value == group.chapters[group.selected].value) continue;
-                            group.chapters[j].node.firstElementChild.style.backgroundColor = color;
+                            group.chapters[j].node.firstElementChild.style.backgroundColor = outerColor;
                         }
                     }
                     currentColor = (currentColor + 1) % lastColor;
