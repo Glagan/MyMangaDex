@@ -10,14 +10,18 @@ window.browser = (function () {
 // Object containing all options
 // Is initialized with the default options
 let defaultOptions = {
-    lastReadColor: "rgba(75, 180, 60, 0.4)",
+    lastReadColor: "rgba(75, 180, 60, 0.6)",
     lowerChaptersColor: "rgba(180, 102, 75, 0.4)",
+    higherChaptersColor: "transparent",
+    nextChapterColor: "rgba(199, 146, 2, 0.4)",
     lastOpenColors: [
-        "rgba(102, 51, 153, 0.6)",
-        "rgba(75, 0, 130, 0.6)"
+        "rgba(28, 135, 141, 0.8)",
+        "rgba(22, 65, 87, 0.8)",
+        "rgba(28, 103, 141, 0.8)"
     ],
-    openedChaptersColor: "rgba(102, 75, 180, 0.6)",
+    openedChaptersColor: "rgba(28, 135, 141, 0.4)",
     hideLowerChapters: true,
+    hideHigherChapters: false,
     saveOnlyHigher: true,
     saveOnlyNext: false,
     confirmChapter: true,
@@ -28,6 +32,7 @@ let defaultOptions = {
     historySize: 100,
     updateMDList: false,
     showTooltips: true,
+    showFullCover: false,
     highlightChapters: true,
     showNotifications: true,
     showErrors: true,
@@ -36,6 +41,6 @@ let defaultOptions = {
     username: "",
     isLoggedIn: false,
     token: "",
-    version: 2.2,
-    subVersion: 3
+    version: 2.3,
+    subVersion: 0
 };

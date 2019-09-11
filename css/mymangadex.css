@@ -6,31 +6,41 @@
     overflow: hidden;
     background-color: rgba(0, 0, 0, 0.8);
     opacity: 0;
-    transition: opacity 0.2s ease-in;
+    transition: opacity .2s ease-in;
     color: #fff;
 }
-
-.mmd-loading {
-    display: none;
+.mmd-tooltip.loading {
+    font-size: 1rem;
+    padding: .25rem;
 }
-
-.mmd-active {
+.mmd-tooltip.active {
     opacity: 1;
 }
-
-.mmd-tooltip-image {
+.mmd-tooltip .mmd-thumbnail {
+    max-width: 100%;
+    user-select: none;
+    display: block;
+}
+.mmd-tooltip .mmd-thumbnail.loading {
+    display: none;
+}
+.mmd-tooltip.has-chapters .mmd-thumbnail {
     border-bottom: 1px solid rgba(0, 0, 0, 0.6);
 }
-
 .mmd-tooltip-content {
     display: inline-block;
     padding: 4px;
+}
+.mmd-tooltip.loading .mmd-tooltip-content {
+    display: none;
+}
+.mmd-next-chapter {
+    color: rgb(199, 146, 2);
 }
 
 .mmd-ptr {
     background-color: rgb(91, 192, 222) !important;
 }
-
 .mmd-background-info {
     background-color: rgba(2, 136, 209, 0.2);
 }

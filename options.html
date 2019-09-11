@@ -61,6 +61,28 @@
                     </div>
                 </div>
                 <div class="form-group text-container p-2">
+                    <label class="font-weight-bold">Higher chapters color <a data-default="higherChaptersColor" class="btn btn-sm btn-secondary"><i
+                                class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+                    <p class="d-none d-xl-block">Color used if <kbd>Hide higher chapters</kbd> is set to false.<br/>Set to <b>transparent</b> if you don't wish to highlight.</p>
+                    <div class="input-group">
+                        <input type="text" data-option="higherChaptersColor" data-type="text" data-color="true" class="form-control" />
+                        <div class="input-group-append">
+                            <span class="input-group-text" data-color="higherChaptersColor"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group text-container p-2">
+                    <label class="font-weight-bold">Next chapter color <a data-default="nextChapterColor" class="btn btn-sm btn-secondary"><i
+                                class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+                    <p class="d-none d-xl-block">Color used to highlight the next chapter for a title.<br/>Set to <b>transparent</b> if you don't wish to highlight.</p>
+                    <div class="input-group">
+                        <input type="text" data-option="nextChapterColor" data-type="text" data-color="true" class="form-control" />
+                        <div class="input-group-append">
+                            <span class="input-group-text" data-color="nextChapterColor"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group text-container p-2">
                     <label class="font-weight-bold">Opened chapters color <a data-default="openedChaptersColor" class="btn btn-sm btn-secondary"><i
                                 class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
                     <p class="d-none d-xl-block">Color used to highlight all opened chapters in a title page.</p>
@@ -143,9 +165,21 @@
             </div>
             <div class="col">
                 <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Hide lower chapters <a data-default="hideLowerChapters" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+                    <label class="font-weight-bold">Hide <b>lower</b> chapters <a data-default="hideLowerChapters" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
                     <p class="d-none d-xl-block">Hide all chapters that are inferior to your last read chapter on MangaDex.</p>
                     <div data-option="hideLowerChapters" data-type="checkbox" class="col px-0 my-auto input-group">
+                        <div class="input-group-prepend">
+                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+                        </div>
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group text-container p-2">
+                    <label class="font-weight-bold">Hide <b>higher</b> chapters <a data-default="hideHigherChapters" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+                    <p class="d-none d-xl-block">Hide all chapters that are higher than your last read chapter on MangaDex.</p>
+                    <div data-option="hideHigherChapters" data-type="checkbox" class="col px-0 my-auto input-group">
                         <div class="input-group-prepend">
                             <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
                         </div>
@@ -170,6 +204,18 @@
                     <label class="font-weight-bold">Show tooltips (Thumbnails) <a data-default="showTooltips" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
                     <p class="d-none d-xl-block">Display tooltips containing a thumbnail of the manga and the list of the last 5 read chapters on chapters and title lists. No tooltips are added if there is already one.</p>
                     <div data-option="showTooltips" data-type="checkbox" class="col px-0 my-auto input-group">
+                        <div class="input-group-prepend">
+                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+                        </div>
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group text-container p-2">
+                    <label class="font-weight-bold">Show full size cover <a data-default="showFullCover" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+                    <p class="d-none d-xl-block">Display the full cover of a title instead of it's thumbnail.<br><b>Some covers can be <i>big</i> and slow to load depending on your connection.</b></p>
+                    <div data-option="showFullCover" data-type="checkbox" class="col px-0 my-auto input-group">
                         <div class="input-group-prepend">
                             <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
                         </div>
