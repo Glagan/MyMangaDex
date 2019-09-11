@@ -120,6 +120,22 @@ async function loadOptions() {
                     }
                 }, { sticky: true, position: "bottom-left" });
             }
+
+            if (data.version < 2.3) {
+                SimpleNotification.info({
+                    title: "More options",
+                    image: mmdImage,
+                    text: "Version **2.3** come with more options, you can now display the full size cover in the thumbnails, hide higher chapters and highlight the next chapter.\nSee you in the options !",
+                    buttons: {
+                        value: "Open Options",
+                        type: "message",
+                        onClick: (n) => {
+                            n.close();
+                            browser.runtime.sendMessage({ action: "openOptions" });
+                        }
+                    }
+                }, { sticky: true, position: "bottom-left" });
+            }
         }
         // Fix the save on version updates
         if ((data.version != defaultOptions.version) ||
