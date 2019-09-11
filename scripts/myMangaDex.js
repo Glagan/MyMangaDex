@@ -26,7 +26,7 @@ class MyMangaDex {
         if ((this.pageUrl.indexOf("org/follows") > -1 && this.pageUrl.indexOf("/manga/") == -1) ||
             (this.pageUrl.indexOf("org/group") > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || (this.pageUrl.indexOf("/manga/") == -1 && this.pageUrl.indexOf("/comments/") == -1))) ||
             (this.pageUrl.indexOf("org/user") > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || this.pageUrl.indexOf("/manga/") == -1))) {
-            this.chaptersListPage();
+            this.chapterListPage();
         } else if (this.pageUrl.indexOf("org/search") > -1 ||
             this.pageUrl.indexOf("org/?page=search") > -1 ||
             this.pageUrl.indexOf("org/?page=titles") > -1 ||
@@ -920,92 +920,43 @@ class MyMangaDex {
         }
     }
 
-    paintOrHide(manga, mangaDexId, chapters, colors) {
-        let data = undefined;
-        let paintColor = this.options.lastOpenColors[colors.current];
-        let rowsDeleted = 0;
-
-        if (manga !== undefined) {
-            data = {chapters: manga.chapters};
-
-            let sawLastChapter = false;
-            let sawHigher = false;
-
-            // It's a multiple row list - we delete the old ones if needed
-            let lastRow = chapters.length-1;
-            for (let chapter in chapters) {
-                let currentChapter = chapters[chapter].currentChapter.chapter;
-                let currentRow = chapters[chapter].row;
-                // We delete the row if it's lower and one first - or first but all are lower
-                if (currentChapter > manga.last) {
-                    if (sawLastChapter && this.options.highlightChapters) {
-                        currentRow.firstElementChild.style.backgroundColor = paintColor;
+    getChapterListGroups() {
+        let chapterContainer = document.querySelector(".chapter-container");
+        if (!chapterContainer) return [];
+        let nodes = chapterContainer.children;
+        let groups = [];
+        if (nodes.length > 1) {
+            let currentGroup = { chapters: [] };
+            for (let i = 1; i < nodes.length; i++) {
+                let chapterRow = nodes[i].querySelector("[data-chapter]");
+                let titleId = Math.floor(chapterRow.dataset.mangaId);
+                let isFirstRow = (nodes[i].firstElementChild.childElementCount > 0);
+                // Is this is a new entry push the current group and create a new one
+                if (isFirstRow) {
+                    if (currentGroup.chapters.length > 0) {
+                        groups.push(currentGroup);
                     }
-                    sawHigher = true;
-                    if (this.options.hideHigherChapters && manga.last > 0 && currentChapter > manga.last + 1) {
-                            // Add 2 classes - one to hide the row and the other to find it back
-                            currentRow.classList.add("d-none");
-                            currentRow.classList.add("mmd-hidden");
-                            rowsDeleted++;
-                            if (this.options.highlightChapters) {
-                                currentRow.style.backgroundColor = this.options.higherChaptersColor;
-                            }
-                    } else if (this.options.highlightChapters && manga.last > 0 && currentChapter == Math.floor(manga.last) + 1) {
-                        currentRow.style.backgroundColor = this.options.nextChapterColor;
-                    } else if (this.options.highlightChapters)  {
-                        currentRow.lastElementChild.firstElementChild.addEventListener("auxclick", () => {
-                            currentRow.style.backgroundColor = paintColor;
-                        });
-                    }
-                } else if (currentChapter < manga.last) {
-                    if (sawLastChapter && this.options.highlightChapters) {
-                        currentRow.firstElementChild.style.backgroundColor = paintColor;
-                    } else if (!sawHigher || lastRow == 0 || (sawHigher && chapter < lastRow)) {
-                        if (this.options.hideLowerChapters) {
-                            // Add 2 classes - one to hide the row and the other to find it back
-                            currentRow.classList.add("d-none");
-                            currentRow.classList.add("mmd-hidden");
-                            rowsDeleted++;
-                        }
-                        if (this.options.highlightChapters) {
-                            currentRow.style.backgroundColor = this.options.lowerChaptersColor;
-                        }
-                    }
-                } else if (currentChapter == manga.last) {
-                    sawLastChapter = true;
-                    if (this.options.highlightChapters) {
-                        currentRow.style.backgroundColor = paintColor;
-                    }
+                    currentGroup = {
+                        titleId: titleId,
+                        name: nodes[i].firstElementChild.textContent.trim(),
+                        chapters: [],
+                    };
+                }
+                let chapter = {
+                    value: parseFloat(chapterRow.dataset.chapter) || undefined,
+                    node: nodes[i],
+                };
+                // Don't add empty chapters
+                if (chapter.value) {
+                    currentGroup.chapters.push(chapter);
                 }
             }
-        } else if (this.options.highlightChapters) {
-            chapters.forEach(chapter => {
-                chapter.row.lastElementChild.firstElementChild.addEventListener("auxclick", () => {
-                    chapter.row.style.backgroundColor = paintColor;
-                });
-            });
-        }
-        colors.current = (colors.current + 1) % colors.max;
-
-        // Show a tooltip with the thumbnail if the row wasn't deleted
-        //try {
-            let firstChapter = chapters[chapters.length - 1];
-            if (this.options.showTooltips && chapters.length > 0) {
-                this.tooltip(firstChapter.row, mangaDexId, data);
-            }/*
-            if (manga && this.options.highlightNextChapter &&
-                firstChapter.currentChapter.chapter == Math.floor(manga.last) + 1) {
-                let link = firstChapter.row.querySelector("a[href^='/title/'");
-                link.insertBefore(document.createTextNode("\xA0"), link.firstChild);
-                let icon = document.createElement("i");
-                icon.className = "fas fa-forward mmd-next-chapter";
-                link.insertBefore(icon, link.firstChild);
+            // Push last group
+            if (currentGroup.chapters.length > 0) {
+                groups.push(currentGroup);
             }
-        } catch (error) {
-            console.error(error);
-        }*/
-
-        return rowsDeleted;
+        }
+        return groups;
     }
 
     createQuickButton(content, status) {
@@ -1107,96 +1058,152 @@ class MyMangaDex {
 
     // END HELP / START PAGE
 
-    async chaptersListPage() {
+    async chapterListPage() {
         if (!this.options.highlightChapters && !this.options.hideLowerChapters &&
             !this.options.showTooltips && !this.options.highlightNextChapter) {
             return;
         } // Abort early if useless - no highlight, no hiding and no thumbnails
+        let groups = this.getChapterListGroups();
+        let lastChapter = groups.length;
+        let titleInformations = {};
 
-        let chaptersList = document.querySelector(".chapter-container").children;
-        // Keep track of the current entries in the follow table
-        var chapters = [];
-        var colors = {
-            current: 0,
-            max: this.options.lastOpenColors.length
-        };
-        // Save each data storage promises to avoid fetching the same data twice - huge speed boost when there is the same serie multiple times
-        var localStorage = {};
+        /**
+         * Hide Lower and Higher
+         */
+        if (this.options.hideLowerChapters) {
+            for (let i = 0; i < lastChapter; i++) {
+                let group = groups[i];
+                // Get title informations from LocalStorage
+                if (!(group.titleId in titleInformations)) {
+                    titleInformations[group.titleId] = await storageGet(group.titleId);
+                }
+                // If there is data
+                if (titleInformations[group.titleId]) {
+                    let chapterCount = group.chapters.length;
+                    for (let j = 0; j < chapterCount; j++) {
+                        let chapter = group.chapters[j];
+                        if ((this.options.hideHigherChapters &&
+                            titleInformations[group.titleId].last < chapter.value &&
+                            chapter.value >= Math.floor(titleInformations[group.titleId].last) + 2) ||
+                            this.options.hideLowerChapters && titleInformations[group.titleId].last > chapter.value) {
+                            chapter.node.classList.add("is-hidden-chapter");
+                            chapter.hidden = true;
+                        }
+                    }
+                    if (group.chapters[0].hidden) {
+                        // Display the title on the first not hidden chapter
+                        let j = 1;
+                        while (j < chapterCount && group.chapters[j].hidden) {
+                            j++;
+                        }
+                        if (j < chapterCount) {
+                            let link = document.createElement("a");
+                            link.textContent = group.name, link.className = "text-truncate";
+                            link.href = ["/title/", group.titleId].join(""), link.title = group.name;
+                            group.chapters[j].node.firstElementChild.appendChild(link);
+                        }
+                    }
+                }
+            }
 
-        // Create a tooltip holder
+            // Button
+            let rows = document.querySelectorAll(".is-hidden-chapter");
+            let hiddenCount = rows.length;
+            if (hiddenCount > 0) {
+                let navBar = document.querySelector(".nav.nav-tabs");
+                let button = document.createElement("li");
+                button.className = "nav-item";
+                let link = document.createElement("a");
+                this.appendTextWithIcon(link, "eye", ["Show Hidden (", hiddenCount, ")"].join(""));
+                link.className = "nav-link", link.href = "#";
+                link.addEventListener("click", event => {
+                    event.preventDefault();
+                    clearDomNode(link);
+                    if (event.target.dataset.show == undefined) {
+                        event.target.dataset.show = true;
+                        this.appendTextWithIcon(link, "eye", ["Hide Hidden (", hiddenCount, ")"].join(""));
+                        rows.forEach(node => {
+                            node.classList.add("is-visible");
+                        });
+                    } else {
+                        delete event.target.dataset.show;
+                        this.appendTextWithIcon(link, "eye", ["Show Hidden (", hiddenCount, ")"].join(""));
+                        rows.forEach(node => {
+                            node.classList.remove("is-visible");
+                        });
+                    }
+                });
+                button.appendChild(link);
+                if (navBar.lastElementChild.classList.contains("ml-auto")) {
+                    navBar.insertBefore(button, navBar.lastElementChild);
+                } else {
+                    navBar.appendChild(button);
+                }
+            }
+        }
+
+        /**
+         * Highlight
+         */
+        if (this.options.highlightChapters) {
+            let colors = this.options.lastOpenColors, lastColor = colors.length, currentColor = 0;
+            for (let i = 0; i < lastChapter; i++) {
+                let group = groups[i];
+                // Get title informations from LocalStorage
+                if (!(group.titleId in titleInformations)) {
+                    titleInformations[group.titleId] = await storageGet(group.titleId);
+                }
+                // If there is data
+                if (titleInformations[group.titleId] != undefined) {
+                    let chapterCount = group.chapters.length;
+                    let outerColor = colors[currentColor];
+                    for (let j = 0; j < chapterCount; j++) {
+                        let chapter = group.chapters[j];
+                        chapter.node.classList.add("has-fast-in-transition");
+                        if (titleInformations[group.titleId].last < chapter.value &&
+                            chapter.value < Math.floor(titleInformations[group.titleId].last) + 2) {
+                            chapter.node.style.backgroundColor = this.options.nextChapterColor;
+                            group.selected = j;
+                            outerColor = this.options.nextChapterColor;
+                        } else if (titleInformations[group.titleId].last < chapter.value) {
+                            chapter.node.style.backgroundColor = this.options.higherChaptersColor;
+                        } else if (titleInformations[group.titleId].last > chapter.value) {
+                            chapter.node.style.backgroundColor = this.options.lowerChaptersColor;
+                        } else if (titleInformations[group.titleId].last == chapter.value) {
+                            chapter.node.style.backgroundColor = colors[currentColor];
+                            group.selected = j;
+                        }
+                    }
+                    if (group.selected > 0) {
+                        for (let j = 0; j < chapterCount; j++) {
+                            if (j == group.selected || group.chapters[j].hidden || group.chapters[j].value == group.chapters[group.selected].value) continue;
+                            group.chapters[j].node.firstElementChild.style.backgroundColor = color;
+                        }
+                    }
+                    currentColor = (currentColor + 1) % lastColor;
+                }
+            }
+        }
+
+        /**
+         * Tooltips
+         */
         if (this.options.showTooltips) {
             this.tooltipContainer = document.createElement("div");
             this.tooltipContainer.id = "mmd-tooltip";
             document.body.appendChild(this.tooltipContainer);
-        }
-
-        // Check each rows of the main table - Stop at 1 because first row is the header
-        let lastChapter = chaptersList.length-1;
-        var hiddenRows = 0;
-        let promises = [];
-        for (let row = lastChapter; row > 0; --row) {
-            let chapter = chaptersList[row];
-
-            // Add the row
-            chapters.push({
-                row: row,
-                currentChapter: this.getVolumeChapterFromNode(chapter.lastElementChild.firstElementChild)
-            });
-
-            // If it's a row with a name
-            if (chapter.firstElementChild.childElementCount > 0) {
-                let mangaDexId = Math.floor(/\/title\/(\d+)\//.exec(chapter.firstElementChild.firstElementChild.href)[1]);
-                let chaptersCopy = JSON.parse(JSON.stringify(chapters));
-                chaptersCopy.forEach(element => {
-                    element.row = chaptersList[element.row];
-                }); // Copy DOM nodes
-
-                // Check if the data for the current serie is already fetched
-                if (localStorage[mangaDexId] === undefined) {
-                    // add the storage call to a promise array for the "show hidden chapters" button
-                    promises.push(
-                        storageGet(mangaDexId).then(result => {
-                            localStorage[mangaDexId] = result;
-                            hiddenRows += this.paintOrHide(result, mangaDexId, chaptersCopy, colors);
-                        })
+            for (let i = 0; i < lastChapter; i++) {
+                let group = groups[i];
+                let chapterCount = group.chapters.length;
+                // Add events
+                for (let j = 0; j < chapterCount; j++) {
+                    this.tooltip(
+                        group.chapters[j].node,
+                        group.titleId,
+                        (titleInformations[group.titleId]) ? titleInformations[group.titleId].chapters : []
                     );
-                } else {
-                    hiddenRows += this.paintOrHide(localStorage[mangaDexId], mangaDexId, chaptersCopy, colors);
                 }
-                chapters = [];
             }
-        }
-
-        // If chapters are hidden add a button to show them - if there is any hidden
-        await Promise.all(promises); // wait for rows that fetch local storage
-        if (this.options.hideLowerChapters && hiddenRows > 0) {
-            let navBar = document.querySelector(".nav.nav-tabs");
-            let showButton = document.createElement("li");
-            showButton.className = "nav-item";
-            let showLink = document.createElement("a");
-            showLink.className = "nav-link";
-            showLink.href = "#";
-            showLink.addEventListener("click", event => {
-                event.preventDefault();
-                if (event.target.dataset.show == undefined) {
-                    event.target.dataset.show = true;
-                    clearDomNode(showLink);
-                    this.appendTextWithIcon(showLink, "eye", "Hide Hidden (" + hiddenRows + ")");
-                    document.querySelectorAll(".mmd-hidden").forEach(node => {
-                        node.classList.remove("d-none");
-                    });
-                } else {
-                    delete event.target.dataset.show;
-                    clearDomNode(showLink);
-                    this.appendTextWithIcon(showLink, "eye", "Show Hidden (" + hiddenRows + ")");
-                    document.querySelectorAll(".mmd-hidden").forEach(node => {
-                        node.classList.add("d-none");
-                    });
-                }
-            });
-            this.appendTextWithIcon(showLink, "eye", "Show Hidden (" + hiddenRows + ")");
-            showButton.appendChild(showLink);
-            navBar.appendChild(showButton);
         }
     }
 
