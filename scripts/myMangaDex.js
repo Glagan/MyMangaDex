@@ -322,17 +322,27 @@ class MyMangaDex {
         let iconNode = document.createElement("span");
         iconNode.className = "fas fa-" + icon + " fa-fw";
         iconNode.setAttribute("aria-hidden", true);
-
         node.appendChild(iconNode);
         node.appendChild(document.createTextNode(" " + text));
     }
 
-    updateTooltipPosition(tooltip, node) {
-        let rowRect = tooltip.getBoundingClientRect();
-        let parentRect = node.getBoundingClientRect();
-        tooltip.style.maxWidth = [parentRect.left - 10 + "px"].join("");
-        tooltip.style.left = parentRect.x - rowRect.width - 5 + "px";
-        tooltip.style.top = parentRect.y + (parentRect.height / 2) + window.scrollY - (rowRect.height / 2) + "px";
+    updateTooltipPosition(tooltip, row) {
+        let tooltipRect = tooltip.getBoundingClientRect();
+        let rowRect = row.getBoundingClientRect();
+        let left = rowRect.x - tooltipRect.width - 5;
+        if (rowRect.left < 200) {
+            let firstChildRect = row.firstElementChild.getBoundingClientRect();
+            left = firstChildRect.right + 5;
+            tooltip.style.maxWidth = [document.body.clientWidth * 0.2, "px"].join("");
+        } else {
+            tooltip.style.maxWidth = [rowRect.left - 10, "px"].join("");
+        }
+        tooltip.style.left = [left, "px"].join("");
+        let top = Math.max(5, rowRect.y + (rowRect.height / 2) + window.scrollY - (tooltipRect.height / 2));
+        if (top + tooltipRect.height > document.body.clientHeight) {
+            top = document.body.clientHeight - tooltipRect.height - 5;
+        }
+        tooltip.style.top = [top, "px"].join("");
     }
 
     tooltip(node, id, chapters=[]) {
@@ -391,14 +401,11 @@ class MyMangaDex {
                         break;
                     default:
                         tooltipThumb.src = '';
-                        break;
                 }
             }
         });
         // Events
         node.addEventListener("mouseenter", () => {
-            let rowRect = tooltip.getBoundingClientRect();
-            let parentRect = node.getBoundingClientRect();
             tooltip.classList.add("active");
             if (!node.dataset.loaded) {
                 if (this.options.showFullCover) {
