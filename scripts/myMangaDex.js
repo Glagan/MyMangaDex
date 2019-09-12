@@ -326,21 +326,24 @@ class MyMangaDex {
         node.appendChild(document.createTextNode(" " + text));
     }
 
-    updateTooltipPosition(tooltip, row) {
+    updateTooltipPosition(tooltip, row, forceLeft=false) {
         let tooltipRect = tooltip.getBoundingClientRect();
         let rowRect = row.getBoundingClientRect();
-        let left = rowRect.x - tooltipRect.width - 5;
-        if (rowRect.left < 200) {
+        let left = Math.max(5, rowRect.x - tooltipRect.width - 5);
+        if (!forceLeft && rowRect.left < 200) {
             let firstChildRect = row.firstElementChild.getBoundingClientRect();
             left = firstChildRect.right + 5;
             tooltip.style.maxWidth = [document.body.clientWidth * 0.2, "px"].join("");
         } else {
             tooltip.style.maxWidth = [rowRect.left - 10, "px"].join("");
         }
+        tooltipRect = tooltip.getBoundingClientRect();
         tooltip.style.left = [left, "px"].join("");
-        let top = Math.max(5, rowRect.y + (rowRect.height / 2) + window.scrollY - (tooltipRect.height / 2));
-        if (top + tooltipRect.height > document.body.clientHeight) {
-            top = document.body.clientHeight - tooltipRect.height - 5;
+        let top = window.scrollY + rowRect.y + (rowRect.height / 2) - (tooltipRect.height / 2);
+        if (top <= window.scrollY) {
+            top = window.scrollY + 5;
+        } else if (top + tooltipRect.height > window.scrollY + window.innerHeight) {
+            top = window.scrollY + window.innerHeight - tooltipRect.height - 5;
         }
         tooltip.style.top = [top, "px"].join("");
     }
@@ -349,7 +352,7 @@ class MyMangaDex {
         // Create tooltip
         let tooltip = document.createElement("div");
         tooltip.className = "mmd-tooltip loading";
-        tooltip.style.left = "-1000px";
+        tooltip.style.left = "-5000px";
         let spinner = document.createElement("i");
         spinner.className = "fas fa-circle-notch fa-spin";
         tooltip.appendChild(spinner);
@@ -377,12 +380,14 @@ class MyMangaDex {
             // Remove the spinner
             spinner.remove();
             tooltip.classList.remove("loading");
-            tooltip.style.left = "-1000px";
+            tooltip.style.left = "-5000px";
             tooltipThumb.classList.remove("loading");
             // Update position
-            setTimeout(() => {
-                this.updateTooltipPosition(tooltip, node);
-            }, 1);
+            if (tooltip.classList.contains("active")) {
+                setTimeout(() => {
+                    this.updateTooltipPosition(tooltip, node);
+                }, 1);
+            }
         });
         tooltipThumb.addEventListener("error", () => {
             if (this.options.showFullCover) {
@@ -405,7 +410,7 @@ class MyMangaDex {
             }
         });
         // Events
-        node.addEventListener("mouseenter", () => {
+        let activateTooltip = (forceLeft=false) => {
             tooltip.classList.add("active");
             if (!node.dataset.loaded) {
                 if (this.options.showFullCover) {
@@ -416,12 +421,20 @@ class MyMangaDex {
                 }
                 node.dataset.loaded = true;
             }
-            this.updateTooltipPosition(tooltip, node);
+            this.updateTooltipPosition(tooltip, node, forceLeft);
+        };
+        node.firstElementChild.addEventListener("mouseenter", event => {
+            activateTooltip();
+            event.stopPropagation();
+        });
+        node.lastElementChild.addEventListener("mouseenter", event => {
+            event.stopPropagation();
+            activateTooltip(true);
         });
         // Hide the tooltip
         node.addEventListener("mouseleave", () => {
             tooltip.classList.remove("active");
-            tooltip.style.left = "-1000px";
+            tooltip.style.left = "-5000px";
         });
     }
 
