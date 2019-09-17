@@ -326,24 +326,44 @@ class MyMangaDex {
         node.appendChild(document.createTextNode(" " + text));
     }
 
-    updateTooltipPosition(tooltip, row, forceLeft=false) {
-        let tooltipRect = tooltip.getBoundingClientRect();
-        let rowRect = row.getBoundingClientRect();
-        let left = Math.max(5, rowRect.x - tooltipRect.width - 5);
-        if (!forceLeft && rowRect.left < 200) {
-            let firstChildRect = row.firstElementChild.getBoundingClientRect();
-            left = firstChildRect.right + 5;
-            tooltip.style.maxWidth = [document.body.clientWidth * 0.2, "px"].join("");
-        } else {
-            tooltip.style.maxWidth = [rowRect.left - 10, "px"].join("");
+    updateTooltipPosition(tooltip, row) {
+        let rightColumn = (tooltip.dataset.column == "true");
+        let rect = {
+            tooltip: tooltip.getBoundingClientRect(),
+            row: row.getBoundingClientRect()
+        };
+        // Calculate to place on the left of the main column by default
+        let left = Math.max(5, rect.row.x - rect.tooltip.width - 5);
+        let maxWidth = rect.row.left - 10;
+        // Boundaries
+        if (rect.row.left < 200) {
+            if (rightColumn) {
+                rect.lastChild = row.lastElementChild.getBoundingClientRect()
+                maxWidth = (rect.lastChild.left - 10) * 0.6;
+            } else {
+                rect.firstChild = row.firstElementChild.getBoundingClientRect();
+                maxWidth = (document.body.clientWidth - 10) * 0.25;
+            }
         }
-        tooltipRect = tooltip.getBoundingClientRect();
-        tooltip.style.left = [left, "px"].join("");
-        let top = window.scrollY + rowRect.y + (rowRect.height / 2) - (tooltipRect.height / 2);
+        tooltip.style.maxWidth = [maxWidth, "px"].join("");
+        // X axis
+        setTimeout(() => {
+            if (rect.row.left < 200) {
+                if (rightColumn) {
+                    left = (rect.lastChild.left - 5) - Math.min(maxWidth, rect.tooltip.width);
+                } else {
+                    left = rect.firstChild.right + 5;
+                }
+            }
+            tooltip.style.left = [left, "px"].join("");
+        }, 1);
+        // Y axis
+        rect.tooltip = tooltip.getBoundingClientRect();
+        let top = window.scrollY + rect.row.y + (rect.row.height / 2) - (rect.tooltip.height / 2);
         if (top <= window.scrollY) {
             top = window.scrollY + 5;
-        } else if (top + tooltipRect.height > window.scrollY + window.innerHeight) {
-            top = window.scrollY + window.innerHeight - tooltipRect.height - 5;
+        } else if (top + rect.tooltip.height > window.scrollY + window.innerHeight) {
+            top = window.scrollY + window.innerHeight - rect.tooltip.height - 5;
         }
         tooltip.style.top = [top, "px"].join("");
     }
@@ -353,6 +373,7 @@ class MyMangaDex {
         let tooltip = document.createElement("div");
         tooltip.className = "mmd-tooltip loading";
         tooltip.style.left = "-5000px";
+        tooltip.style.maxHeight = [(window.innerHeight - 10) * 0.8, "px"].join("");
         let spinner = document.createElement("i");
         spinner.className = "fas fa-circle-notch fa-spin";
         tooltip.appendChild(spinner);
@@ -365,7 +386,6 @@ class MyMangaDex {
         // Append the chapters if there is
         if (this.options.saveAllOpened && chapters.length > 0) {
             tooltip.classList.add("has-chapters"); // Add a border below the image
-
             let chaptersContainer = document.createElement("div");
             chaptersContainer.className = "mmd-tooltip-content";
             let max = Math.min(5, chapters.length);
@@ -377,6 +397,8 @@ class MyMangaDex {
         }
 
         tooltipThumb.addEventListener("load", () => {
+            delete node.dataset.loading;
+            node.dataset.loaded = true;
             // Remove the spinner
             spinner.remove();
             tooltip.classList.remove("loading");
@@ -389,52 +411,62 @@ class MyMangaDex {
                 }, 1);
             }
         });
+        let extensions = [ 'jpg', 'png', 'jpeg', 'gif' ];
         tooltipThumb.addEventListener("error", () => {
             if (this.options.showFullCover) {
-                if (tooltipThumb.dataset.next != 'error') {
-                    tooltipThumb.src = ["https://mangadex.org/images/manga/", id, ".", tooltipThumb.dataset.next].join('');
-                }
-                switch (tooltipThumb.dataset.next) {
-                    case 'png':
-                        tooltipThumb.dataset.next = 'jpeg';
-                        break;
-                    case 'jpeg':
-                        tooltipThumb.dataset.next = 'gif';
-                        break;
-                    case 'gif':
-                        tooltipThumb.dataset.next = 'error';
-                        break;
-                    default:
-                        tooltipThumb.src = '';
+                let tryNumber = Math.floor(tooltipThumb.dataset.ext);
+                if (Math.floor(tooltipThumb.dataset.ext) < extensions.length) {
+                    tooltipThumb.src = ["https://mangadex.org/images/manga/", id, ".", extensions[tryNumber]].join('');
+                    tooltipThumb.dataset.ext = tryNumber + 1;
+                } else {
+                    tooltipThumb.src = '';
                 }
             }
         });
         // Events
-        let activateTooltip = (forceLeft=false) => {
+        let activateTooltip = (rightColumn) => {
+            tooltip.dataset.column = rightColumn;
             tooltip.classList.add("active");
+            if (node.dataset.loading) {
+                this.updateTooltipPosition(tooltip, node);
+                return;
+            }
             if (!node.dataset.loaded) {
+                node.dataset.loading = true;
+                // Will trigger 'load' event
                 if (this.options.showFullCover) {
                     tooltipThumb.src = "https://mangadex.org/images/manga/" + id + ".jpg";
-                    tooltipThumb.dataset.next = "png";
+                    tooltipThumb.dataset.ext = 1;
                 } else {
                     tooltipThumb.src = "https://mangadex.org/images/manga/" + id + ".thumb.jpg";
                 }
-                node.dataset.loaded = true;
             }
-            this.updateTooltipPosition(tooltip, node, forceLeft);
+            this.updateTooltipPosition(tooltip, node);
         };
+        let disableTooltip = () => {
+            tooltip.classList.remove("active");
+            tooltip.style.left = "-5000px";
+        };
+        // First column
         node.firstElementChild.addEventListener("mouseenter", event => {
-            activateTooltip();
             event.stopPropagation();
+            activateTooltip(false);
         });
+        // Second column
         node.lastElementChild.addEventListener("mouseenter", event => {
             event.stopPropagation();
             activateTooltip(true);
         });
-        // Hide the tooltip
-        node.addEventListener("mouseleave", () => {
-            tooltip.classList.remove("active");
-            tooltip.style.left = "-5000px";
+        // Row
+        node.addEventListener("mouseleave", event => {
+            event.stopPropagation();
+            disableTooltip();
+        });
+        node.addEventListener("mouseout", event => {
+            event.stopPropagation();
+            if (event.target == node) {
+                disableTooltip();
+            }
         });
     }
 

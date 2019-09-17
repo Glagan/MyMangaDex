@@ -10,6 +10,7 @@
     transition: opacity .2s ease-in;
     color: #fff;
     z-index: 9999;
+    pointer-events: none
 }
 .mmd-tooltip.loading {
     font-size: 1rem;
@@ -20,7 +21,6 @@
 }
 .mmd-tooltip .mmd-thumbnail {
     max-width: 100%;
-    user-select: none;
     display: block;
 }
 .mmd-tooltip .mmd-thumbnail.loading {
