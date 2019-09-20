@@ -33,6 +33,7 @@ let defaultOptions = {
     updateMDList: false,
     showTooltips: true,
     showFullCover: false,
+    coverMaxHeight: 80,
     highlightChapters: true,
     showNotifications: true,
     showErrors: true,
@@ -42,5 +43,5 @@ let defaultOptions = {
     isLoggedIn: false,
     token: "",
     version: 2.3,
-    subVersion: 3
+    subVersion: 4
 };

@@ -346,7 +346,19 @@ class OptionsManager {
                 if ("type" in element.dataset && element.dataset.type == "checkbox") {
                     this.options[element.dataset.option] = (element.dataset.value == "true");
                 } else {
-                    this.options[element.dataset.option] = element.value;
+                    if (element.dataset.type == "number") {
+                        let value = Math.floor(element.value);
+                        if (element.min != "" && Math.floor(element.min) > value) {
+                            value = Math.floor(element.min);
+                            element.value = value;
+                        } else if (element.max != "" && Math.floor(element.max) < value) {
+                            value = Math.floor(element.max);
+                            element.value = value;
+                        }
+                        this.options[element.dataset.option] = value;
+                    } else {
+                        this.options[element.dataset.option] = element.value;
+                    }
                 }
             });
             // Save
@@ -1123,14 +1135,14 @@ class OptionsManager {
         };
 
         // Build titles list
-        let titles = await storageGet(null);
-        Object.keys(titles).forEach(key => {
+        let _local = await storageGet(null);
+        Object.keys(_local).forEach(key => {
             if (key == "options" || key == "history") return;
-            body.titles[key] = titles[key];
+            body.titles[key] = _local[key];
         });
         // History
         if (this.options.updateHistoryPage) {
-            let history = await storageGet("history");
+            let history = _local.history;
             if (history) {
                 body.history.list = history.list;
                 Object.keys(history).forEach(id => {
@@ -1386,7 +1398,7 @@ class OptionsManager {
                     body.history[title.md_id] = {
                         name: title.name,
                         id: title.md_id,
-                        progress: parseFloat(title.progress),
+                        progress: title.progress,
                         chapter: Math.floor(title.chapter)
                     };
                 });

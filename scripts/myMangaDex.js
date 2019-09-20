@@ -332,23 +332,27 @@ class MyMangaDex {
             tooltip: tooltip.getBoundingClientRect(),
             row: row.getBoundingClientRect()
         };
+        if (tooltip.childElementCount == 2) {
+            let chapterRect = tooltip.lastElementChild.getBoundingClientRect();
+            tooltip.firstElementChild.style.maxHeight = [(window.innerHeight - 10) * (this.options.coverMaxHeight / 100) - chapterRect.height, "px"].join("");
+        }
         // Calculate to place on the left of the main column by default
         let left = Math.max(5, rect.row.x - rect.tooltip.width - 5);
         let maxWidth = rect.row.left - 10;
         // Boundaries
-        if (rect.row.left < 200) {
+        if ((this.options.showFullCover && rect.row.left < 400) || rect.row.left < 100) {
             if (rightColumn) {
-                rect.lastChild = row.lastElementChild.getBoundingClientRect()
-                maxWidth = (rect.lastChild.left - 10) * 0.6;
+                rect.lastChild = row.lastElementChild.getBoundingClientRect();
+                maxWidth = (rect.lastChild.left - 10);
             } else {
                 rect.firstChild = row.firstElementChild.getBoundingClientRect();
-                maxWidth = (document.body.clientWidth - 10) * 0.25;
+                maxWidth = (document.body.clientWidth - 10);
             }
         }
         tooltip.style.maxWidth = [maxWidth, "px"].join("");
         // X axis
         setTimeout(() => {
-            if (rect.row.left < 200) {
+            if ((this.options.showFullCover && rect.row.left < 400) || rect.row.left < 100) {
                 if (rightColumn) {
                     left = (rect.lastChild.left - 5) - Math.min(maxWidth, rect.tooltip.width);
                 } else {
@@ -373,7 +377,7 @@ class MyMangaDex {
         let tooltip = document.createElement("div");
         tooltip.className = "mmd-tooltip loading";
         tooltip.style.left = "-5000px";
-        tooltip.style.maxHeight = [(window.innerHeight - 10) * 0.8, "px"].join("");
+        tooltip.style.maxHeight = [(window.innerHeight - 10) * (this.options.coverMaxHeight / 100), "px"].join("");
         let spinner = document.createElement("i");
         spinner.className = "fas fa-circle-notch fa-spin";
         tooltip.appendChild(spinner);
@@ -381,6 +385,7 @@ class MyMangaDex {
         // Thumbnail
         let tooltipThumb = document.createElement("img");
         tooltipThumb.className = "mmd-thumbnail loading";
+        tooltipThumb.style.maxHeight = [(window.innerHeight - 10) * (this.options.coverMaxHeight / 100), "px"].join("");
         tooltip.appendChild(tooltipThumb);
 
         // Append the chapters if there is
