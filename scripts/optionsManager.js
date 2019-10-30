@@ -621,7 +621,7 @@ class OptionsManager {
             };
             // Scan the manga page for the mal icon and mal url
             let mangaName = content.querySelector("h6.card-header").textContent.trim();
-            let myAnimeListURL = content.querySelector("img[src='/images/misc/mal.png'");
+            let myAnimeListURL = content.querySelector("img[src$='/mal.png']");
             if (myAnimeListURL !== null) {
                 myAnimeListURL = myAnimeListURL.nextElementSibling;
                 manga.myAnimeListId = parseInt(/https:\/\/myanimelist\.net\/manga\/(\d+)/.exec(myAnimeListURL.href)[1]);
@@ -739,7 +739,7 @@ class OptionsManager {
                         chapters: []
                     };
                     // Scan the manga page for the mal icon and mal url
-                    let myAnimeListURL = content.querySelector("img[src='/images/misc/mal.png'");
+                    let myAnimeListURL = content.querySelector("img[src$='/mal.png']");
                     if (myAnimeListURL !== null) {
                         myAnimeListURL = myAnimeListURL.nextElementSibling;
                         current.mal = parseInt(/https:\/\/myanimelist\.net\/manga\/(\d+)/.exec(myAnimeListURL.href)[1]);
