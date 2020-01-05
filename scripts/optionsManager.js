@@ -546,7 +546,7 @@ class OptionsManager {
         try {
             let response = await browser.runtime.sendMessage({
                 action: "fetch",
-                url: "https://mangadex.org/follows/manga/" + type + "/0/" + page + "/",
+                url: [domain, "follows/manga/", type, "/0/", page, "/"].join(''),
                 options: {
                     method: "GET",
                     redirect: "follow",
@@ -601,7 +601,7 @@ class OptionsManager {
         try {
             let response = await browser.runtime.sendMessage({
                 action: "fetch",
-                url: "https://mangadex.org/title/" + this.mangaDexMangaList[index],
+                url: [domain, "title/", this.mangaDexMangaList[index]].join(''),
                 options: {
                     method: "GET",
                     cache: "no-cache"
@@ -725,7 +725,7 @@ class OptionsManager {
                     this.logAndScroll(LOG.INFO, "Trying to find a MyAnimeList id for #" + this.mangaDexMangaList[i]);
                     let response = await browser.runtime.sendMessage({
                         action: "fetch",
-                        url: "https://mangadex.org/title/" + this.mangaDexMangaList[i],
+                        url: [domain, "title/", this.mangaDexMangaList[i]].join(''),
                         options: {
                             method: "GET",
                             cache: "no-cache"

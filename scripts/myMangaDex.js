@@ -16,33 +16,52 @@ class MyMangaDex {
         this.fetched = false;
         this.myAnimeListImage = "https://ramune.nikurasu.org/mymangadex/myanimelist.png";
         this.mmdImage = "https://ramune.nikurasu.org/mymangadex/128.png";
-        this.mmdCrossedImage = "https://ramune.nikurasu.org/mymangadex/128b.png";
+		this.mmdCrossedImage = "https://ramune.nikurasu.org/mymangadex/128b.png";
     }
 
     async start() {
-        this.options = await loadOptions();
+		this.options = await loadOptions();
+		let urls = {
+			follows: "follows",
+			group: "group",
+			user: "user",
+			search: "search",
+			oldSearch: "?page=search",
+			oldTitles: "?page=titles",
+			featured: "featured",
+			titles: "titles",
+			genre: "genre",
+			list: "list",
+			title: "title",
+			chapter: "chapter",
+			history: "history",
+			manga: "manga"
+		};
+		Object.keys(urls).forEach(key => {
+			urls[key] = [domainName, urls[key]].join('/');
+		});
 
         // Choose page
-        if ((this.pageUrl.indexOf("org/follows") > -1 && this.pageUrl.indexOf("/manga/") == -1) ||
-            (this.pageUrl.indexOf("org/group") > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || (this.pageUrl.indexOf("/manga/") == -1 && this.pageUrl.indexOf("/comments/") == -1))) ||
-            (this.pageUrl.indexOf("org/user") > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || this.pageUrl.indexOf("/manga/") == -1))) {
+        if ((this.pageUrl.indexOf(urls.follows) > -1 && this.pageUrl.indexOf("/manga/") == -1) ||
+            (this.pageUrl.indexOf(urls.group) > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || (this.pageUrl.indexOf("/manga/") == -1 && this.pageUrl.indexOf("/comments/") == -1))) ||
+            (this.pageUrl.indexOf(urls.user) > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || this.pageUrl.indexOf("/manga/") == -1))) {
             this.chapterListPage();
-        } else if (this.pageUrl.indexOf("org/search") > -1 ||
-            this.pageUrl.indexOf("org/?page=search") > -1 ||
-            this.pageUrl.indexOf("org/?page=titles") > -1 ||
-            this.pageUrl.indexOf("org/featured") > -1 ||
-            this.pageUrl.indexOf("org/titles") > -1 ||
-            this.pageUrl.indexOf("org/genre") > -1 ||
-            this.pageUrl.indexOf("org/list") > -1 ||
-            (this.pageUrl.indexOf("org/follows") > -1 && this.pageUrl.indexOf("/manga/") > -1) ||
-            (this.pageUrl.indexOf("org/group") > -1 && this.pageUrl.indexOf("/manga/") > -1) ||
-            (this.pageUrl.indexOf("org/user") > -1 && this.pageUrl.indexOf("/manga/") > -1)) {
+        } else if (this.pageUrl.indexOf(urls.search) > -1 ||
+            this.pageUrl.indexOf(urls.oldSearch) > -1 ||
+            this.pageUrl.indexOf(urls.oldTitles) > -1 ||
+            this.pageUrl.indexOf(urls.featured) > -1 ||
+            this.pageUrl.indexOf(urls.titles) > -1 ||
+			this.pageUrl.indexOf(urls.genre) > -1 ||
+            this.pageUrl.indexOf(urls.list) > -1 ||
+            (this.pageUrl.indexOf(urls.follows) > -1 && this.pageUrl.indexOf("/manga/") > -1) ||
+            (this.pageUrl.indexOf(urls.group) > -1 && this.pageUrl.indexOf("/manga/") > -1) ||
+            (this.pageUrl.indexOf(urls.user) > -1 && this.pageUrl.indexOf("/manga/") > -1)) {
             this.titlesListPage();
-        } else if (this.pageUrl.indexOf("org/title") > -1 || this.pageUrl.indexOf("org/manga") > -1) {
+        } else if (this.pageUrl.indexOf(urls.title) > -1 || this.pageUrl.indexOf(urls.manga) > -1) {
             this.titlePage();
-        } else if (this.pageUrl.indexOf("org/chapter") > -1) {
+        } else if (this.pageUrl.indexOf(urls.chapter) > -1) {
             this.singleChapterPage();
-        } else if (this.pageUrl.indexOf("org/history") > -1) {
+        } else if (this.pageUrl.indexOf(urls.history) > -1) {
             this.historyPage();
         }
     }
@@ -119,7 +138,7 @@ class MyMangaDex {
                     if (this.options.confirmChapter) {
                         SimpleNotification.info({
                             title: "Not updated",
-                            image: "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg",
+                            image: this.getCurrentThumbnail(),
                             text: "Last read chapter on MyAnimelist is higher or equal to the current chapter and wasn't updated.\nYou can update it anyway or ignore this notification.",
                             buttons: [{
                                 value: "Update", type: "success",
@@ -135,7 +154,7 @@ class MyMangaDex {
                             }]
                         }, { position: "bottom-left", closeOnClick: false, duration: 10000 });
                     } else {
-                        this.notification(NOTIFY.INFO, "Not updated", "Last read chapter on MyAnimelist is higher or equal to the current chapter and wasn't updated.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                        this.notification(NOTIFY.INFO, "Not updated", "Last read chapter on MyAnimelist is higher or equal to the current chapter and wasn't updated.", this.getCurrentThumbnail());
                     }
                     return;
                 }
@@ -148,7 +167,7 @@ class MyMangaDex {
                     if (this.options.confirmChapter) {
                         SimpleNotification.info({
                             title: "Not updated",
-                            image: "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg",
+                            image: this.getCurrentThumbnail(),
                             text: "The current chapter is not the next one and it wasn't updated on **MyAnimelist**.\nYou can update it anyway or ignore this notification.",
                             buttons: [{
                                 value: "Update", type: "success",
@@ -164,7 +183,7 @@ class MyMangaDex {
                             }]
                         }, { position: "bottom-left", closeOnClick: false, sticky: true });
                     } else {
-                        this.notification(NOTIFY.INFO, "Not updated", "The current chapter is not the next one and it wasn't updated on **MyAnimelist**.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                        this.notification(NOTIFY.INFO, "Not updated", "The current chapter is not the next one and it wasn't updated on **MyAnimelist**.", this.getCurrentThumbnail());
                     }
                     return;
                 }
@@ -193,26 +212,26 @@ class MyMangaDex {
 
                 if (usePepper) {
                     if (this.manga.status == 6) {
-                        this.notification(NOTIFY.SUCCESS, "Plan to Read", "**" + this.manga.name + "** has been put in your endless Plan to read list !", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                        this.notification(NOTIFY.SUCCESS, "Plan to Read", "**" + this.manga.name + "** has been put in your endless Plan to read list !", this.getCurrentThumbnail());
                     } else {
                         if ("started" in this.manga) {
                             delete this.manga.started;
                             if ("start_today" in this.manga) {
                                 delete this.manga.start_today;
-                                this.notification(NOTIFY.SUCCESS, "Started manga", "You started reading **" + this.manga.name + "** and it's start date was set to today.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                                this.notification(NOTIFY.SUCCESS, "Started manga", "You started reading **" + this.manga.name + "** and it's start date was set to today.", this.getCurrentThumbnail());
                             } else {
-                                this.notification(NOTIFY.SUCCESS, "Manga updated", "You started reading **" + this.manga.name + "** at chapter " + this.manga.lastMyAnimeListChapter, "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                                this.notification(NOTIFY.SUCCESS, "Manga updated", "You started reading **" + this.manga.name + "** at chapter " + this.manga.lastMyAnimeListChapter, this.getCurrentThumbnail());
                             }
                         } else if (this.manga.lastMyAnimeListChapter > 0 &&
                                 (this.manga.status != 2 || (this.manga.status == 2 && this.manga.is_rereading) || oldStatus == 2)) {
-                            this.notification(NOTIFY.SUCCESS, "Manga updated", "**" + this.manga.name + "** has been updated to chapter " + this.manga.lastMyAnimeListChapter + ((this.manga.total_chapter > 0) ? " out of " + this.manga.total_chapter : ""), "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                            this.notification(NOTIFY.SUCCESS, "Manga updated", "**" + this.manga.name + "** has been updated to chapter " + this.manga.lastMyAnimeListChapter + ((this.manga.total_chapter > 0) ? " out of " + this.manga.total_chapter : ""), this.getCurrentThumbnail());
                         }
                         if (oldStatus != 2 && this.manga.status == 2 && !this.manga.is_rereading) {
                             if ("end_today" in this.manga) {
                                 delete this.manga.end_today;
-                                this.notification(NOTIFY.SUCCESS, "Manga completed", "You completed **" + this.manga.name + "** and it's finish date was set to today.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                                this.notification(NOTIFY.SUCCESS, "Manga completed", "You completed **" + this.manga.name + "** and it's finish date was set to today.", this.getCurrentThumbnail());
                             } else {
-                                this.notification(NOTIFY.SUCCESS, "Manga updated", "**" + this.manga.name + "** was set as completed.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                                this.notification(NOTIFY.SUCCESS, "Manga updated", "**" + this.manga.name + "** was set as completed.", this.getCurrentThumbnail());
                             }
                         }
                     }
@@ -271,7 +290,7 @@ class MyMangaDex {
         try {
             await browser.runtime.sendMessage({
                 action: "fetch",
-                url: "https://mangadex.org/ajax/actions.ajax.php?function=" + func + "&id=" + this.manga.mangaDexId + "&type=" + type + "&_=" + time,
+                url: [domain, "ajax/actions.ajax.php?function=", func, "&id=", this.manga.mangaDexId, "&type=", type, "&_=", time].join(''),
                 options: {
                     method: "GET",
                     redirect: "follow",
@@ -421,7 +440,7 @@ class MyMangaDex {
             if (this.options.showFullCover) {
                 let tryNumber = Math.floor(tooltipThumb.dataset.ext);
                 if (Math.floor(tooltipThumb.dataset.ext) < extensions.length) {
-                    tooltipThumb.src = ["https://mangadex.org/images/manga/", id, ".", extensions[tryNumber]].join('');
+                    tooltipThumb.src = [domain, "images/manga/", id, ".", extensions[tryNumber]].join('');
                     tooltipThumb.dataset.ext = tryNumber + 1;
                 } else {
                     tooltipThumb.src = '';
@@ -440,10 +459,10 @@ class MyMangaDex {
                 node.dataset.loading = true;
                 // Will trigger 'load' event
                 if (this.options.showFullCover) {
-                    tooltipThumb.src = "https://mangadex.org/images/manga/" + id + ".jpg";
+                    tooltipThumb.src = [domain, "images/manga/", id, ".jpg"].join('');
                     tooltipThumb.dataset.ext = 1;
                 } else {
-                    tooltipThumb.src = "https://mangadex.org/images/manga/" + id + ".thumb.jpg";
+					tooltipThumb.src = [domain, "images/manga/", id, ".thumb.jpg"].join('');
                 }
             }
             this.updateTooltipPosition(tooltip, node);
@@ -849,7 +868,7 @@ class MyMangaDex {
 
                 await this.updateManga(false);
                 this.insertMyAnimeListInformations();
-                this.notification(NOTIFY.SUCCESS, "Re-reading", "You started re-reading **" + this.manga.name + "**", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                this.notification(NOTIFY.SUCCESS, "Re-reading", "You started re-reading **" + this.manga.name + "**", this.getCurrentThumbnail());
                 // Update MangaDex to *Reading*
                 if (this.options.updateMDList) {
                     this.mangaDexStatus = "Re-reading";
@@ -904,7 +923,7 @@ class MyMangaDex {
             // Fetch it from mangadex manga page
             let data = await browser.runtime.sendMessage({
                 action: "fetch",
-                url: "https://mangadex.org/title/" + this.manga.mangaDexId,
+                url: [domain, "title/", this.manga.mangaDexId].join(''),
                 options: {
                     method: "GET",
                     cache: "no-cache"
@@ -1111,7 +1130,11 @@ class MyMangaDex {
         container.appendChild(informationsContainer);
         frag.appendChild(container);
         return frag;
-    }
+	}
+
+	getCurrentThumbnail() {
+		return [domain, "images/manga/", this.manga.mangaDexId, ".thumb.jpg"].join('');
+	}
 
     // END HELP / START PAGE
 
@@ -1416,7 +1439,7 @@ class MyMangaDex {
                     SimpleNotification.info({
                         title: "Not in list",
                         text: "The title is not in your **MangaDex** reading list and wasn't updated, but you can still update it.",
-                        image: "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg",
+                        image: this.getCurrentThumbnail(),
                         buttons: [{
                             value: "Update", type: "success",
                             onClick: async n => {
@@ -1434,7 +1457,7 @@ class MyMangaDex {
                 if (oldChapter) {
                     this.manga.currentChapter = oldChapter;
                 }
-                this.notification(NOTIFY.ERROR, "Chapter Delayed", "The chapter was not updated and saved since it is delayed on MangaDex.", "https://mangadex.org/images/manga/" + this.manga.mangaDexId + ".thumb.jpg");
+                this.notification(NOTIFY.ERROR, "Chapter Delayed", "The chapter was not updated and saved since it is delayed on MangaDex.", this.getCurrentThumbnail());
             }
         };
 

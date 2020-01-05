@@ -141,7 +141,7 @@ async function loadOptions() {
         if ((data.version != defaultOptions.version) ||
             (data.version == defaultOptions.version && data.subVersion != defaultOptions.subVersion)) {
             // Fix history wrong progress
-            let history = await storageGet("history");
+            /*let history = await storageGet("history");
             if (history) {
                 Object.keys(history).forEach(md_id => {
                     if (md_id == 'list') return;
@@ -164,7 +164,7 @@ async function loadOptions() {
             } else {
                 history = { list: [] };
             }
-            await storageSet("history", history);
+			await storageSet("history", history);*/
             data.version = defaultOptions.version;
             data.subVersion = defaultOptions.subVersion;
             fixed = true;
@@ -191,8 +191,8 @@ async function updateLocalStorage(manga, options) {
     if (options.showNotifications && manga.myAnimeListId == 0 && manga.currentChapter.chapter > manga.lastMangaDexChapter) {
         SimpleNotification.success({
             title: "Manga updated",
-            image: "https://mangadex.org/images/manga/" + manga.mangaDexId + ".thumb.jpg",
-            text: manga.name + " last open Chapter as been updated to " + manga.lastMangaDexChapter,
+            image: [domain, "images/manga/", manga.mangaDexId, ".thumb.jpg"].join(''),
+            text: [manga.name, " last open Chapter as been updated to ", manga.lastMangaDexChapter].join(''),
         }, { position: "bottom-left" });
     }
     // Update online
