@@ -912,7 +912,7 @@ class MyMangaDex {
         let data = await storageGet(this.manga.mangaDexId);
         // If there is no entry for mal link
         if (data === undefined) {
-            this.notification(NOTIFY.INFO, "No MyAnimeList ID", "Searching on the manga page of **" + this.manga.name + "** to find a MyAnimeList id.", this.mmdImage);
+            this.notification(NOTIFY.INFO, "Searching MAL ID", "Searching on the manga page of **" + this.manga.name + "** to find a MyAnimeList id.", this.mmdImage);
         } else {
             // Get the mal id from the local storage
             this.manga.myAnimeListId = data.mal;

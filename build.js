@@ -12,7 +12,7 @@ const [,, ...args] = process.argv;
 let manifest = {
     manifest_version: 2,
     name: "MyMangaDex",
-    version: "2.3.7",
+    version: "2.3.8",
     author: "Glagan",
 
     description: "Automatically update your MyAnimeList manga list when reading on MangaDex.",

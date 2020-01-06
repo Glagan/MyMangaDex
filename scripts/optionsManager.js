@@ -1,7 +1,3 @@
-/**
- * Author: Glagan
- * See <https://github.com/Glagan/MyMangaDex> for more informations
- */
 const LOG = {INFO: "info", DANGER: "danger", WARNING: "warning", SUCCESS: "success"};
 class OptionsManager {
     constructor() {
@@ -31,7 +27,7 @@ class OptionsManager {
         this.onlineForm = document.getElementById("onlineForm");
         this.onlineError = document.getElementById("onlineError");
         this.onlineSuccess = document.getElementById("onlineSuccess");
-        this.downloadOnlineButton = document.getElementById("downloadOnline");
+		this.downloadOnlineButton = document.getElementById("downloadOnline");
 
         // Only Chrome users can update the online save
         if (CHROME) {
@@ -395,7 +391,18 @@ class OptionsManager {
             console.error(error);
             this.flashBackground(false);
         }
-    }
+	}
+
+	async setDomain() {
+		if (!this.domain) {
+			let resp = await fetch("https://mangadex.cc/about");
+			if (resp.ok) {
+				this.domain = "https://mangadex.cc/";
+			} else {
+				this.domain = "https://mangadex.org/";
+			}
+		}
+	}
 
     // END FUNCTIONS / START IMPORT EXPORT
 
@@ -542,11 +549,11 @@ class OptionsManager {
 
     async listMangaDex(page = 1, max_page = 1, type = 0) {
         this.logAndScroll(LOG.INFO, "Fetching MangaDex follow page manga " + page + ((max_page > 1) ? " of " + max_page : ""));
-
+		await this.setDomain();
         try {
             let response = await browser.runtime.sendMessage({
                 action: "fetch",
-                url: [domain, "follows/manga/", type, "/0/", page, "/"].join(''),
+                url: [this.domain, "follows/manga/", type, "/0/", page, "/"].join(''),
                 options: {
                     method: "GET",
                     redirect: "follow",
@@ -597,11 +604,11 @@ class OptionsManager {
                 resolve();
             }, 500);
         });
-
+		await this.setDomain();
         try {
             let response = await browser.runtime.sendMessage({
                 action: "fetch",
-                url: [domain, "title/", this.mangaDexMangaList[index]].join(''),
+                url: [this.domain, "title/", this.mangaDexMangaList[index]].join(''),
                 options: {
                     method: "GET",
                     cache: "no-cache"
@@ -687,8 +694,9 @@ class OptionsManager {
         this.logOutput = this.exportOutput;
         this.logOutput.style.display = "block";
         clearDomNode(this.logOutput);
-        this.logAndScroll(LOG.INFO, "Starting... don't close the options page.");
+		this.logAndScroll(LOG.INFO, "Starting... don't close the options page.");
 
+		await this.setDomain();
         // Do the same process for every status
         for (let s = 1; s <= 6; s++) {
             await new Promise(resolve => {
@@ -725,7 +733,7 @@ class OptionsManager {
                     this.logAndScroll(LOG.INFO, "Trying to find a MyAnimeList id for #" + this.mangaDexMangaList[i]);
                     let response = await browser.runtime.sendMessage({
                         action: "fetch",
-                        url: [domain, "title/", this.mangaDexMangaList[i]].join(''),
+                        url: [this.domain, "title/", this.mangaDexMangaList[i]].join(''),
                         options: {
                             method: "GET",
                             cache: "no-cache"
