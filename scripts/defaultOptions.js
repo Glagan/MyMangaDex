@@ -46,5 +46,5 @@ let defaultOptions = {
     isLoggedIn: false,
     token: "",
     version: 2.3,
-    subVersion: 8
+    subVersion: 9
 };
