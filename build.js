@@ -12,14 +12,14 @@ const [,, ...args] = process.argv;
 let manifest = {
     manifest_version: 2,
     name: "MyMangaDex",
-    version: "2.3.9",
+    version: "2.3.10",
     author: "Glagan",
 
     description: "Automatically update your MyAnimeList manga list when reading on MangaDex.",
 
     permissions: [
         "https://*.myanimelist.net/*",
-        "https://*.mangadex.cc/*",
+        //"https://*.mangadex.cc/*",
         "https://*.mangadex.org/*",
         "*://*.nikurasu.org/api/*",
         "storage"
@@ -58,7 +58,7 @@ let manifest = {
             "https://*.mangadex.org/user*",
             "https://*.mangadex.org/list*",
             "https://*.mangadex.org/history",
-            "https://*.mangadex.cc/follows",
+            /*"https://*.mangadex.cc/follows",
             "https://*.mangadex.cc/follows/manga/0/0/*",
             "https://*.mangadex.cc/follows/chapters/*",
             "https://*.mangadex.cc/manga*",
@@ -73,7 +73,7 @@ let manifest = {
             "https://*.mangadex.cc/genre*",
             "https://*.mangadex.cc/user*",
             "https://*.mangadex.cc/list*",
-            "https://*.mangadex.cc/history"
+            "https://*.mangadex.cc/history"*/
         ],
         js: [
             "scripts/MyMangaDex.js"

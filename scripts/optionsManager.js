@@ -395,12 +395,13 @@ class OptionsManager {
 
 	async setDomain() {
 		if (!this.domain) {
-			let resp = await fetch("https://mangadex.cc/about");
+			this.domain = 'https://mangadex.org/';
+			/*let resp = await fetch("https://mangadex.cc/about");
 			if (resp.ok) {
 				this.domain = "https://mangadex.cc/";
 			} else {
 				this.domain = "https://mangadex.org/";
-			}
+			}*/
 		}
 	}
 

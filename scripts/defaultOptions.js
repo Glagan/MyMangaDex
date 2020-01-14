@@ -8,7 +8,7 @@ window.browser = (function () {
         window.chrome;
 })();
 let domainName = window.location.hostname.split('.')[1] || 'org';
-let domain = [window.location.origin, '/'].join('') || 'https://mangadex.org/';
+let domain = 'https://mangadex.org/'; // [window.location.origin, '/'].join('')
 
 // Object containing all options
 // Is initialized with the default options
@@ -46,5 +46,5 @@ let defaultOptions = {
     isLoggedIn: false,
     token: "",
     version: 2.3,
-    subVersion: 9
+    subVersion: 10
 };
