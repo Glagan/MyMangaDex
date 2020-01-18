@@ -25,6 +25,7 @@ let defaultOptions = {
     openedChaptersColor: "rgba(28, 135, 141, 0.4)",
     hideLowerChapters: true,
     hideHigherChapters: false,
+	hideLastRead: false,
     saveOnlyHigher: true,
     saveOnlyNext: false,
     confirmChapter: true,

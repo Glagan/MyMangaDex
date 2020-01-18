@@ -169,7 +169,7 @@ async function loadOptions() {
 				SimpleNotification.info({
 					title: "Update 2.3.11",
 					image: mmdImage,
-					text: "Version **2.3.11** has been released, it should fix weird things with Ch.0/Oneshot.\nIf something else is now bugged because of that please report it."
+					text: "Version **2.3.11** has been released, it should fix weird things with Ch.0/Oneshot.\nIf something else is now bugged because of that please report it.\nYou can also hide the Last Read chapter in lists."
 				}, { sticky: true, position: "bottom-left" });
 			}
             data.version = defaultOptions.version;

@@ -502,7 +502,6 @@ class MyMangaDex {
 		let chaptersList = Array.from(document.querySelector(".chapter-container").children).reverse();
 
         // Get the name of each "chapters" in the list - ignore first line
-		let zeroedChapter = Math.max(this.manga.lastMyAnimeListChapter, 0);
 		let hasChapterZero = false;
         for (let i = 0; i < chaptersList.length - 1; i++) {
             let element = chaptersList[i];
@@ -1028,6 +1027,7 @@ class MyMangaDex {
                     };
                 }
 				let chapter = this.getVolumeChapterFromNode(chapterRow);
+				chapter.value = chapter.chapter;
 				chapter.node = nodes[i];
 				currentGroup.chapters.push(chapter);
             }
@@ -1168,12 +1168,14 @@ class MyMangaDex {
                 // If there is data
                 if (titleInformations[group.titleId]) {
                     let chapterCount = group.chapters.length;
+					let highestChapter = Math.max.apply(Math, group.chapters.map(e => { return e.value; }));
                     for (let j = 0; j < chapterCount; j++) {
-                        let chapter = group.chapters[j];
+						let chapter = group.chapters[j];
                         if ((this.options.hideHigherChapters &&
-                            titleInformations[group.titleId].last < chapter.value &&
-                            chapter.value >= Math.floor(titleInformations[group.titleId].last) + 2) ||
-                            this.options.hideLowerChapters && titleInformations[group.titleId].last > chapter.value) {
+								titleInformations[group.titleId].last < chapter.value &&
+								chapter.value >= Math.floor(titleInformations[group.titleId].last) + 2)
+							|| (this.options.hideLowerChapters && titleInformations[group.titleId].last > chapter.value)
+							|| (this.options.hideLastRead && chapter.value == highestChapter && titleInformations[group.titleId].last == chapter.value)) {
                             chapter.node.classList.add("is-hidden-chapter");
                             chapter.hidden = true;
                         }
@@ -1255,7 +1257,7 @@ class MyMangaDex {
                         let chapter = group.chapters[j];
                         chapter.node.classList.add("has-fast-in-transition");
                         if (titleInformations[group.titleId].last < chapter.value &&
-                            chapter.value < Math.floor(titleInformations[group.titleId].last) + 2) {
+							chapter.value < Math.floor(titleInformations[group.titleId].last) + 2) {
                             paintRow(chapter.node, this.options.nextChapterColor);
                             group.selected = j;
                             outerColor = this.options.nextChapterColor;
