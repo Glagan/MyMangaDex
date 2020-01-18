@@ -165,6 +165,13 @@ async function loadOptions() {
                 history = { list: [] };
             }
 			await storageSet("history", history);*/
+			if (data.version == 2.3 && data.subVersion == 10) {
+				SimpleNotification.info({
+					title: "Update 2.3.11",
+					image: mmdImage,
+					text: "Version **2.3.11** has been released, it should fix weird things with Ch.0/Oneshot.\nIf something else is now bugged because of that please report it."
+				}, { sticky: true, position: "bottom-left" });
+			}
             data.version = defaultOptions.version;
             data.subVersion = defaultOptions.subVersion;
             fixed = true;
@@ -280,7 +287,7 @@ function processMyAnimeListResponse(manga, text) {
     manga.ask_to_discuss = (manga.ask_to_discuss === null) ? 0 : parseInt(manga.ask_to_discuss[1]);
     // Last read chapter
     manga.lastMyAnimeListChapter = /add_manga_num_read_chapters.+value="(\d+)?"/.exec(text);
-    manga.lastMyAnimeListChapter = (manga.lastMyAnimeListChapter === null) ? 0 : parseInt(manga.lastMyAnimeListChapter[1]);
+    manga.lastMyAnimeListChapter = (manga.lastMyAnimeListChapter === null) ? -1 : parseInt(manga.lastMyAnimeListChapter[1]);
     // Total times re-read
     manga.total_reread = /add_manga_num_read_times.+value="(\d+)?"/.exec(text);
     manga.total_reread = (manga.total_reread === null) ? 0 : parseInt(manga.total_reread[1]);

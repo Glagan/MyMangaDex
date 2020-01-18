@@ -7,7 +7,7 @@ class MyMangaDex {
         this.manga = {
             name: "",
             myAnimeListId: 0,
-            lastMangaDexChapter: 0,
+            lastMangaDexChapter: -1,
             mangaDexId: 0,
             chapterId: 0,
             chapters: [],
@@ -133,7 +133,7 @@ class MyMangaDex {
                 // If the current chapter is higher than the last read one
                 // Use Math.floor on the current chapter to avoid updating even tough it's the same if this is a sub chapter
                 let realChapter = Math.floor(this.manga.currentChapter.chapter);
-                let isHigher = (realChapter == 0 || realChapter > this.manga.lastMyAnimeListChapter);
+                let isHigher = (realChapter < 0 || realChapter > this.manga.lastMyAnimeListChapter);
                 if (!force && usePepper && !isHigher && (this.options.saveOnlyHigher || realChapter == this.manga.lastMyAnimeListChapter)) {
                     if (this.options.confirmChapter) {
                         SimpleNotification.info({
@@ -159,7 +159,7 @@ class MyMangaDex {
                     return;
                 }
 
-                let isNext = (realChapter == 0 ||
+                let isNext = (realChapter < 0 ||
                     realChapter == this.manga.lastMyAnimeListChapter ||
                     (realChapter == this.manga.lastMyAnimeListChapter+1 ||
                     (!this.options.saveOnlyHigher && realChapter == this.manga.lastMyAnimeListChapter-1)));
@@ -222,7 +222,7 @@ class MyMangaDex {
                             } else {
                                 this.notification(NOTIFY.SUCCESS, "Manga updated", "You started reading **" + this.manga.name + "** at chapter " + this.manga.lastMyAnimeListChapter, this.getCurrentThumbnail());
                             }
-                        } else if (this.manga.lastMyAnimeListChapter > 0 &&
+                        } else if (this.manga.lastMyAnimeListChapter >= 0 &&
                                 (this.manga.status != 2 || (this.manga.status == 2 && this.manga.is_rereading) || oldStatus == 2)) {
                             this.notification(NOTIFY.SUCCESS, "Manga updated", "**" + this.manga.name + "** has been updated to chapter " + this.manga.lastMyAnimeListChapter + ((this.manga.total_chapter > 0) ? " out of " + this.manga.total_chapter : ""), this.getCurrentThumbnail());
                         }
@@ -308,7 +308,7 @@ class MyMangaDex {
     }
 
     getVolumeChapterFromNode(node) {
-        let chapter = node.getAttribute("data-chapter");
+        let chapter = node.dataset.chapter;
 
         // If it's a Oneshot or just attributes are empty, we use a regex on the title
         if (chapter == "") {
@@ -316,9 +316,10 @@ class MyMangaDex {
             return this.getVolumeChapterFromString(node.children[1].textContent);
         }
 
+		chapter = parseFloat(chapter);
         return {
-            volume: Math.floor(node.getAttribute("data-volume")) || 0,
-            chapter: parseFloat(chapter) || 1
+            volume: Math.floor(node.dataset.volume) || 0,
+            chapter: (isNaN(chapter) ? 0 : chapter)
         };
     }
 
@@ -328,12 +329,13 @@ class MyMangaDex {
 
         // If it's a Oneshot
         if (regexResult == null) {
-            regexResult = [0, 0, 1, undefined];
+            regexResult = [0, 0, 0, undefined];
         }
 
+		let chapter = parseFloat(regexResult[2]);
         return {
             volume: Math.floor(regexResult[1]) || 0,
-            chapter: parseFloat(regexResult[2])
+            chapter: (isNaN(chapter) ? 0 : chapter)
         };
     }
 
@@ -497,16 +499,23 @@ class MyMangaDex {
     highlightChapters() {
         if (!this.options.highlightChapters) return;
         // Chapters list displayed
-        let chaptersList = document.querySelector(".chapter-container").children;
+		let chaptersList = Array.from(document.querySelector(".chapter-container").children).reverse();
 
         // Get the name of each "chapters" in the list - ignore first line
-        for (let i = 1; i < chaptersList.length; i++) {
+		let zeroedChapter = Math.max(this.manga.lastMyAnimeListChapter, 0);
+		let hasChapterZero = false;
+        for (let i = 0; i < chaptersList.length - 1; i++) {
             let element = chaptersList[i];
             let chapterVolume = this.getVolumeChapterFromNode(element.firstElementChild.firstElementChild);
+			chapterVolume.chapterFloored = Math.floor(chapterVolume.chapter);
 
-            if (Math.floor(this.manga.lastMyAnimeListChapter) + 1 == Math.floor(chapterVolume.chapter)) {
+			if (chapterVolume.chapter == 0) {
+				hasChapterZero = true;
+			}
+			if ((!hasChapterZero && this.manga.lastMyAnimeListChapter == -1 && this.manga.lastMyAnimeListChapter + 2 == chapterVolume.chapterFloored)
+				|| this.manga.lastMyAnimeListChapter + 1 == chapterVolume.chapterFloored) {
                 element.style.backgroundColor = this.options.nextChapterColor;
-            } else if (this.manga.lastMyAnimeListChapter == Math.floor(chapterVolume.chapter)) {
+            } else if (this.manga.lastMyAnimeListChapter == chapterVolume.chapterFloored) {
                 element.style.backgroundColor = this.options.lastReadColor;
             } else if (this.manga.lastMangaDexChapter == chapterVolume.chapter) {
                 element.style.backgroundColor = this.options.lastOpenColors[0];
@@ -1018,14 +1027,9 @@ class MyMangaDex {
                         chapters: [],
                     };
                 }
-                let chapter = {
-                    value: parseFloat(chapterRow.dataset.chapter) || undefined,
-                    node: nodes[i],
-                };
-                // Don't add empty chapters
-                if (chapter.value) {
-                    currentGroup.chapters.push(chapter);
-                }
+				let chapter = this.getVolumeChapterFromNode(chapterRow);
+				chapter.node = nodes[i];
+				currentGroup.chapters.push(chapter);
             }
             // Push last group
             if (currentGroup.chapters.length > 0) {
@@ -1082,8 +1086,12 @@ class MyMangaDex {
         let string = [];
         if (chapter.volume > 0) {
             string.push("Vol. ", chapter.volume, " ");
-        }
-        string.push("Chapter ", chapter.chapter);
+		}
+		if (chapter.chapter <= 0) {
+			string.push("Chapter 0");
+		} else {
+			string.push("Chapter ", chapter.chapter);
+		}
         return string.join("");
     }
 
@@ -1410,7 +1418,7 @@ class MyMangaDex {
     async singleChapterPage() {
         // We can use the info on the page if we don't change chapter while reading
         let chapter = document.querySelector("meta[property='og:title']").content;
-        this.manga.currentChapter = this.getVolumeChapterFromString(chapter);
+		this.manga.currentChapter = this.getVolumeChapterFromString(chapter);
         this.manga.name = /Volume\s*\d*\s*,\s(.+),.+\sManga/.exec(document.querySelector("meta[name='keywords']").content)[1];
         chapter = document.querySelector("meta[property='og:image']").content;
         this.manga.mangaDexId = Math.floor(/manga\/(\d+)\.thumb.+/.exec(chapter)[1]);
