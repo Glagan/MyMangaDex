@@ -917,17 +917,26 @@ class MyMangaDex {
     }
 
     async getTitleInfos() {
-        let data = await storageGet(this.manga.mangaDexId);
-        // If there is no entry for mal link
+		let data = await storageGet(this.manga.mangaDexId);
+		let outdatedMyAnimeList = false;
+		// If there is no entry for mal link
+		let notificationText = ["Searching on the title page of **", this.manga.name, "** to find a MyAnimeList id."].join('');
         if (data === undefined) {
-            this.notification(NOTIFY.INFO, "Searching MAL ID", "Searching on the manga page of **" + this.manga.name + "** to find a MyAnimeList id.", this.mmdImage);
+            this.notification(NOTIFY.INFO, "Searching MAL ID", notificationText, this.mmdImage);
         } else {
             // Get the mal id from the local storage
             this.manga.myAnimeListId = data.mal;
             this.manga.lastMangaDexChapter = data.last;
-            this.manga.chapters = data.chapters || [];
+			this.manga.chapters = data.chapters || [];
+			this.manga.lastTitle = data.lastTitle;
+			// Check if there is an updated MAL id if lastTitle is older than 3 days (259200000ms)
+			if (this.manga.myAnimeListId == 0
+				&& (!data.lastTitle || (Date.now() - data.lastTitle) >= 259200000)) {
+				this.notification(NOTIFY.INFO, "Searching MAL ID", notificationText, this.mmdImage);
+				outdatedMyAnimeList = true;
+			}
         }
-        if (data === undefined || this.options.updateOnlyInList) {
+        if (data === undefined || this.options.updateOnlyInList || outdatedMyAnimeList) {
             // Fetch it from mangadex manga page
             let data = await browser.runtime.sendMessage({
                 action: "fetch",
@@ -936,17 +945,21 @@ class MyMangaDex {
                     method: "GET",
                     cache: "no-cache"
                 }
-            });
+			});
+			this.manga.lastTitle = Date.now();
             // Scan the manga page for the mal icon and mal url
             let myAnimeListURL = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(data.body);
             // If regex is empty, there is no mal link, can't do anything
             if (data == undefined && myAnimeListURL == null) {
-                this.notification(NOTIFY.ERROR, "No MyAnimeList ID", "You will need to go on the manga page if one is added.\nLast open chapters are still saved.", this.mmdCrossedImage, true);
+                this.notification(NOTIFY.ERROR, "No MyAnimeList ID", "Last open chapters are still saved.", this.mmdCrossedImage, true);
             }
             if (myAnimeListURL != undefined) {
                 // If there is a mal link, add it and save it in local storage
                 this.manga.myAnimeListId = Math.floor(/.+\/(\d+)/.exec(myAnimeListURL[1])[1]);
-            }
+			}
+			if (outdatedMyAnimeList || myAnimeListURL != undefined) {
+				await updateLocalStorage(this.manga, this.options);
+			}
             // Get the manga status on MangaDex
             this.mangaDexLoggedIn = !/You need to log in to use this function\./.exec(data.body);
             this.mangaDexStatus = false;
@@ -1057,7 +1070,7 @@ class MyMangaDex {
         if (this.history[manga.mangaDexId] == undefined) {
             this.history[manga.mangaDexId] = {
                 name: manga.name,
-                id: manga.mangaDexId
+				id: manga.mangaDexId
             };
         } else {
             let index = this.history.list.indexOf(manga.mangaDexId);
@@ -1067,6 +1080,7 @@ class MyMangaDex {
         }
         this.history[manga.mangaDexId].progress = manga.currentChapter;
         this.history[manga.mangaDexId].chapter = manga.chapterId;
+		this.history[manga.mangaDexId].lastRead = Date.now();
         this.history.list.push(manga.mangaDexId);
         if (this.history.list.length > this.options.historySize) {
             let diff = this.history.list.length-this.options.historySize;
@@ -1093,13 +1107,28 @@ class MyMangaDex {
 			string.push("Chapter ", chapter.chapter);
 		}
         return string.join("");
-    }
+	}
+
+	setCardLastRead(card, titleTimestamp, readTimestamp) {
+		card.dataset.toggle = "tooltip";
+		card.dataset.placement = "bottom";
+		card.dataset.html = true;
+		let date =  new Date(readTimestamp);
+		let title = [
+			`${date.getUTCDate()} ${date.toDateString().split(' ')[1]} ${date.getUTCFullYear()} ${date.toTimeString().split(' ')[0]}`
+		];
+		if (titleTimestamp) {
+			date = new Date(titleTimestamp);
+			title.push(`<span style="color:rgb(51,152,182)">${date.getUTCDate()} ${date.toDateString().split(' ')[1]} ${date.getUTCFullYear()} ${date.toTimeString().split(' ')[0]}</span>`);
+		}
+		card.title = title.join("<br>");
+	}
 
     buildHistoryEntryNode(historyEntry) {
         // Build
         let frag = document.createDocumentFragment();
         let container = document.createElement("div");
-        container.className = "large_logo rounded position-relative mx-1 my-2";
+		container.className = "large_logo rounded position-relative mx-1 my-2";
         let hover = document.createElement("div");
         hover.className = "hover";
         let titleLinkImage = document.createElement("a");
@@ -1125,7 +1154,7 @@ class MyMangaDex {
         let chapterLink = document.createElement("a");
         chapterLink.className = "white";
         chapterLink.rel = "noreferrer noopener";
-        chapterLink.href = ["/chapter/", historyEntry.chapter].join("");
+		chapterLink.href = ["/chapter/", historyEntry.chapter].join("");
         chapterLink.textContent = this.chapterStringFromObject(historyEntry.progress);
         // Append
         titleName.appendChild(titleLinkName);
@@ -1304,7 +1333,8 @@ class MyMangaDex {
     }
 
     async titlePage() {
-        this.manga.name = document.querySelector("h6.card-header").textContent.trim();
+		this.manga.name = document.querySelector("h6.card-header").textContent.trim();
+		this.manga.lastTitle = Date.now();
         this.manga.mangaDexId = /.+title\/(\d+)/.exec(this.pageUrl);
         // We always try to find the link, in case it was updated
         let myAnimeListUrl = document.querySelector("img[src$='/mal.png']");
@@ -1344,19 +1374,18 @@ class MyMangaDex {
         // If there is no entry try to find it
         if (data === undefined) {
             firstFetch = true;
-            // Update it at least once to save the mal id
-            await updateLocalStorage(this.manga, this.options);
         } else {
-            if (data.mal == 0 && this.manga.myAnimeListId > 0) {
-                // Still save storage to have the new ID save even if it's not approved
-                await updateLocalStorage(this.manga, this.options);
-                // set firstFetch to update if valid
+			if ((data.mal == 0 && this.manga.myAnimeListId > 0)
+				|| (this.manga.myAnimeListId > 0 && data.mal != this.manga.myAnimeListId)) {
+                // New ID so it's a firstFetch
                 firstFetch = true;
             }
             this.manga.lastMangaDexChapter = data.last;
             this.manga.chapters = data.chapters || [];
             this.manga.currentChapter.chapter = this.manga.lastMangaDexChapter;
         }
+		// Update everytime to save updated MAL id and lastTitle
+		let storageSet = updateLocalStorage(this.manga, this.options);
 
         // Informations
         let parentNode = document.querySelector(".col-xl-9.col-lg-8.col-md-7");
@@ -1383,8 +1412,10 @@ class MyMangaDex {
 
                         if (firstFetch) {
                             this.manga.currentChapter.chapter = Math.max(this.manga.lastMyAnimeListChapter, this.manga.lastMangaDexChapter);
-                            this.insertChapter(this.manga.currentChapter.chapter);
-                            await updateLocalStorage(this.manga, this.options);
+							this.insertChapter(this.manga.currentChapter.chapter);
+                            storageSet.then(() => {
+								updateLocalStorage(this.manga, this.options);
+							});
                         }
                     } else {
                         // Add a "Add to reading list" button
@@ -1543,18 +1574,29 @@ class MyMangaDex {
                 name: node.querySelector(".manga_title").textContent,
                 chapterId: Math.floor(/\/chapter\/(\d+)/.exec(chapterLink.href)[1]),
                 currentChapter: this.getVolumeChapterFromString(chapterLink.textContent)
-            };
-            await this.saveTitleInHistory(title);
+			};
+			// Save only if the title isn't already in the list or if the chapter is different
+			if (!this.history[title.mangaDexId]
+				|| Math.floor(this.history[title.mangaDexId].chapter) != title.chapterId) {
+				await this.saveTitleInHistory(title);
+			}
         }
-        // Display additionnal history
+		// Display additionnal history
         for (let i = this.history.list.length-1; i >= 0; i--) {
             let entry = this.history[this.history.list[i]];
-            let exist = container.querySelector(["a[href^='/manga/", entry.id, "']"].join(""));
+			let exist = container.querySelector(["a[href^='/manga/", entry.id, "']"].join(""));
+			let entryNode;
             if (!exist) {
-                let entryNode = this.buildHistoryEntryNode(entry);
+				entryNode = this.buildHistoryEntryNode(entry);
                 container.insertBefore(entryNode, container.lastElementChild);
-            }
-        }
+			} else {
+				entryNode = exist.parentElement.parentElement;
+			}
+			let title = await storageGet(entry.id);
+			this.setCardLastRead(entryNode, (title || {}).lastTitle, entry.lastRead);
+		}
+		window.wrappedJSObject.jQuery("[data-toggle='tooltip']").tooltip();
+		XPCNativeWrapper(window.wrappedJSObject.jQuery);
     }
 
     // END PAGE

@@ -188,12 +188,13 @@ async function updateLocalStorage(manga, options) {
         manga.lastMangaDexChapter = Math.max(manga.lastMangaDexChapter, manga.currentChapter.chapter);
     } else {
         manga.lastMangaDexChapter = manga.currentChapter.chapter;
-    }
-    await storageSet(manga.mangaDexId, {
-        mal: manga.myAnimeListId,
-        last: manga.lastMangaDexChapter,
-        chapters: manga.chapters
-    });
+	}
+	await storageSet(manga.mangaDexId, {
+		mal: manga.myAnimeListId,
+		last: manga.lastMangaDexChapter,
+		chapters: manga.chapters,
+		lastTitle: manga.lastTitle
+	});
     // Show a notification for updated last opened if there is no MyAnimeList id
     if (options.showNotifications && manga.myAnimeListId == 0 && manga.currentChapter.chapter > manga.lastMangaDexChapter) {
         SimpleNotification.success({
