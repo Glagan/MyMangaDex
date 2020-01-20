@@ -1114,9 +1114,10 @@ class MyMangaDex {
 		card.dataset.placement = "bottom";
 		card.dataset.html = true;
 		let date =  new Date(readTimestamp);
-		let title = [
-			`${date.getUTCDate()} ${date.toDateString().split(' ')[1]} ${date.getUTCFullYear()} ${date.toTimeString().split(' ')[0]}`
-		];
+		let title = [];
+		if (readTimestamp) {
+			title.push(`${date.getUTCDate()} ${date.toDateString().split(' ')[1]} ${date.getUTCFullYear()} ${date.toTimeString().split(' ')[0]}`);
+		}
 		if (titleTimestamp) {
 			date = new Date(titleTimestamp);
 			title.push(`<span style="color:rgb(51,152,182)">${date.getUTCDate()} ${date.toDateString().split(' ')[1]} ${date.getUTCFullYear()} ${date.toTimeString().split(' ')[0]}</span>`);
@@ -1126,7 +1127,6 @@ class MyMangaDex {
 
     buildHistoryEntryNode(historyEntry) {
         // Build
-        let frag = document.createDocumentFragment();
         let container = document.createElement("div");
 		container.className = "large_logo rounded position-relative mx-1 my-2";
         let hover = document.createElement("div");
@@ -1165,8 +1165,7 @@ class MyMangaDex {
         hover.appendChild(titleLinkImage);
         container.appendChild(hover);
         container.appendChild(informationsContainer);
-        frag.appendChild(container);
-        return frag;
+        return container;
 	}
 
 	getCurrentThumbnail() {
