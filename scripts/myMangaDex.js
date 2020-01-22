@@ -1594,8 +1594,14 @@ class MyMangaDex {
 			let title = await storageGet(entry.id);
 			this.setCardLastRead(entryNode, (title || {}).lastTitle, entry.lastRead);
 		}
-		window.wrappedJSObject.jQuery("[data-toggle='tooltip']").tooltip();
-		XPCNativeWrapper(window.wrappedJSObject.jQuery);
+        if (CHROME) {
+			document.documentElement.setAttribute("onreset", "$(() => { $('[data-toggle=\"tooltip\"]').tooltip() })");
+            document.documentElement.dispatchEvent(new CustomEvent("reset"));
+			document.documentElement.removeAttribute("onreset");
+		} else {
+			window.wrappedJSObject.jQuery("[data-toggle='tooltip']").tooltip();
+			XPCNativeWrapper(window.wrappedJSObject.jQuery);
+		}
     }
 
     // END PAGE
