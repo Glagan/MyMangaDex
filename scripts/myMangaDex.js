@@ -1451,7 +1451,7 @@ class MyMangaDex {
         // We can use the info on the page if we don't change chapter while reading
         let chapter = document.querySelector("meta[property='og:title']").content;
 		this.manga.currentChapter = this.getVolumeChapterFromString(chapter);
-        this.manga.name = /Volume\s*\d*\s*,\s(.+),.+\sManga/.exec(document.querySelector("meta[name='keywords']").content)[1];
+		this.manga.name = /scans\s*,\s+(.+)\s+mangadex/i.exec(document.querySelector("meta[name='keywords']").content)[1];
         chapter = document.querySelector("meta[property='og:image']").content;
         this.manga.mangaDexId = Math.floor(/manga\/(\d+)\.thumb.+/.exec(chapter)[1]);
         this.manga.chapterId = Math.floor(document.querySelector("meta[name='app']").dataset.chapterId);
