@@ -18,11 +18,17 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 let xhr = new XMLHttpRequest();
                 xhr.addEventListener("readystatechange", () => {
                     if (xhr.readyState == 4) {
+						let body;
+						try {
+							body = (message.isJson) ? JSON.parse(xhr.responseText) : xhr.responseText;
+						} catch (error) {
+							body = (message.isJson) ? {} : "";
+						}
                         sendResponse({
                             url: xhr.responseURL,
                             status: xhr.status,
                             headers: xhr.getAllResponseHeaders(),
-                            body: (message.isJson) ? JSON.parse(xhr.responseText) : xhr.responseText,
+                            body: body
                         });
                     }
                 });
@@ -45,7 +51,15 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     };
                 })
                 .then(response => sendResponse(response))
-                .catch(error => console.error(error));
+                .catch(error => {
+					console.error(error);
+					sendResponse({
+						url: message.url,
+						status: 0,
+						headers: {},
+						body: (message.isJson) ? {} : ""
+					});
+				});
             }
             return true;
         } else if (message.action == "openOptions") {

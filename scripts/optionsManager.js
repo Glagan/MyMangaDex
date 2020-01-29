@@ -1,4 +1,4 @@
-const LOG = {INFO: "info", DANGER: "danger", WARNING: "warning", SUCCESS: "success"};
+const LOG = {INFO: "info", ERROR: "error", DANGER: "danger", WARNING: "warning", SUCCESS: "success"};
 class OptionsManager {
     constructor() {
         // Nodes
@@ -12,7 +12,9 @@ class OptionsManager {
         this.saveContent = document.getElementById("save-content");
         this.importMMDForm = document.getElementById("save-import");
         this.importMALForm = document.getElementById("mal-import");
+        this.importMALbutton = this.importMALForm.querySelector("button");
         this.exportMALForm = document.getElementById("mal-export");
+        this.exportMALbutton = this.exportMALForm.querySelector("button");
         this.deleteSaveButton = document.getElementById("delete-save");
         this.lastOpenColorsNodes = {};
         this.importOutput = document.getElementById("malImportStatus");
@@ -41,7 +43,8 @@ class OptionsManager {
         this.myAnimeListMangaList = {};
         this.mangaDexMangaList = [];
         this.currentLog = "import";
-        this.malBusy = false;
+		this.malBusy = false;
+		this.malAbort = false;
         this.loggedMyAnimeList = true;
         this.HTMLParser = new DOMParser();
 
@@ -195,7 +198,15 @@ class OptionsManager {
         }
     }
 
-    // FUNCTIONS
+	// FUNCTIONS
+
+	async sleep(time) {
+		return await new Promise(resolve => {
+			setTimeout(() => {
+				resolve();
+			}, time);
+		});
+	}
 
     async restoreOptions() {
         // Update current options, no lastOpenColors yet
@@ -394,15 +405,7 @@ class OptionsManager {
 	}
 
 	async setDomain() {
-		if (!this.domain) {
-			this.domain = 'https://mangadex.org/';
-			/*let resp = await fetch("https://mangadex.cc/about");
-			if (resp.ok) {
-				this.domain = "https://mangadex.cc/";
-			} else {
-				this.domain = "https://mangadex.org/";
-			}*/
-		}
+		this.domain = "https://mangadex.org/";
 	}
 
     // END FUNCTIONS / START IMPORT EXPORT
@@ -461,12 +464,24 @@ class OptionsManager {
         this.importMMDForm.save.value = "";
     }
 
-    async importMAL() {
-        if (this.malBusy)
-            return;
+	abortImport() {
+		this.importMALbutton.textContent = "Import";
+		this.malBusy = false;
+		this.malAbort = false;
+		this.logAndScroll(LOG.INFO, "You aborted the task.");
+	}
 
+    async importMAL() {
+		if (this.malBusy) {
+			this.malAbort = true;
+			this.importMALbutton.textContent = "Aborting...";
+			return;
+		}
+
+		this.importMALbutton.textContent = "In progress, click to abort.";
         let username = this.importMALForm.username.value;
-        this.importMALForm.disabled = true;
+		this.importMALForm.disabled = true;
+		await this.setDomain();
 
         if (username != "") {
             // Arrays with the data
@@ -475,22 +490,34 @@ class OptionsManager {
 
             // Show the status box
             this.malBusy = true;
-            this.logOutput = this.importOutput;
+			this.logOutput = this.importOutput;
             this.logOutput.style.display = "block";
             clearDomNode(this.logOutput);
             this.logAndScroll(LOG.INFO, "Starting... don't close the options page.");
 
             // Start a dummy request to MyAnimeList to see if we can fetch the data
-            await this.listMyAnimeList(username, 0, true);
+			await this.listMyAnimeList(username, 0, true);
+			if (this.malAbort) {
+				return (this.abortImport());
+			}
             if (Object.keys(this.myAnimeListMangaList).length == 0) {
                 this.flashBackground(false);
                 this.logAndScroll(LOG.INFO, "Empty MyAnimeList manga list, try another username maybe ?");
             } else {
                 // Start fetching the data
-                await this.listMangaDex();
+				await this.listMangaDex();
+				if (this.malAbort) {
+					return (this.abortImport());
+				}
                 if (this.mangaDexMangaList.length > 0) {
-                    await this.listMyAnimeList(username, Object.keys(this.myAnimeListMangaList).length);
-                    await this.updateLocalFromMDMAL();
+					await this.listMyAnimeList(username, Object.keys(this.myAnimeListMangaList).length);
+					if (this.malAbort) {
+						return (this.abortImport());
+					}
+					await this.updateLocalFromMDMAL();
+					if (this.malAbort) {
+						return (this.abortImport());
+					}
                     this.flashBackground(true);
                 } else {
                     this.logAndScroll(LOG.INFO, "No followed manga on MangaDex.");
@@ -514,43 +541,58 @@ class OptionsManager {
         }
         this.logAndScroll(LOG.INFO, "Fetching MyAnimeList manga from " + offset + " to " + (offset + 300));
 
-        try {
-            let response = await browser.runtime.sendMessage({
-                action: "fetch",
-                url: "https://myanimelist.net/mangalist/" + username + "/load.json?offset=" + offset + "&status=7",
-                options: {
-                    method: "GET",
-                    redirect: "follow",
-                    credentials: "include"
-                },
-                isJson: true
-            });
-            if (response.body.hasOwnProperty("errors")) {
-                this.logAndScroll(LOG.DANGER, response.body.errors[0].message);
-            } else {
-                // Insert each manga fetched in the list
-                for (let manga of response.body) {
-                    this.myAnimeListMangaList[parseInt(manga.manga_id)] = parseInt(manga.num_read_chapters);
-                }
+		for (let i = 0; i < 3; ++i) {
+			try {
+				let response = await browser.runtime.sendMessage({
+					action: "fetch",
+					url: "https://myanimelist.net/mangalist/" + username + "/load.json?offset=" + offset + "&status=7",
+					options: {
+						method: "GET",
+						redirect: "follow",
+						credentials: "include"
+					},
+					isJson: true
+				});
+				if (response.body.hasOwnProperty("errors")) {
+					this.logAndScroll(LOG.DANGER, response.body.errors[0].message);
+				} else {
+					// Insert each manga fetched in the list
+					for (let manga of response.body) {
+						this.myAnimeListMangaList[parseInt(manga.manga_id)] = parseInt(manga.num_read_chapters);
+					}
 
-                if (!dummy) {
-                    // If there is 300 items, we might have reached the list limit so we try again
-                    if (response.body.length == 300) {
-                        await this.listMyAnimeList(username, offset + 300);
-                    } else {
-                        this.logAndScroll(LOG.SUCCESS, "Done fetching MyAnimeList manga.");
-                    }
-                }
-            }
-        } catch (error) {
-            this.flashBackground(false);
-            console.error(error);
-        }
+					if (!dummy) {
+						// If there is 300 items, we might have reached the list limit so we try again
+						if (response.body.length == 300) {
+							await this.sleep(1000); // Wait 1000ms between requests
+							if (this.malAbort) {
+								return (false);
+							}
+							await this.listMyAnimeList(username, offset + 300);
+						} else {
+							this.logAndScroll(LOG.SUCCESS, "Done fetching MyAnimeList manga.");
+						}
+					}
+				}
+				break ;
+			} catch (error) {
+				if (i < 2) {
+					this.flashBackground(false);
+					console.error(error);
+					await this.sleep(1000);
+					if (this.malAbort) {
+						return (false);
+					}
+				} else {
+					return (false);
+				}
+			}
+		}
+		return (true);
     }
 
     async listMangaDex(page = 1, max_page = 1, type = 0) {
         this.logAndScroll(LOG.INFO, "Fetching MangaDex follow page manga " + page + ((max_page > 1) ? " of " + max_page : ""));
-		await this.setDomain();
         try {
             let response = await browser.runtime.sendMessage({
                 action: "fetch",
@@ -580,32 +622,31 @@ class OptionsManager {
 
             // We fetch the next page if required
             if (page < max_page) {
-                // Wait 500ms
-                await new Promise(resolve => {
-                    setTimeout(() => {
-                        resolve();
-                    }, 500);
-                });
+                // Wait 1000ms
+				await this.sleep(1000);
+				if (this.malAbort) {
+					return (false);
+				}
                 await this.listMangaDex(page + 1, max_page, type);
             } else {
-                this.logAndScroll(LOG.SUCCESS, "Done fetching MangaDex follow manga.");
+				this.logAndScroll(LOG.SUCCESS, "Done fetching MangaDex follow manga.");
             }
+			return (true)
         } catch (error) {
-            this.flashBackground(false);
+			this.flashBackground(false);
             console.error(error);
-        }
+			return (false);
+		}
     }
 
     async updateLocalFromMDMAL(index = 0) {
         this.logAndScroll(LOG.INFO, "Updating " + (index + 1) + "/" + this.mangaDexMangaList.length);
 
-        // Wait 500ms
-        await new Promise(resolve => {
-            setTimeout(() => {
-                resolve();
-            }, 500);
-        });
-		await this.setDomain();
+        // Wait 1000ms
+		await this.sleep(1000);
+		if (this.malAbort) {
+			return (false);
+		}
         try {
             let response = await browser.runtime.sendMessage({
                 action: "fetch",
@@ -643,7 +684,7 @@ class OptionsManager {
                 await updateLocalStorage(manga, this.options);
                 index++;
                 if (index < this.mangaDexMangaList.length) {
-                    return this.updateLocalFromMDMAL(index);
+                    return (this.updateLocalFromMDMAL(index));
                 } else {
                     this.logAndScroll(LOG.SUCCESS, "Done.");
                 }
@@ -666,11 +707,12 @@ class OptionsManager {
                 await updateLocalStorage(manga, this.options);
                 index++;
                 if (index < this.mangaDexMangaList.length) {
-                    return this.updateLocalFromMDMAL(index);
+                    return (this.updateLocalFromMDMAL(index));
                 } else {
                     this.logAndScroll(LOG.SUCCESS, "Done.");
                 }
-            }
+			}
+			return (true);
         } catch (error) {
             this.flashBackground(false);
             this.logAndScroll(LOG.DANGER, "Updating " + (index + 1) + " Failed");
@@ -682,34 +724,52 @@ class OptionsManager {
                 await this.updateLocalFromMDMAL(index);
             } else {
                 this.logAndScroll(LOG.SUCCESS, "Done.");
-            }
+			}
+			return (false);
         }
-    }
+	}
+
+	abortExport() {
+		this.exportMALbutton.textContent = "Export";
+		this.malBusy = false;
+		this.malAbort = false;
+		this.logAndScroll(LOG.INFO, "You aborted the task.");
+	}
 
     async exportMAL() {
-        if (this.malBusy)
+        if (this.malBusy) {
+			this.malAbort = true;
+			this.exportMALbutton.textContent = "Aborting...";
             return;
+		}
 
         // Disable import
-        this.malBusy = true;
+		this.malBusy = true;
+		this.exportMALbutton.textContent = "In progress, click to abort.";
+
+		// Start
         this.logOutput = this.exportOutput;
         this.logOutput.style.display = "block";
         clearDomNode(this.logOutput);
-		this.logAndScroll(LOG.INFO, "Starting... don't close the options page.");
-
+		this.logAndScroll(LOG.INFO, "Starting... don't close the options page. Some requests can be long on failure, \
+									don\'t close the page until there is a \"Done for real\" notifications.");
 		await this.setDomain();
+
         // Do the same process for every status
         for (let s = 1; s <= 6; s++) {
-            await new Promise(resolve => {
-                setTimeout(() => {
-                    resolve();
-                }, 500);
-            });
+			// Wait 1000ms
+			await this.sleep(1000);
+			if (this.malAbort) {
+				return (this.abortExport());
+			}
 
             this.logAndScroll(LOG.INFO, "Updating manga with the status " + s);
             // Arrays with the data in this.mangaDexMangaList
             this.mangaDexMangaList = [];
-            await this.listMangaDex(1, 1, s);
+			await this.listMangaDex(1, 1, s);
+			if (this.malAbort) {
+				return (this.abortExport());
+			}
 
             // Abort if empty
             let max = this.mangaDexMangaList.length;
@@ -717,12 +777,12 @@ class OptionsManager {
                 continue;
 
             // Update everything
-            for (let i = 0; i < max; i++) {
-                await new Promise(resolve => {
-                    setTimeout(() => {
-                        resolve();
-                    }, 500);
-                });
+			for (let i = 0; i < max; i++) {
+				// Wait 1000ms
+				await this.sleep(1000);
+				if (this.malAbort) {
+					return (this.abortExport());
+				}
 
                 this.logAndScroll(LOG.INFO, "Updating #" + this.mangaDexMangaList[i]);
                 let current = await storageGet(this.mangaDexMangaList[i]);
@@ -764,7 +824,12 @@ class OptionsManager {
                 let manga = {};
                 manga.myAnimeListId = current.mal;
                 manga.currentChapter = {chapter: current.last, volume: 0};
-                await this.fetchMyAnimeList(manga, current.mal);
+                if (!await this.fetchMyAnimeList(manga, current.mal)) {
+					return ;
+				}
+				if (this.malAbort) {
+					return (this.abortExport());
+				}
                 // Abort if not logged in - we didn't receive any data
                 if (!this.loggedMyAnimeList) {
                     this.logAndScroll(LOG.ERROR, "Not logged on MyAnimeList, aborting.");
@@ -775,7 +840,7 @@ class OptionsManager {
                         myAnimeListId: 0,
                         chapters: []
                     }, this.options);
-                    return;
+                    return ;
                 }
                 // Finally update Local Storage or MAL if possible
                 if (manga.is_approved) {
@@ -815,29 +880,50 @@ class OptionsManager {
 
         // Done
         this.flashBackground(true);
-        this.logAndScroll(LOG.SUCCESS, "Done.");
+        this.logAndScroll(LOG.SUCCESS, "Done, for real !");
         this.malBusy = false;
     }
 
-    async fetchMyAnimeList(manga) {
-        let data = await browser.runtime.sendMessage({
-            action: "fetch",
-            url: "https://myanimelist.net/ownlist/manga/" + manga.myAnimeListId + "/edit?hideLayout",
-            options: {
-                method: "GET",
-                redirect: "follow",
-                cache: "no-cache",
-                credentials: "include"
-            }
-        });
+	async fetchMyAnimeList(manga) {
+		for (let i = 0; i < 3; ++i) {
+			let data = await browser.runtime.sendMessage({
+				action: "fetch",
+				url: "https://myanimelist.net/ownlist/manga/" + manga.myAnimeListId + "/edit?hideLayout",
+				options: {
+					method: "GET",
+					redirect: "follow",
+					cache: "no-cache",
+					credentials: "include"
+				}
+			});
 
-        if (data.url.indexOf("login.php") > -1) {
-            this.loggedMyAnimeList = false;
-        } else {
-            // CSRF Token
-            this.csrf = /'csrf_token'\scontent='(.{40})'/.exec(data.body)[1];
-            processMyAnimeListResponse(manga, data.body);
-        }
+			if (data.url.indexOf("login.php") > -1) {
+				this.loggedMyAnimeList = false;
+				break ;
+			} else {
+				if (!data || (data.status < 200 || data.status >= 400)) {
+					if (this.malAbort) {
+						return (false);
+					}
+					if (i < 2) {
+						this.logAndScroll(LOG.WARNING, "Error updating the manga. Retrying...");
+					} else {
+						this.logAndScroll(LOG.ERROR, "There was an error while receiving info from MyAnimeList, aborting.");
+						return (false);
+					}
+					await this.sleep(1000);
+					if (this.malAbort) {
+						return (false);
+					}
+				} else {
+					// CSRF Token
+					this.csrf = /'csrf_token'\scontent='(.{40})'/.exec(data.body)[1];
+					processMyAnimeListResponse(manga, data.body);
+					break ;
+				}
+			}
+		}
+		return (true);
     }
 
     async updateMyAnimeList(manga, status) {
@@ -853,25 +939,35 @@ class OptionsManager {
 
         // Build body
         let {requestURL, body} = buildMyAnimeListBody(true, manga, this.csrf, status);
-        // Send the POST request to update or add the manga
-        try {
-            await browser.runtime.sendMessage({
-                action: "fetch",
-                url: requestURL,
-                options: {
-                    method: "POST",
-                    body: body,
-                    redirect: "follow",
-                    credentials: "include",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
-                    }
-                }
-            });
-        } catch (error) {
-            this.logAndScroll(LOG.ERROR, "Error updating the manga. error: " + error);
-        }
+		// Send the POST request to update or add the manga
+		for (let i = 0; i < 3; ++i) {
+			try {
+				await browser.runtime.sendMessage({
+					action: "fetch",
+					url: requestURL,
+					options: {
+						method: "POST",
+						body: body,
+						redirect: "follow",
+						credentials: "include",
+						headers: {
+							"Content-Type": "application/x-www-form-urlencoded",
+							"accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+						}
+					}
+				});
+				break ;
+			} catch (error) {
+				if (i < 2) {
+					this.logAndScroll(LOG.WARNING, "Error updating the manga. Retrying...");
+					await this.sleep(1000);
+				} else {
+					this.logAndScroll(LOG.ERROR, "Error updating the manga. error: " + error);
+					return (false);
+				}
+			}
+		}
+		return (true);
     }
 
     // END IMPORT EXPORT
