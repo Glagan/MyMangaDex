@@ -184,10 +184,12 @@ async function loadOptions() {
 }
 
 async function updateLocalStorage(manga, options) {
-    if (options.saveOnlyHigher) {
-        manga.lastMangaDexChapter = Math.max(manga.lastMangaDexChapter, manga.currentChapter.chapter);
-    } else {
-        manga.lastMangaDexChapter = manga.currentChapter.chapter;
+	if (manga.currentChapter) {
+		if (options.saveOnlyHigher) {
+			manga.lastMangaDexChapter = Math.max(manga.lastMangaDexChapter, manga.currentChapter.chapter);
+		} else {
+			manga.lastMangaDexChapter = manga.currentChapter.chapter;
+		}
 	}
 	await storageSet(manga.mangaDexId, {
 		mal: manga.myAnimeListId,
