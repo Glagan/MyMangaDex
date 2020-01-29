@@ -11,7 +11,7 @@ class MyMangaDex {
             mangaDexId: 0,
             chapterId: 0,
             chapters: [],
-            currentChapter: {chapter: 0, volume: 0}
+            currentChapter: {chapter: -1, volume: 0}
         };
         this.fetched = false;
         this.myAnimeListImage = "https://ramune.nikurasu.org/mymangadex/myanimelist.png";
@@ -926,7 +926,7 @@ class MyMangaDex {
         } else {
             // Get the mal id from the local storage
             this.manga.myAnimeListId = data.mal;
-            this.manga.lastMangaDexChapter = data.last;
+			this.manga.lastMangaDexChapter = data.last;
 			this.manga.chapters = data.chapters || [];
 			this.manga.lastTitle = data.lastTitle;
 			// Check if there is an updated MAL id if lastTitle is older than 3 days (259200000ms)
@@ -1367,12 +1367,13 @@ class MyMangaDex {
         }
 
         // Fetch the manga information from the local storage
-        let data = await storageGet(this.manga.mangaDexId);
+		let data = await storageGet(this.manga.mangaDexId);
+		console.debug(data);
         let firstFetch = false;
 
         // If there is no entry try to find it
         if (data === undefined) {
-            firstFetch = true;
+			firstFetch = true;
         } else {
 			if ((data.mal == 0 && this.manga.myAnimeListId > 0)
 				|| (this.manga.myAnimeListId > 0 && data.mal != this.manga.myAnimeListId)) {

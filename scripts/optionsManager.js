@@ -1,4 +1,4 @@
-const LOG = {INFO: "info", ERROR: "error", DANGER: "danger", WARNING: "warning", SUCCESS: "success"};
+const LOG = {INFO: "info", DANGER: "danger", WARNING: "warning", SUCCESS: "success"};
 class OptionsManager {
     constructor() {
         // Nodes
@@ -629,7 +629,7 @@ class OptionsManager {
 				}
                 await this.listMangaDex(page + 1, max_page, type);
             } else {
-				this.logAndScroll(LOG.SUCCESS, "Done fetching MangaDex follow manga.");
+				this.logAndScroll(LOG.SUCCESS, "Done fetching MangaDex followed manga.");
             }
 			return (true)
         } catch (error) {
@@ -661,7 +661,7 @@ class OptionsManager {
             let manga = {
                 mangaDexId: this.mangaDexMangaList[index],
                 myAnimeListId: 0,
-                lastMangaDexChapter: 0,
+                lastMangaDexChapter: -1,
                 currentChapter: {
                     volume: 0,
                     chapter: 0
@@ -788,9 +788,9 @@ class OptionsManager {
                 let current = await storageGet(this.mangaDexMangaList[i]);
 
                 // Get the MAL id
-                let notSaved = false;
+                let needLocalUpdate = false;
                 if (current == null) {
-                    notSaved = true;
+                    needLocalUpdate = true;
                     this.logAndScroll(LOG.INFO, "Trying to find a MyAnimeList id for #" + this.mangaDexMangaList[i]);
                     let response = await browser.runtime.sendMessage({
                         action: "fetch",
@@ -801,11 +801,12 @@ class OptionsManager {
                         }
                     });
                     let content = this.HTMLParser.parseFromString(response.body, "text/html");
-                    //
+                    // New local title
                     current = {
                         mal: 0,
-                        last: 0,
-                        chapters: []
+                        last: -1,
+						chapters: [],
+						lastTitle: Date.now()
                     };
                     // Scan the manga page for the mal icon and mal url
                     let myAnimeListURL = content.querySelector("img[src$='/mal.png']");
@@ -816,64 +817,74 @@ class OptionsManager {
                 }
 
                 if (current.mal == 0) {
-                    this.logAndScroll(LOG.WARNING, "No MyAnimeList id, skip.");
-                    continue;
+					this.logAndScroll(LOG.WARNING, "No MyAnimeList id, skip.");
+					if (needLocalUpdate) {
+						await updateLocalStorage({
+							mangaDexId: this.mangaDexMangaList[i],
+							myAnimeListId: current.mal,
+							lastMangaDexChapter: current.last,
+							chapters: current.chapters,
+							lastTitle: current.lastTitle
+						}, this.options);
+					}
+                    continue ;
                 }
 
                 // Update MyAnimeList
                 let manga = {};
                 manga.myAnimeListId = current.mal;
-                manga.currentChapter = {chapter: current.last, volume: 0};
+				manga.lastMangaDexChapter = current.last;
+				manga.currentChapter = { chapter: current.last, volume: 0 };
                 if (!await this.fetchMyAnimeList(manga, current.mal)) {
+					if (this.malAbort) {
+						return (this.abortExport());
+					}
 					return ;
 				}
 				if (this.malAbort) {
 					return (this.abortExport());
 				}
                 // Abort if not logged in - we didn't receive any data
-                if (!this.loggedMyAnimeList) {
-                    this.logAndScroll(LOG.ERROR, "Not logged on MyAnimeList, aborting.");
-                    // Still save it in Local Storage to know it's empty
-                    await updateLocalStorage({
-                        mangaDexId: this.mangaDexMangaList[i],
-                        lastMangaDexChapter: 0,
-                        myAnimeListId: 0,
-                        chapters: []
-                    }, this.options);
-                    return ;
-                }
-                // Finally update Local Storage or MAL if possible
-                if (manga.is_approved) {
-                    // If MAL is already in the list save it to local
-                    if (manga.in_list) {
-                        if (current.last > manga.lastMyAnimeListChapter) {
-                            await this.updateMyAnimeList(manga, s);
-                            this.logAndScroll(LOG.INFO, "> MyAnimeList #" + current.mal + " updated with chapter " + current.last);
-                            manga.lastMangaDexChapter = current.last;
-                        } else {
-                            this.logAndScroll(LOG.INFO, "> MyAnimeList #" + current.mal + " NOT updated since it is up to date.");
-                            manga.currentChapter.chapter = manga.lastMyAnimeListChapter;
-                            manga.lastMangaDexChapter = manga.lastMyAnimeListChapter;
-                        }
-                    } else { // Else update MAL
-                        await this.updateMyAnimeList(manga, s);
-                        this.logAndScroll(LOG.INFO, "> MyAnimeList #" + current.mal + " added with chapter " + current.last);
-                    }
-                } else {
-                    this.logAndScroll(LOG.INFO, "The manga is still pending approval on MyAnimelist and can't be updated, skip.");
-                }
+                if (this.loggedMyAnimeList) {
+					if (manga.is_approved) {
+						// If MAL is already in the list save it to local
+						if (manga.in_list) {
+							if (current.last > manga.lastMyAnimeListChapter) {
+								await this.updateMyAnimeList(manga, s);
+								this.logAndScroll(LOG.INFO, "> MyAnimeList #" + current.mal + " updated with chapter " + current.last);
+							} else {
+								this.logAndScroll(LOG.INFO, "> MyAnimeList #" + current.mal + " NOT updated since it is up to date.");
+								manga.lastMangaDexChapter = manga.lastMyAnimeListChapter;
+								needLocalUpdate = true;
+							}
+						} else { // Else update MAL
+							await this.updateMyAnimeList(manga, s);
+							this.logAndScroll(LOG.INFO, "> MyAnimeList #" + current.mal + " added with chapter " + current.last);
+						}
+					} else {
+						this.logAndScroll(LOG.INFO, "The manga is still pending approval on MyAnimelist and can't be updated, skip.");
+					}
+				}
                 // Save to Local Storage if needed
-                if (notSaved) {
+                if (needLocalUpdate) {
                     manga.mangaDexId = this.mangaDexMangaList[i];
-                    manga.chapters = [];
-                    if (this.options.saveAllOpened) {
-                        let min = Math.max(manga.currentChapter.chapter - this.options.maxChapterSaved, 0);
-                        for (let i = manga.currentChapter.chapter; i > min; i--) {
+					manga.chapters = current.chapters;
+					manga.lastTitle = current.lastTitle;
+                    if (manga.chapters.length == 0 && this.options.saveAllOpened) {
+                        let min = Math.max(manga.lastMangaDexChapter - this.options.maxChapterSaved, 0);
+                        for (let i = manga.lastMangaDexChapter; i > min; i--) {
                             manga.chapters.push(i);
                         }
                     }
                     await updateLocalStorage(manga, this.options);
-                }
+				}
+				if (this.malAbort) {
+					return (this.abortExport());
+				}
+				if (!this.loggedMyAnimeList) {
+					this.logAndScroll(LOG.DANGER, "Not logged on MyAnimeList, aborting.");
+					return ;
+				}
             }
             this.logAndScroll(LOG.SUCCESS, "Status " + s + " done.");
         }
@@ -886,6 +897,9 @@ class OptionsManager {
 
 	async fetchMyAnimeList(manga) {
 		for (let i = 0; i < 3; ++i) {
+			if (this.malAbort) {
+				return (false);
+			}
 			let data = await browser.runtime.sendMessage({
 				action: "fetch",
 				url: "https://myanimelist.net/ownlist/manga/" + manga.myAnimeListId + "/edit?hideLayout",
@@ -902,13 +916,10 @@ class OptionsManager {
 				break ;
 			} else {
 				if (!data || (data.status < 200 || data.status >= 400)) {
-					if (this.malAbort) {
-						return (false);
-					}
 					if (i < 2) {
 						this.logAndScroll(LOG.WARNING, "Error updating the manga. Retrying...");
 					} else {
-						this.logAndScroll(LOG.ERROR, "There was an error while receiving info from MyAnimeList, aborting.");
+						this.logAndScroll(LOG.DANGER, "There was an error while receiving info from MyAnimeList, aborting.");
 						return (false);
 					}
 					await this.sleep(1000);
@@ -942,6 +953,9 @@ class OptionsManager {
 		// Send the POST request to update or add the manga
 		for (let i = 0; i < 3; ++i) {
 			try {
+				if (this.malAbort) {
+					return (false);
+				}
 				await browser.runtime.sendMessage({
 					action: "fetch",
 					url: requestURL,
@@ -961,8 +975,11 @@ class OptionsManager {
 				if (i < 2) {
 					this.logAndScroll(LOG.WARNING, "Error updating the manga. Retrying...");
 					await this.sleep(1000);
+					if (this.malAbort) {
+						return (false);
+					}
 				} else {
-					this.logAndScroll(LOG.ERROR, "Error updating the manga. error: " + error);
+					this.logAndScroll(LOG.DANGER, "Error updating the manga. error: " + error);
 					return (false);
 				}
 			}
