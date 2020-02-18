@@ -352,7 +352,7 @@ function buildMyAnimeListBody(usePepper, manga, csrf, status = 1) {
                 year: MyDate.getFullYear(),
                 month: MyDate.getMonth() + 1,
                 day: MyDate.getDate()
-            }
+            };
             manga.start_today = true;
         }
 

@@ -1,6 +1,7 @@
 # ---> VisualStudioCode
 .settings
 .vscode
+.jshintrc
 
 # Firefox extension
 builds

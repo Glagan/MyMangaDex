@@ -511,9 +511,10 @@ class MyMangaDex {
 			if (chapterVolume.chapter == 0) {
 				hasChapterZero = true;
 			}
-			if ((!hasChapterZero && this.manga.lastMyAnimeListChapter == -1 && this.manga.lastMyAnimeListChapter + 2 == chapterVolume.chapterFloored)
-				|| this.manga.lastMyAnimeListChapter + 1 == chapterVolume.chapterFloored) {
-                element.style.backgroundColor = this.options.nextChapterColor;
+			// TODO: Also check volume if it saved
+			if ((!hasChapterZero && this.manga.lastMyAnimeListChapter == -1 && chapterVolume.chapterFloored == 1) ||
+				this.manga.lastMyAnimeListChapter + 1 == chapterVolume.chapterFloored) {
+				element.style.backgroundColor = this.options.nextChapterColor;
             } else if (this.manga.lastMyAnimeListChapter == chapterVolume.chapterFloored) {
                 element.style.backgroundColor = this.options.lastReadColor;
             } else if (this.manga.lastMangaDexChapter == chapterVolume.chapter) {
@@ -930,8 +931,8 @@ class MyMangaDex {
 			this.manga.chapters = data.chapters || [];
 			this.manga.lastTitle = data.lastTitle;
 			// Check if there is an updated MAL id if lastTitle is older than 3 days (259200000ms)
-			if (this.manga.myAnimeListId == 0
-				&& (!data.lastTitle || (Date.now() - data.lastTitle) >= 259200000)) {
+			if (this.manga.myAnimeListId == 0 &&
+				(!data.lastTitle || (Date.now() - data.lastTitle) >= 259200000)) {
 				this.notification(NOTIFY.INFO, "Searching MAL ID", notificationText, this.mmdImage);
 				outdatedMyAnimeList = true;
 			}
@@ -1201,9 +1202,9 @@ class MyMangaDex {
 						let chapter = group.chapters[j];
                         if ((this.options.hideHigherChapters &&
 								titleInformations[group.titleId].last < chapter.value &&
-								chapter.value >= Math.floor(titleInformations[group.titleId].last) + 2)
-							|| (this.options.hideLowerChapters && titleInformations[group.titleId].last > chapter.value)
-							|| (this.options.hideLastRead && chapter.value == highestChapter && titleInformations[group.titleId].last == chapter.value)) {
+								chapter.value >= Math.floor(titleInformations[group.titleId].last) + 2) ||
+							(this.options.hideLowerChapters && titleInformations[group.titleId].last > chapter.value) ||
+							(this.options.hideLastRead && chapter.value == highestChapter && titleInformations[group.titleId].last == chapter.value)) {
                             chapter.node.classList.add("is-hidden-chapter");
                             chapter.hidden = true;
                         }
@@ -1216,8 +1217,8 @@ class MyMangaDex {
                         }
                         if (j < chapterCount) {
                             let link = document.createElement("a");
-                            link.textContent = group.name, link.className = "text-truncate";
-                            link.href = ["/title/", group.titleId].join(""), link.title = group.name;
+                            link.textContent = group.name; link.className = "text-truncate";
+                            link.href = ["/title/", group.titleId].join(""); link.title = group.name;
                             group.chapters[j].node.firstElementChild.appendChild(link);
                         }
                     }
@@ -1233,7 +1234,7 @@ class MyMangaDex {
                 button.className = "nav-item";
                 let link = document.createElement("a");
                 this.appendTextWithIcon(link, "eye", ["Show Hidden (", hiddenCount, ")"].join(""));
-                link.className = "nav-link", link.href = "#";
+                link.className = "nav-link"; link.href = "#";
                 link.addEventListener("click", event => {
                     event.preventDefault();
                     clearDomNode(link);
@@ -1360,7 +1361,7 @@ class MyMangaDex {
         if (this.mangaDexLoggedIn) {
             let mangaDexStatus = document.querySelector('.disabled.dropdown-item.manga_follow_button');
             this.mangaDexStatus = (mangaDexStatus) ? mangaDexStatus.textContent.trim() : false;
-            let mangaDexScore = document.querySelector('.disabled.dropdown-item.manga_rating_button')
+            let mangaDexScore = document.querySelector('.disabled.dropdown-item.manga_rating_button');
             if (mangaDexScore) {
                 this.mangaDexScore = Math.floor(mangaDexScore.id);
             }
@@ -1374,8 +1375,8 @@ class MyMangaDex {
         if (data === undefined) {
 			firstFetch = true;
         } else {
-			if ((data.mal == 0 && this.manga.myAnimeListId > 0)
-				|| (this.manga.myAnimeListId > 0 && data.mal != this.manga.myAnimeListId)) {
+			if ((data.mal == 0 && this.manga.myAnimeListId > 0) ||
+				(this.manga.myAnimeListId > 0 && data.mal != this.manga.myAnimeListId)) {
                 // New ID so it's a firstFetch
                 firstFetch = true;
             }
@@ -1409,13 +1410,13 @@ class MyMangaDex {
                     if (this.manga.in_list) {
                         this.insertMyAnimeListInformations();
 
-                        if (firstFetch) {
-                            this.manga.currentChapter.chapter = Math.max(this.manga.lastMyAnimeListChapter, this.manga.lastMangaDexChapter);
+						this.manga.currentChapter.chapter = Math.max(this.manga.lastMyAnimeListChapter, this.manga.lastMangaDexChapter);
+						if (this.options.saveAllOpened) {
 							this.insertChapter(this.manga.currentChapter.chapter);
-                            storageSet.then(() => {
-								updateLocalStorage(this.manga, this.options);
-							});
-                        }
+						}
+						storageSet.then(() => {
+							updateLocalStorage(this.manga, this.options);
+						});
                     } else {
                         // Add a "Add to reading list" button
                         let quickAddReading = this.createQuickButton("Start Reading", 1);
@@ -1464,9 +1465,18 @@ class MyMangaDex {
         }
         // Informations
         await this.getTitleInfos();
-        await this.fetchMyAnimeList();
+		await this.fetchMyAnimeList();
+		// Save LocalStorage to MAL values if it's higher
+		if (this.manga.lastMyAnimeListChapter > this.manga.lastMangaDexChapter) {
+			this.manga.lastMangaDexChapter = this.manga.lastMyAnimeListChapter;
+			if (this.options.saveAllOpened) {
+				this.insertChapter(this.manga.lastMangaDexChapter);
+			}
+			await updateLocalStorage(this.manga, this.options);
+		}
 
-        // Update function
+		// Update function
+		// TODO: Save volume if there is one
         let update = async (delayed, oldChapter=undefined) => {
             if (!delayed) {
                 if (!this.options.updateOnlyInList || this.mangaDexStatus != false) {
@@ -1575,8 +1585,8 @@ class MyMangaDex {
                 currentChapter: this.getVolumeChapterFromString(chapterLink.textContent)
 			};
 			// Save only if the title isn't already in the list or if the chapter is different
-			if (!this.history[title.mangaDexId]
-				|| Math.floor(this.history[title.mangaDexId].chapter) != title.chapterId) {
+			if (!this.history[title.mangaDexId] ||
+				Math.floor(this.history[title.mangaDexId].chapter) != title.chapterId) {
 				await this.saveTitleInHistory(title);
 			}
         }

@@ -631,11 +631,11 @@ class OptionsManager {
             } else {
 				this.logAndScroll(LOG.SUCCESS, "Done fetching MangaDex followed manga.");
             }
-			return (true)
+			return true;
         } catch (error) {
 			this.flashBackground(false);
             console.error(error);
-			return (false);
+			return false;
 		}
     }
 
@@ -751,8 +751,8 @@ class OptionsManager {
         this.logOutput = this.exportOutput;
         this.logOutput.style.display = "block";
         clearDomNode(this.logOutput);
-		this.logAndScroll(LOG.INFO, "Starting... don't close the options page. Some requests can be long on failure, \
-									don\'t close the page until there is a \"Done for real\" notifications.");
+		this.logAndScroll(LOG.INFO, "Starting... don't close the options page. Some requests can be long on failure, " +
+									"don\'t close the page until there is a \"Done for real\" notifications.");
 		await this.setDomain();
 
         // Do the same process for every status
