@@ -60,7 +60,7 @@ class MyMangaDex {
         } else if (this.pageUrl.indexOf(urls.title) > -1 || this.pageUrl.indexOf(urls.manga) > -1) {
             this.titlePage();
         } else if (this.pageUrl.indexOf(urls.chapter) > -1) {
-            this.singleChapterPage();
+            this.singleChapterPageStart();
         } else if (this.pageUrl.indexOf(urls.history) > -1) {
             this.historyPage();
         }
@@ -83,9 +83,11 @@ class MyMangaDex {
                 redirect: "follow",
             }
         });
-        this.fetched = true;
+		this.fetched = true;
+		if (data.status >= 500) {
+			this.notification(NOTIFY.ERROR, "MyAnimeList error", "MyAnimeList is unreacheable.");
         // init and set if it was redirected - redirected often means not in list or not approved
-        if (data.url.indexOf("login.php") > -1) {
+		} else if (data.url.indexOf("login.php") > -1) {
             if (CHROME) {
                 this.notification(NOTIFY.ERROR, "Not logged in", "Login {{here|https://myanimelist.net/login.php}} on MyAnimeList !", this.myAnimeListImage, true);
             } else {
@@ -100,7 +102,8 @@ class MyMangaDex {
             // CSRF Token
             this.csrf = /'csrf_token'\scontent='(.{40})'/.exec(data.body)[1];
             processMyAnimeListResponse(this.manga, data.body);
-        }
+		}
+		return data;
     }
 
     // MAL status:  READING: 1, COMPLETED: 2, ON_HOLD: 3, PLAN_TO_READ: 6, DROPPED: 4, RE_READING: 1+is_rereading
@@ -1369,17 +1372,9 @@ class MyMangaDex {
 
         // Fetch the manga information from the local storage
 		let data = await storageGet(this.manga.mangaDexId);
-        let firstFetch = false;
 
         // If there is no entry try to find it
-        if (data === undefined) {
-			firstFetch = true;
-        } else {
-			if ((data.mal == 0 && this.manga.myAnimeListId > 0) ||
-				(this.manga.myAnimeListId > 0 && data.mal != this.manga.myAnimeListId)) {
-                // New ID so it's a firstFetch
-                firstFetch = true;
-            }
+        if (data !== undefined) {
             this.manga.lastMangaDexChapter = data.last;
             this.manga.chapters = data.chapters || [];
             this.manga.currentChapter.chapter = this.manga.lastMangaDexChapter;
@@ -1400,71 +1395,72 @@ class MyMangaDex {
         this.informationsNode.className = "col-lg-9 col-xl-10";
         informationsRow.appendChild(this.informationsNode);
 
+		let appendErrorMessage = (message) => {
+            let messageNode = document.createElement("span");
+            messageNode.textContent = message;
+            informationsRow.classList.add("mmd-background-info");
+            this.informationsNode.appendChild(messageNode);
+		};
+
         // If there is a existing mal link
         if (this.manga.myAnimeListId > 0) {
             // Fetch the edit page of the manga
-            await this.fetchMyAnimeList();
-            if (this.loggedMyAnimeList) {
-                if (this.manga.is_approved) {
-                    // Check if the manga is already in the reading list
-                    if (this.manga.in_list) {
-                        this.insertMyAnimeListInformations();
-
-						this.manga.currentChapter.chapter = Math.max(this.manga.lastMyAnimeListChapter, this.manga.lastMangaDexChapter);
-						if (this.options.saveAllOpened) {
-							this.insertChapter(this.manga.currentChapter.chapter);
+			let ret = await this.fetchMyAnimeList();
+			if (ret.status >= 200 && ret.status < 400) {
+				if (this.loggedMyAnimeList) {
+					if (this.manga.is_approved) {
+						// Check if the manga is already in the reading list
+						if (this.manga.in_list) {
+							this.insertMyAnimeListInformations();
+							this.manga.currentChapter.chapter = Math.max(this.manga.lastMyAnimeListChapter, this.manga.lastMangaDexChapter);
+							if (this.options.saveAllOpened) {
+								this.insertChapter(this.manga.currentChapter.chapter);
+							}
+							await storageSet.then(() => {
+								updateLocalStorage(this.manga, this.options);
+							});
+						} else {
+							// Add a "Add to reading list" button
+							let quickAddReading = this.createQuickButton("Start Reading", 1);
+							// And a "Plan to read" button
+							let quickAddPTR = this.createQuickButton("Add to Plan to Read list", 6);
+							// Append
+							this.informationsNode.appendChild(quickAddReading);
+							this.informationsNode.appendChild(document.createTextNode(" "));
+							this.informationsNode.appendChild(quickAddPTR);
 						}
-						storageSet.then(() => {
-							updateLocalStorage(this.manga, this.options);
-						});
-                    } else {
-                        // Add a "Add to reading list" button
-                        let quickAddReading = this.createQuickButton("Start Reading", 1);
-                        // And a "Plan to read" button
-                        let quickAddPTR = this.createQuickButton("Add to Plan to Read list", 6);
-                        // Append
-                        this.informationsNode.appendChild(quickAddReading);
-                        this.informationsNode.appendChild(document.createTextNode(" "));
-                        this.informationsNode.appendChild(quickAddPTR);
-                    }
-                } else {
-                    let pendingMessage = document.createElement("span");
-                    pendingMessage.textContent = "The manga is still pending approval on MyAnimelist and can't be updated.";
-                    informationsRow.classList.add("mmd-background-info");
-                    this.informationsNode.appendChild(pendingMessage);
-                }
-            } else {
-                let notLoggedMesage = document.createElement("span");
-                notLoggedMesage.textContent = "Login on MyAnimeList to display informations.";
-                informationsRow.classList.add("mmd-background-info");
-                this.informationsNode.appendChild(notLoggedMesage);
-            }
+					} else {
+						appendErrorMessage("The manga is still pending approval on MyAnimelist and can't be updated.");
+					}
+				} else {
+					appendErrorMessage("Login on MyAnimeList to display informations.");
+				}
+			} else {
+				appendErrorMessage(["Status code: ", ret.status, ". Open an issue if the code is more or equal to 400 and less than 500. Retry later."].join(''));
+			}
         } else {
-            let noIDMessage = document.createElement("span");
-            noIDMessage.textContent = "No MyAnimeList found. When one is added, MyMangaDex will find it if you visit this page again.";
-            informationsRow.classList.add("mmd-background-info");
-            this.informationsNode.appendChild(noIDMessage);
+            appendErrorMessage("No MyAnimeList found. When one is added, MyMangaDex will find it if you visit this page again.");
         }
         this.highlightChapters();
     }
 
-    async singleChapterPage() {
-        // We can use the info on the page if we don't change chapter while reading
-        let chapter = document.querySelector("meta[property='og:title']").content;
+	async singleChapterPage() {
+		// We can use the info on the page if we don't change chapter while reading
+		let chapter = document.querySelector("meta[property='og:title']").content;
 		this.manga.currentChapter = this.getVolumeChapterFromString(chapter);
 		this.manga.name = /scans\s*,\s+(.+)\s+mangadex/i.exec(document.querySelector("meta[name='keywords']").content)[1];
-        chapter = document.querySelector("meta[property='og:image']").content;
-        this.manga.mangaDexId = Math.floor(/manga\/(\d+)\.thumb.+/.exec(chapter)[1]);
-        this.manga.chapterId = Math.floor(document.querySelector("meta[name='app']").dataset.chapterId);
-        // Jump chapter
-        let legacyReader = !document.getElementById("content").classList.contains("reader");
-        let jumpChapter = (legacyReader) ? document.getElementById("jump_chapter") : document.getElementById("jump-chapter");
-        // History
-        if (this.options.updateHistoryPage) {
-            this.history = storageGet("history");
-        }
-        // Informations
-        await this.getTitleInfos();
+		chapter = document.querySelector("meta[property='og:image']").content;
+		this.manga.mangaDexId = Math.floor(/manga\/(\d+)\.thumb.+/.exec(chapter)[1]);
+		this.manga.chapterId = Math.floor(document.querySelector("meta[name='app']").dataset.chapterId);
+		// Jump chapter
+		let legacyReader = !document.getElementById("content").classList.contains("reader");
+		let jumpChapter = (legacyReader) ? document.getElementById("jump_chapter") : document.getElementById("jump-chapter");
+		// History
+		if (this.options.updateHistoryPage) {
+			this.history = storageGet("history");
+		}
+		// Informations
+		await this.getTitleInfos();
 		await this.fetchMyAnimeList();
 		// Save LocalStorage to MAL values if it's higher
 		if (this.manga.lastMyAnimeListChapter > this.manga.lastMangaDexChapter) {
@@ -1477,68 +1473,84 @@ class MyMangaDex {
 
 		// Update function
 		// TODO: Save volume if there is one
-        let update = async (delayed, oldChapter=undefined) => {
-            if (!delayed) {
-                if (!this.options.updateOnlyInList || this.mangaDexStatus != false) {
-                    await this.updateManga();
-                } else if (this.options.confirmChapter) {
-                    let newChapter = this.manga.currentChapter;
-                    if (oldChapter) {
-                        this.manga.currentChapter = oldChapter;
-                    }
-                    SimpleNotification.info({
-                        title: "Not in list",
-                        text: "The title is not in your **MangaDex** reading list and wasn't updated, but you can still update it.",
-                        image: this.getCurrentThumbnail(),
-                        buttons: [{
-                            value: "Update", type: "success",
-                            onClick: async n => {
-                                n.remove();
-                                this.manga.currentChapter = newChapter;
-                                await this.updateManga();
-                            }
-                        }, {
-                            value: "Close", type: "error",
-                            onClick: n => n.remove()
-                        }]
-                    }, { position: "bottom-left", duration: 10000 });
-                }
-            } else {
-                if (oldChapter) {
-                    this.manga.currentChapter = oldChapter;
-                }
-                this.notification(NOTIFY.ERROR, "Chapter Delayed", "The chapter was not updated and saved since it is delayed on MangaDex.", this.getCurrentThumbnail());
-            }
-        };
+		let update = async (delayed, oldChapter = undefined) => {
+			if (!delayed) {
+				if (!this.options.updateOnlyInList || this.mangaDexStatus != false) {
+					await this.updateManga();
+				} else if (this.options.confirmChapter) {
+					let newChapter = this.manga.currentChapter;
+					if (oldChapter) {
+						this.manga.currentChapter = oldChapter;
+					}
+					SimpleNotification.info({
+						title: "Not in list",
+						text: "The title is not in your **MangaDex** reading list and wasn't updated, but you can still update it.",
+						image: this.getCurrentThumbnail(),
+						buttons: [{
+							value: "Update", type: "success",
+							onClick: async n => {
+								n.remove();
+								this.manga.currentChapter = newChapter;
+								await this.updateManga();
+							}
+						}, {
+							value: "Close", type: "error",
+							onClick: n => n.remove()
+						}]
+					}, { position: "bottom-left", duration: 10000 });
+				}
+			} else {
+				if (oldChapter) {
+					this.manga.currentChapter = oldChapter;
+				}
+				this.notification(NOTIFY.ERROR, "Chapter Delayed", "The chapter was not updated and saved since it is delayed on MangaDex.", this.getCurrentThumbnail());
+			}
+		};
 
-        // Detect which reader we're using - if we're not legacy we have to check when changing chapter
-        if (!legacyReader) {
-            var observer = new MutationObserver(async mutationsList => {
-                for (var mutation of mutationsList) {
-                    if (mutation.type == "attributes") {
-                        // If the new id is different - check for the first load
-                        let newChapterId = Math.floor(document.querySelector(".chapter-title").dataset.chapterId);
-                        if (this.manga.chapterId != newChapterId) {
-                            let oldChapter = this.manga.currentChapter;
-                            let currentChapter = this.getVolumeChapterFromString(jumpChapter.options[jumpChapter.selectedIndex].textContent);
-                            this.manga.currentChapter = currentChapter;
-                            let delayed = (document.getElementsByClassName("alert alert-danger text-center m-auto").length > 0);
-                            update(delayed, oldChapter);
-                        }
-                        this.manga.chapterId = newChapterId;
-                    }
-                }
-            });
-            let config = { attributes: true };
-            observer.observe(document.querySelector(".chapter-title"), config);
-        }
+		// Detect which reader we're using - if we're not legacy we have to check when changing chapter
+		if (!legacyReader) {
+			var observer = new MutationObserver(async mutationsList => {
+				for (var mutation of mutationsList) {
+					if (mutation.type == "attributes") {
+						// If the new id is different - check for the first load
+						let newChapterId = Math.floor(document.querySelector(".chapter-title").dataset.chapterId);
+						if (this.manga.chapterId != newChapterId) {
+							let oldChapter = this.manga.currentChapter;
+							let currentChapter = this.getVolumeChapterFromString(jumpChapter.options[jumpChapter.selectedIndex].textContent);
+							this.manga.currentChapter = currentChapter;
+							let delayed = !!document.querySelector("div.reader-images > div.alert.alert-danger");
+							update(delayed, oldChapter);
+						}
+						this.manga.chapterId = newChapterId;
+					}
+				}
+			});
+			let config = { attributes: true };
+			observer.observe(document.querySelector(".chapter-title"), config);
+		}
 
-        // Get MAL Url from the database
-        let delayed = (document.getElementsByClassName("alert alert-danger text-center m-auto").length > 0);
-        update(delayed);
-        if (this.manga.exist && this.manga.is_approved) {
-            this.insertMyAnimeListButton(document.querySelector(".reader-controls-actions.col-auto.row.no-gutters.p-1").lastElementChild);
-        }
+		// Get MAL Url from the database
+		let delayed = !!document.querySelector("div.reader-images > div.alert.alert-danger");
+		update(delayed);
+		if (this.manga.exist && this.manga.is_approved) {
+			this.insertMyAnimeListButton(document.querySelector(".reader-controls-actions.col-auto.row.no-gutters.p-1").lastElementChild);
+		}
+	}
+
+    singleChapterPageStart() {
+		let called = false;
+		// wait for MangaDex API calls to be done and for the DOM to be updated
+		var observer = new MutationObserver(async (mutationsList, observer) => {
+			for (var mutation of mutationsList) {
+				if (!called) {
+					called = true;
+					this.singleChapterPage();
+				}
+				observer.disconnect();
+			}
+		});
+		let config = { childList: true };
+		observer.observe(document.querySelector(".reader-images"), config);
     }
 
     titlesListPage() {
