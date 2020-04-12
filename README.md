@@ -104,9 +104,10 @@ Example: ``npm run chrome -- -no-minify -debug``
 3. Install dependencies ``npm install``
 4. Build ``npm run firefox``
 5. Go to [about:debugging](about:debugging)
-6. Click *Load a temporary module*
-7. Select any file of *firefoxBuild* folder
-8. Done !
+6. Go to *This Firefox*
+7. Click *Load a Temporart Add-on...*
+8. Select *manifest.json* of *firefoxBuild* folder
+9. Done !
 
 ### Chrome
 
