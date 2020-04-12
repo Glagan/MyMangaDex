@@ -90,13 +90,13 @@ let files = {
 // Scripts to make
 let scripts = {
     "MyMangaDex.js": [
-        "third_party/SimpleNotification.min.js",
+        "third_party/simpleNotification.min.js",
         "scripts/defaultOptions.js",
         "scripts/sharedFunctions.js",
         "scripts/myMangaDex.js",
     ],
     "Options.js": [
-        "third_party/SimpleNotification.min.js",
+        "third_party/simpleNotification.min.js",
         "scripts/defaultOptions.js",
         "scripts/sharedFunctions.js",
         "scripts/optionsManager.js"
