@@ -86,33 +86,40 @@ You can disable the option to save all opened chapters, and all of the data can 
 ## Debug installation
 
 You can also install the extension from this repository, but the extension **will** be uninstalled when Firefox is closed and the data **could** be deleted at the same time, Chrome will keep the extension installed.  
-Before you actually install it, you have to build it, using ``node build <browser>``, ``rimraf``, ``terser`` and ``web-ext`` are required.
+Before you can actually build it, make sure you have [node](https://nodejs.org) and [npm](https://www.npmjs.com) installed. In the cloned directory then run ``npm install``. This will install all dependencies.
+
+To build the extension, run ``npm run firefox`` or ``npm run chrome``. Both commands support options, separated by ``--``:
 
 Options:
 
 * ``-no-minify``: Don't use **terser** to minify scripts.
 * ``-debug``: Add a global try catch block.
 
+Example: ``npm run chrome -- -no-minify -debug``
+
 ### Firefox
 
 1. Be sure that the version from the Firefox add-ons site is not installed (don't know what it would do, maybe it just won't work)
 2. Clone the repo
-3. Build ``node build firefox``
-4. Go to [about:debugging](about:debugging)
-5. Click *Load a temporary module*
-6. Select any file of *firefoxBuild* folder
-7. Done !
+3. Install dependencies ``npm install``
+4. Build ``npm run firefox``
+5. Go to [about:debugging](about:debugging)
+6. Go to *This Firefox*
+7. Click *Load a Temporart Add-on...*
+8. Select *manifest.json* of *firefoxBuild* folder
+9. Done !
 
 ### Chrome
 
 1. Make sure it isn't already installed
 2. Clone the repo
-3. Build ``node build chrome``
-4. Go to [chrome://extensions/](chrome://extensions/)
-5. Activate *Developper Mode* on the top right
-6. Click *Load Unpacked*
-7. Select the *chromeBuild* folder
-8. Done !
+3. Install dependencies ``npm install``
+4. Build ``npm run chrome``
+5. Go to [chrome://extensions/](chrome://extensions/)
+6. Activate *Developper Mode* on the top right
+7. Click *Load Unpacked*
+8. Select the *chromeBuild* folder
+9. Done !
 
 ## Useful links
 

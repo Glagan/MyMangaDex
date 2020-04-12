@@ -1,0 +1,34 @@
+{
+  "name": "mymangadex",
+  "version": "2.3.18",
+  "description": "Syncronize what you read on MangaDex.org to your MyAnimeList.net manga list",
+  "main": "build.js",
+  "dependencies": {
+    "rimraf": "^3.0.2",
+    "terser": "^4.6.11",
+    "web-ext": "^4.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "firefox": "node build firefox",
+    "chrome": "node build chrome"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Glagan/MyMangaDex.git"
+  },
+  "keywords": [
+    "manga",
+    "mangadex",
+    "myanimelist",
+    "firefox",
+    "mal",
+    "chrome"
+  ],
+  "author": "Glagan",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/Glagan/MyMangaDex/issues"
+  },
+  "homepage": "https://github.com/Glagan/MyMangaDex#readme"
+}
