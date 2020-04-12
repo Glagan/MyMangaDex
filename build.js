@@ -30,6 +30,16 @@ let manifest = {
         128: "icons/128.png"
     },
 
+    browser_action: {
+        default_icon: {
+            48: "icons/48.png",
+            96: "icons/96.png",
+            128: "icons/128.png"
+        },
+        default_title: "MyMangaDex",
+        //default_popup: "options.html"
+    },
+
     background: {
         scripts: [ "scripts/background.js" ]
     },

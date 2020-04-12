@@ -71,3 +71,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         throw new Error("No action for this message.");
     }
 });
+
+browser.browserAction.onClicked.addListener(() => {
+    browser.runtime.openOptionsPage();
+});
