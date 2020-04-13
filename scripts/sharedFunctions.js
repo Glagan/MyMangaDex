@@ -16,6 +16,21 @@ function isEmpty(obj) {
 }
 
 /**
+ * source: https://stackoverflow.com/a/9517879
+ * Inject a page script
+ * Content scripts don't have access to variables, this does
+ * Communicate using events: https://stackoverflow.com/a/19312198
+ * @param {function} func The function to be injected and executed
+ */
+function injectScript(func) {
+	var actualCode = '(' + func + ')();'
+	var script = document.createElement('script');
+	script.textContent = actualCode;
+	(document.head || document.documentElement).appendChild(script);
+	script.remove();
+}
+
+/**
  * Fetch data from the storage and directly return the real value
  * Return undefined if the data isn't stored or the data as it was stored if it exist
  * @param {string} key The key of the data to fetch in the storage

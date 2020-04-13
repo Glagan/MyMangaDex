@@ -815,7 +815,7 @@ class MyMangaDex {
 		document.body.appendChild(modal);
 	}
 
-	insertMyAnimeListButton(parentNode = undefined) {
+	insertMyAnimeListButton(parentNode = undefined, rnew=true) {
 		// Create the modal
 		this.createMyAnimeListModal();
 
@@ -830,7 +830,7 @@ class MyMangaDex {
 			button.className = "btn btn-secondary float-right mr-1";
 			this.appendTextWithIcon(button, "edit", "Edit on MyAnimeList");
 		} else {
-			button.className = "btn btn-secondary col m-1";
+			button.className = "btn btn-secondary" + (rnew ? " col m-1" : "");
 			this.appendTextWithIcon(button, "edit", "");
 		}
 		// On click we hide or create the modal
@@ -1444,17 +1444,17 @@ class MyMangaDex {
 		this.highlightChapters();
 	}
 
-	async singleChapterPage() {
+	async singleChapterPageLegacy(update) {
 		// We can use the info on the page if we don't change chapter while reading
 		let chapter = document.querySelector("meta[property='og:title']").content;
 		this.manga.currentChapter = this.getVolumeChapterFromString(chapter);
 		this.manga.name = /scans\s*,\s+(.+)\s+mangadex/i.exec(document.querySelector("meta[name='keywords']").content)[1];
 		chapter = document.querySelector("meta[property='og:image']").content;
 		this.manga.mangaDexId = Math.floor(/manga\/(\d+)\.thumb.+/.exec(chapter)[1]);
-		this.manga.chapterId = Math.floor(document.querySelector("meta[name='app']").dataset.chapterId);
+		//this.manga.chapterId = Math.floor(document.querySelector("meta[name='app']").dataset.chapterId);
+		this.manga.chapterId = Math.floor(/\/(\d+)\/?/.exec(document.querySelector("meta[property='og:url']").content)[1]);
 		// Jump chapter
-		let legacyReader = !document.getElementById("content").classList.contains("reader");
-		let jumpChapter = (legacyReader) ? document.getElementById("jump_chapter") : document.getElementById("jump-chapter");
+		// let jumpChapter = (legacyReader) ? document.getElementById("jump_chapter") : document.getElementById("jump-chapter");
 		// History
 		if (this.options.updateHistoryPage) {
 			this.history = storageGet("history");
@@ -1471,6 +1471,50 @@ class MyMangaDex {
 			await updateLocalStorage(this.manga, this.options);
 		}
 
+		// Get MAL Url from the database
+		let delayed = !!document.querySelector("div.container > div.alert.alert-danger");
+		update(delayed);
+		if (this.manga.exist && this.manga.is_approved) {
+			this.insertMyAnimeListButton(document.querySelector(".card-body .col-md-4.mb-1"), false);
+		}
+	}
+
+	async singleChapterPage(e, update, firstRun) {
+		let data = e.detail.data;
+
+		if (firstRun) {
+			this.manga.name = e.detail.title;
+			this.manga.mangaDexId = data.manga_id;
+			this.manga.chapterId = data.id;
+
+			if (this.options.updateHistoryPage) {
+				this.history = storageGet("history");
+			}
+			// Informations
+			await this.getTitleInfos();
+			await this.fetchMyAnimeList();
+
+			if (this.manga.exist && this.manga.is_approved) {
+				this.insertMyAnimeListButton(document.querySelector(".reader-controls-actions.col-auto.row.no-gutters.p-1").lastElementChild);
+			}
+		}
+
+		// If the new id is different
+		let oldChapter = undefined;
+		if (this.manga.chapterId != data.id) {
+			oldChapter = this.manga.currentChapter;
+		}
+
+		this.manga.currentChapter = {
+			volume: parseInt(data.volume) || 0,
+			chapter: parseFloat(data.chapter) || 0
+		};
+		let delayed = data.status != "OK";
+		update(delayed, oldChapter);
+		this.manga.chapterId = data.id;
+	}
+
+	singleChapterPageStart() {
 		// Update function
 		// TODO: Save volume if there is one
 		let update = async (delayed, oldChapter = undefined) => {
@@ -1507,50 +1551,42 @@ class MyMangaDex {
 			}
 		};
 
-		// Detect which reader we're using - if we're not legacy we have to check when changing chapter
-		if (!legacyReader) {
-			var observer = new MutationObserver(async mutationsList => {
+		let legacyReader = !document.getElementById("content").classList.contains("reader");
+		if (legacyReader) {
+			/*let called = false;
+			// wait for MangaDex API calls to be done and for the DOM to be updated
+			var observer = new MutationObserver(async (mutationsList, observer) => {
 				for (var mutation of mutationsList) {
-					if (mutation.type == "attributes") {
-						// If the new id is different - check for the first load
-						let newChapterId = Math.floor(document.querySelector(".chapter-title").dataset.chapterId);
-						if (this.manga.chapterId != newChapterId) {
-							let oldChapter = this.manga.currentChapter;
-							let currentChapter = this.getVolumeChapterFromString(jumpChapter.options[jumpChapter.selectedIndex].textContent);
-							this.manga.currentChapter = currentChapter;
-							let delayed = !!document.querySelector("div.reader-images > div.alert.alert-danger");
-							update(delayed, oldChapter);
-						}
-						this.manga.chapterId = newChapterId;
+					if (!called) {
+						called = true;
+						this.singleChapterPageLegacy(update);
 					}
+					observer.disconnect();
 				}
 			});
-			let config = { attributes: true };
-			observer.observe(document.querySelector(".chapter-title"), config);
+			let config = { childList: true };
+			observer.observe(document.querySelector(".reader-images"), config);*/
+			this.singleChapterPageLegacy(update);
+			return;
 		}
 
-		// Get MAL Url from the database
-		let delayed = !!document.querySelector("div.reader-images > div.alert.alert-danger");
-		update(delayed);
-		if (this.manga.exist && this.manga.is_approved) {
-			this.insertMyAnimeListButton(document.querySelector(".reader-controls-actions.col-auto.row.no-gutters.p-1").lastElementChild);
+		// new reader
+		let firstRun = true;
+		// only injected scripts can access global variables, but we also need chrome (only in content scripts)
+		// -> custom events to communicate
+		function relayChapterEvent() {
+			window.reader.model.on("chapterchange", (data) => {
+				// note: due to some weird bug this function needs to have an actual body
+				// otherwise subsequent events aren't dispatched
+				document.dispatchEvent(new CustomEvent("mmdChapterChange", { detail: { data: data._data, title: data.manga.name } }));
+			});
 		}
-	}
+		injectScript(relayChapterEvent);
 
-	singleChapterPageStart() {
-		let called = false;
-		// wait for MangaDex API calls to be done and for the DOM to be updated
-		var observer = new MutationObserver(async (mutationsList, observer) => {
-			for (var mutation of mutationsList) {
-				if (!called) {
-					called = true;
-					this.singleChapterPage();
-				}
-				observer.disconnect();
-			}
+		document.addEventListener("mmdChapterChange", async (e) => {
+			this.singleChapterPage(e, update, firstRun);
+			firstRun = false;
 		});
-		let config = { childList: true };
-		observer.observe(document.querySelector(".reader-images"), config);
 	}
 
 	titlesListPage() {
