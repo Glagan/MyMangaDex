@@ -137,7 +137,8 @@ class MyMangaDex {
 				// Use Math.floor on the current chapter to avoid updating even tough it's the same if this is a sub chapter
 				let realChapter = Math.floor(this.manga.currentChapter.chapter);
 				let isHigher = (realChapter < 0 || realChapter > this.manga.lastMyAnimeListChapter);
-				if (!force && usePepper && !isHigher && (this.options.saveOnlyHigher || realChapter == this.manga.lastMyAnimeListChapter)) {
+				let isHigherDex = (isHigher || (this.manga.lastMangaDexChapter != -1 && this.manga.currentChapter.chapter > this.manga.lastMangaDexChapter));
+				if (!force && usePepper && !isHigherDex && (this.options.saveOnlyHigher || this.manga.currentChapter.chapter == this.manga.lastMangaDexChapter)) {
 					if (this.options.confirmChapter) {
 						SimpleNotification.info({
 							title: "Not updated",
@@ -163,9 +164,9 @@ class MyMangaDex {
 				}
 
 				let isNext = (realChapter < 0 ||
-					realChapter == this.manga.lastMyAnimeListChapter ||
-					(realChapter == this.manga.lastMyAnimeListChapter + 1 ||
-						(!this.options.saveOnlyHigher && realChapter == this.manga.lastMyAnimeListChapter - 1)));
+					//realChapter == this.manga.lastMyAnimeListChapter ||
+					realChapter == this.manga.lastMyAnimeListChapter + 1); // ||
+						//(!this.options.saveOnlyHigher && realChapter == this.manga.lastMyAnimeListChapter - 1));
 				if (!force && usePepper && this.options.saveOnlyNext && this.manga.lastMyAnimeListChapter > 0 && !isNext) {
 					if (this.options.confirmChapter) {
 						SimpleNotification.info({
@@ -191,27 +192,30 @@ class MyMangaDex {
 					return;
 				}
 
+				let doUpdate = this.manga.lastMyAnimeListChapter != realChapter;
 				let oldStatus = this.manga.status;
 				if (this.mangaDexScore > 0) {
 					this.manga.score = this.mangaDexScore;
 				}
 				let { requestURL, body } = buildMyAnimeListBody(usePepper, this.manga, this.csrf, setStatus);
 
-				// Send the POST request to update the manga
-				await browser.runtime.sendMessage({
-					action: "fetch",
-					url: requestURL,
-					options: {
-						method: "POST",
-						body: body,
-						redirect: "follow",
-						credentials: "include",
-						headers: {
-							"Content-Type": "application/x-www-form-urlencoded",
-							"accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+				// Send the POST request to update the manga if there as a change
+				if (doUpdate) {
+					await browser.runtime.sendMessage({
+						action: "fetch",
+						url: requestURL,
+						options: {
+							method: "POST",
+							body: body,
+							redirect: "follow",
+							credentials: "include",
+							headers: {
+								"Content-Type": "application/x-www-form-urlencoded",
+								"accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+							}
 						}
-					}
-				});
+					});
+				}
 
 				if (usePepper) {
 					if (this.manga.status == 6) {
@@ -265,6 +269,7 @@ class MyMangaDex {
 			this.insertChapter(this.manga.currentChapter.chapter);
 		}
 		// Update local storage - after, it doesn't really matter
+		this.manga.lastMangaDexChapter = this.manga.currentChapter.chapter;
 		await updateLocalStorage(this.manga, this.options);
 		// Update History
 		if (this.options.updateHistoryPage && this.history) {
@@ -1531,9 +1536,7 @@ class MyMangaDex {
 		}
 	}
 
-	async singleChapterEvent(event, firstRun) {
-		let data = event.detail.data;
-
+	async singleChapterEvent(data, firstRun) {
 		if (firstRun) {
 			this.manga.mangaDexId = data.manga_id;
 			this.manga.chapterId = data.id;
@@ -1550,7 +1553,6 @@ class MyMangaDex {
 			}
 		}
 
-		// If the new id is different
 		let oldChapter = undefined;
 		if (this.manga.chapterId != data.id) {
 			oldChapter = this.manga.currentChapter;
@@ -1577,15 +1579,15 @@ class MyMangaDex {
 		// -> custom events to communicate
 		function relayChapterEvent() {
 			window.reader.model.on("chapterchange", (data) => {
-				// note: due to some weird bug this function needs to have an actual body
-				// otherwise subsequent events aren't dispatched
-				document.dispatchEvent(new CustomEvent("mmdChapterChange", { detail: { data: data._data, title: data.manga.name } }));
+				// note: this function needs to have an actual body to avoid a return
+				// EventEmitter.js removes an event if return matches (default: true)
+				document.dispatchEvent(new CustomEvent("mmdChapterChange", { detail: data._data }));
 			});
 		}
 		injectScript(relayChapterEvent);
 
 		document.addEventListener("mmdChapterChange", async (event) => {
-			this.singleChapterEvent(event, firstRun);
+			this.singleChapterEvent(event.detail, firstRun);
 			firstRun = false;
 		});
 	}
