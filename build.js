@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 
 const fs = require('fs');
-const { exec } = require('child_process');
+const { exec, spawn } = require('child_process');
 const rimraf = require('rimraf');
 const Terser = require('terser');
 
@@ -130,6 +130,7 @@ if (args[0] == 'firefox' || args[0] == 'f') {
 } else if (args[0] == 'chrome' || args[0] == 'c') {
 	browser = 'chrome';
 }
+let makeFolder = browser + 'Build';
 
 // Options
 let noMinify = false;
@@ -140,9 +141,14 @@ let debug = false;
 if (args.indexOf('-debug') >= 0) {
 	debug = true;
 }
+let dev = false;
+if (args.indexOf('-dev') >= 0) {
+	dev = true;
+	noMinify = true;
+}
 
 console.log(`Building for ${browser}`);
-console.log(`Options: no-minify[${noMinify}] debug[${debug}]\n`);
+console.log(`Options: no-minify[${noMinify}] debug[${debug}] dev[${dev}]\n`);
 
 // Browser specific elements
 if (browser == 'firefox') {
@@ -187,10 +193,9 @@ function deepFileCopy(files, destFolder, baseFolder = '') {
 	}
 }
 
-if (['firefox', 'chrome'].includes(browser)) {
+function build() {
 	// Create temp folder for the bundle
 	console.log('Creating tmp. directory');
-	let makeFolder = browser + 'Build';
 	if (fs.existsSync(makeFolder)) {
 		rimraf.sync(makeFolder);
 	}
@@ -206,50 +211,94 @@ if (['firefox', 'chrome'].includes(browser)) {
 
 	// Make scripts
 	console.log('Making minified scripts');
-	Object.keys(scripts).forEach(name => {
-		console.log('Making', name);
-		let scriptConcatContent = [];
-		scripts[name].forEach(filename => {
-			scriptConcatContent.push(fs.readFileSync(filename, 'utf-8'));
-		});
-		let minified = 0;
-		if (noMinify) {
-			minified = { code: scriptConcatContent.join(`\n`) };
-		} else {
-			minified = Terser.minify(scriptConcatContent, {
-				ie8: false
-			});
-		}
-		if (debug) {
-			minified.code = `try {\n\t${minified.code}\n} catch(e) {\n\tconsole.error(e);\n}`;
-		}
-		let scriptFileStream = fs.createWriteStream(`${makeFolder}/scripts/${name}`, { flags: 'w+' });
-		scriptFileStream.write(minified.code);
-		scriptFileStream.cork();
-		scriptFileStream.end();
-	});
+	Object.keys(scripts).forEach(name => buildScript(name));
 
 	// Copy files
 	console.log('Copying files');
 	deepFileCopy(files, `${makeFolder}/`, '');
 
-	exec('web-ext build', { cwd: makeFolder }, (error, stdout, stderr) => {
-		if (error) {
-			console.error(`Build error: ${error}`);
-			return;
-		}
+	if (!dev) {
+		exec('web-ext build', { cwd: makeFolder }, (error, stdout, stderr) => {
+			if (error) {
+				console.error(`Build error: ${error}`);
+				return;
+			}
 
-		if (!fs.existsSync('builds')) {
-			fs.mkdirSync('builds');
-		}
-		console.log(`Moving zip archive to 'builds'`);
-		fs.renameSync(
-			`${makeFolder}/web-ext-artifacts/mymangadex-${manifest.version}.zip`,
-			`builds/mymangadex-${manifest.version}_${browser}.zip`
-		);
+			if (!fs.existsSync('builds')) {
+				fs.mkdirSync('builds');
+			}
+			console.log(`Moving zip archive to 'builds'`);
+			fs.renameSync(
+				`${makeFolder}/web-ext-artifacts/mymangadex-${manifest.version}.zip`,
+				`builds/mymangadex-${manifest.version}_${browser}.zip`
+			);
 
-		console.log('Done');
+			console.log('Done');
+		});
+	}
+}
+
+function buildScript(name) {
+	console.log('Making', name);
+	let scriptConcatContent = [];
+	scripts[name].forEach(filename => {
+		scriptConcatContent.push(fs.readFileSync(filename, 'utf-8'));
 	});
+	let minified = 0;
+	if (noMinify) {
+		minified = { code: scriptConcatContent.join(`\n`) };
+	} else {
+		minified = Terser.minify(scriptConcatContent, {
+			ie8: false
+		});
+	}
+	if (debug) {
+		minified.code = `try {\n\t${minified.code}\n} catch(e) {\n\tconsole.error(e);\n}`;
+	}
+	let scriptFileStream = fs.createWriteStream(`${makeFolder}/scripts/${name}`, { flags: 'w+' });
+	scriptFileStream.write(minified.code);
+	scriptFileStream.cork();
+	scriptFileStream.end();
+}
+
+if (['firefox', 'chrome'].includes(browser)) {
+	if (!dev) {
+		build();
+	} else {
+		// start browser with extension and auto-rebuilder
+		build();
+		const watch = require('node-watch');
+
+		const web = spawn('web-ext', ['run', '--target', browser == 'chrome' ? 'chromium' : browser, '--keep-profile-changes', '--browser-console'], { cwd: makeFolder });
+		const watcher = watch(["options.html", "scripts/", "css/"], { recursive: true }, (evt, name) => {
+			if (evt == 'remove') {
+				console.error('Removing files not supported, adjust build file and rerun');
+				process.exit();
+			}
+
+			// rebuild necessary scripts or copy file
+			if (/^scripts\//.exec(name)) {
+				Object.keys(scripts).forEach(script => {
+					if (scripts[script].includes(name)) {
+						buildScript(script);
+					}
+				});
+			} else {
+				console.log(`Copying ${name}`);
+				fs.copyFileSync(name, makeFolder+'/'+name);
+			}
+		});
+		web.stdout.on('data', (data) => {
+			console.log(''+data+'\n');
+		});
+		web.stderr.on('data', (data) => {
+			console.error(''+data+'\n');
+		});
+		process.on('SIGINT', () => {
+			watcher.close();
+			web.kill();
+		});
+	}
 } else {
 	console.error('Unrecognized browser to bundle for.');
 }

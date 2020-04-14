@@ -8,10 +8,14 @@
     "terser": "^4.6.11",
     "web-ext": "^4.1.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "node-watch": "^0.6.3"
+  },
   "scripts": {
     "firefox": "node build firefox",
     "chrome": "node build chrome",
+    "firefox:dev": "node build firefox -dev",
+    "chrome:dev": "node build chrome -dev",
     "clean": "node build clean"
   },
   "repository": {
