@@ -1210,8 +1210,9 @@ class MyMangaDex {
 	// END HELP / START PAGE
 
 	async chapterListPage() {
-		if (!this.options.highlightChapters && !this.options.hideLowerChapters &&
-			!this.options.showTooltips && !this.options.highlightNextChapter) {
+		if (!this.options.highlightChapters &&
+			!this.options.hideLowerChapters && !this.options.hideHigherChapters && !this.options.hideLastRead &&
+			!this.options.showTooltips) {
 			return;
 		} // Abort early if useless - no highlight, no hiding and no thumbnails
 		let groups = this.getChapterListGroups();
