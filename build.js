@@ -269,7 +269,13 @@ if (['firefox', 'chrome'].includes(browser)) {
 		build();
 		const watch = require('node-watch');
 
-		const web = spawn('web-ext', ['run', '--target', browser == 'chrome' ? 'chromium' : browser, '--keep-profile-changes', '--browser-console'], { cwd: makeFolder });
+		let target = browser;
+		if (browser == 'chrome') {
+			target = 'chromium';
+		} else if (browser == 'firefox') {
+			target = 'firefox-desktop';
+		}
+		const web = spawn('web-ext', ['run', '--target', target, '--keep-profile-changes', '--browser-console'], { cwd: makeFolder });
 		const watcher = watch(["options.html", "scripts/", "css/"], { recursive: true }, (evt, name) => {
 			if (evt == 'remove') {
 				console.error('Removing files not supported, adjust build file and rerun');
@@ -294,6 +300,7 @@ if (['firefox', 'chrome'].includes(browser)) {
 		web.stderr.on('data', (data) => {
 			console.error(''+data+'\n');
 		});
+		web.on('exit', () => process.exit());
 		process.on('SIGINT', () => {
 			watcher.close();
 			web.kill();
