@@ -279,6 +279,8 @@ if (['firefox', 'chrome'].includes(browser)) {
 		const watcher = watch(["options.html", "scripts/", "css/"], { recursive: true }, (evt, name) => {
 			if (evt == 'remove') {
 				console.error('Removing files not supported, adjust build file and rerun');
+				watcher.close();
+				web.kill();
 				process.exit();
 			}
 
