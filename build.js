@@ -275,7 +275,13 @@ if (['firefox', 'chrome'].includes(browser)) {
 		} else if (browser == 'firefox') {
 			target = 'firefox-desktop';
 		}
-		const web = spawn('web-ext', ['run', '--target', target, '--keep-profile-changes', '--browser-console'], { cwd: makeFolder });
+		let webargs = ['run', '--target', target, '--browser-console'];
+		let pos;
+		if ((pos = args.indexOf('-profile')) >= 0 && args.length > pos + 1) {
+			webargs = webargs.concat(['--firefox-profile', args[pos+1], '--keep-profile-changes']);
+		}
+
+		const web = spawn('web-ext', webargs, { cwd: makeFolder });
 		const watcher = watch(["options.html", "scripts/", "css/"], { recursive: true }, (evt, name) => {
 			if (evt == 'remove') {
 				console.error('Removing files not supported, adjust build file and rerun');
