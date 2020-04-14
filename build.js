@@ -9,13 +9,20 @@ const Terser = require('terser');
 // Args
 const [, , ...args] = process.argv;
 
+if (args[0] == 'clean') {
+	rimraf.sync('builds');
+	rimraf.sync('firefoxBuild');
+	rimraf.sync('chromeBuild');
+	process.exit();
+}
+
 let manifest = {
 	manifest_version: 2,
 	name: 'MyMangaDex',
-	version: '2.3.20',
+	version: process.env.npm_package_version,
 	author: 'Glagan',
 
-	description: 'Automatically update your MyAnimeList manga list when reading on MangaDex.',
+	description: process.env.npm_package_description,
 
 	permissions: [
 		'https://*.myanimelist.net/*',

@@ -1,7 +1,7 @@
 {
   "name": "mymangadex",
-  "version": "2.3.18",
-  "description": "Syncronize what you read on MangaDex.org to your MyAnimeList.net manga list",
+  "version": "2.3.20",
+  "description": "Automatically update your MyAnimeList manga list when reading on MangaDex.",
   "main": "build.js",
   "dependencies": {
     "rimraf": "^3.0.2",
@@ -11,7 +11,8 @@
   "devDependencies": {},
   "scripts": {
     "firefox": "node build firefox",
-    "chrome": "node build chrome"
+    "chrome": "node build chrome",
+    "clean": "node build clean"
   },
   "repository": {
     "type": "git",
