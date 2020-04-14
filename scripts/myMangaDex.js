@@ -534,9 +534,10 @@ class MyMangaDex {
 			// TODO: Also check volume if it saved
 			if ((!hasChapterZero && this.manga.lastMyAnimeListChapter == -1 && chapterVolume.chapterFloored == 1) ||
 				((this.manga.lastMangaDexChapter == -1 || markFullChapter) && this.manga.lastMyAnimeListChapter + 1 == chapterVolume.chapterFloored) ||
-				(parseFloat(chapterVolume.chapter) > this.manga.lastMangaDexChapter && !foundNext && !markFullChapter)) {
+				(parseFloat(chapterVolume.chapter) > this.manga.lastMangaDexChapter &&
+					(foundNext === false || foundNext === chapterVolume.chapter) && !markFullChapter)) {
 				element.style.backgroundColor = this.options.nextChapterColor;
-				foundNext = true;
+				foundNext = parseFloat(chapterVolume.chapter);
 			} else if (this.manga.lastMyAnimeListChapter == chapterVolume.chapterFloored &&
 				(this.manga.lastMangaDexChapter == -1 || chapterVolume.chapter == this.manga.lastMangaDexChapter)) {
 				element.style.backgroundColor = this.options.lastReadColor;
