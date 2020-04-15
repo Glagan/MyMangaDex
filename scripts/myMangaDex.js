@@ -138,7 +138,7 @@ class MyMangaDex {
 				let realChapter = Math.floor(this.manga.currentChapter.chapter);
 				let isHigher = (realChapter < 0 || realChapter > this.manga.lastMyAnimeListChapter);
 				let isHigherDex = (isHigher || (this.manga.lastMangaDexChapter != -1 && this.manga.currentChapter.chapter > this.manga.lastMangaDexChapter));
-				if (!force && usePepper && !isHigherDex && (this.options.saveOnlyHigher || this.manga.currentChapter.chapter == this.manga.lastMangaDexChapter)) {
+				if (!force && usePepper && !isHigherDex && this.options.saveOnlyHigher) {
 					if (this.options.confirmChapter) {
 						SimpleNotification.info({
 							title: "Not updated",
@@ -163,11 +163,12 @@ class MyMangaDex {
 					return;
 				}
 
-				let isNext = (realChapter < 0 ||
+				/*let isNext = (realChapter < 0 ||
 					//realChapter == this.manga.lastMyAnimeListChapter ||
 					realChapter == this.manga.lastMyAnimeListChapter + 1); // ||
-						//(!this.options.saveOnlyHigher && realChapter == this.manga.lastMyAnimeListChapter - 1));
-				if (!force && usePepper && this.options.saveOnlyNext && this.manga.lastMyAnimeListChapter > 0 && !isNext) {
+						//(!this.options.saveOnlyHigher && realChapter == this.manga.lastMyAnimeListChapter - 1));*/
+				let maybeNext = isHigherDex && this.manga.currentChapter.chapter <= Math.floor(this.manga.lastMangaDexChapter)+1;
+				if (!force && usePepper && this.options.saveOnlyNext && this.manga.lastMyAnimeListChapter > 0 && !maybeNext) {
 					if (this.options.confirmChapter) {
 						SimpleNotification.info({
 							title: "Not updated",
