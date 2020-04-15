@@ -133,6 +133,8 @@ Run ``npm run firefox:dev`` / ``npm run chrome:dev`` to watch and automatically 
 - `-mobile [device]` Connect to FireFox Android over `adb`. If not device is supplied, lists available devices.
 Example: ``npm run firefox:dev -- -mobile 73QPH18801900227``
 
+``-detached`` allows the builder to leave the browser and extension-reloading running in the background and to reconnect the next time you start. Don't forget to terminate this process with ``npm run stop``. Note: This does not check if the background process was started for the same browser. Stop if you want to change browsers.
+
 ## Useful links
 
 * Extension inspired by [MAL-Sync](https://github.com/lolamtisch/MALSync).

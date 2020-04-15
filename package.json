@@ -16,6 +16,7 @@
     "chrome": "node build chrome",
     "firefox:dev": "node build firefox -dev",
     "chrome:dev": "node build chrome -dev",
+    "stop": "node build stop",
     "clean": "node build clean"
   },
   "repository": {
