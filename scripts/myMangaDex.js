@@ -167,7 +167,8 @@ class MyMangaDex {
 					//realChapter == this.manga.lastMyAnimeListChapter ||
 					realChapter == this.manga.lastMyAnimeListChapter + 1); // ||
 						//(!this.options.saveOnlyHigher && realChapter == this.manga.lastMyAnimeListChapter - 1));*/
-				let maybeNext = isHigherDex && this.manga.currentChapter.chapter <= Math.floor(this.manga.lastMangaDexChapter)+1;
+				let maybeNext = isHigherDex && realChapter <= Math.floor(this.manga.lastMangaDexChapter)+1;
+				console.log(this.manga.currentChapter, this.manga.lastMangaDexChapter, isHigherDex, maybeNext);
 				if (!force && usePepper && this.options.saveOnlyNext && this.manga.lastMyAnimeListChapter > 0 && !maybeNext) {
 					if (this.options.confirmChapter) {
 						SimpleNotification.info({
