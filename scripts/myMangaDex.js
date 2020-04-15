@@ -516,7 +516,7 @@ class MyMangaDex {
 		}
 
 		// Get the name of each "chapters" in the list - ignore first line
-		let hasChapterZero = false;
+		let firstChapter = undefined;
 		let foundNext = false;
 		let markFullChapter = undefined;
 		for (let i = 0; i < chaptersList.length - 1; i++) {
@@ -524,8 +524,8 @@ class MyMangaDex {
 			let chapterVolume = this.getVolumeChapterFromNode(element.firstElementChild.firstElementChild);
 			chapterVolume.chapterFloored = Math.floor(chapterVolume.chapter);
 
-			if (chapterVolume.chapterFloored == 0) {
-				hasChapterZero = true;
+			if (firstChapter === undefined) {
+				firstChapter = chapterVolume.chapter;
 			}
 			// if is current chapter and subchapter matches, proceed as normal
 			if (markFullChapter === undefined && chapterVolume.chapter == this.manga.lastMangaDexChapter) {
@@ -537,7 +537,7 @@ class MyMangaDex {
 				markFullChapter = true;
 			}
 			// TODO: Also check volume if it saved
-			if (((this.manga.lastMyAnimeListChapter == -1 || this.manga.lastMangaDexChapter == -1) && chapterVolume.chapterFloored == (hasChapterZero ? 0 : 1)) ||
+			if (((this.manga.lastMyAnimeListChapter == -1 || this.manga.lastMangaDexChapter == -1) && chapterVolume.chapter == firstChapter) ||
 				((this.manga.lastMangaDexChapter == -1 || markFullChapter) && this.manga.lastMyAnimeListChapter + 1 == chapterVolume.chapterFloored) ||
 				(this.manga.lastMangaDexChapter != -1 && parseFloat(chapterVolume.chapter) > this.manga.lastMangaDexChapter &&
 					(foundNext === false || foundNext === chapterVolume.chapter) && !markFullChapter)) {
