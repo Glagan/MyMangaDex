@@ -273,12 +273,15 @@ if (['firefox', 'chrome'].includes(browser)) {
 		if (browser == 'chrome') {
 			target = 'chromium';
 		} else if (browser == 'firefox') {
-			target = 'firefox-desktop';
+			target = (args.indexOf('-mobile') >= 0 ? 'firefox-android' : 'firefox-desktop');
 		}
 		let webargs = ['run', '--target', target, '--browser-console'];
 		let pos;
 		if ((pos = args.indexOf('-profile')) >= 0 && args.length > pos + 1) {
 			webargs = webargs.concat(['--firefox-profile', args[pos+1], '--keep-profile-changes']);
+		}
+		if ((pos = args.indexOf('-mobile')) >= 0 && args.length > pos + 1) {
+			webargs = webargs.concat(['--android-device', args[pos+1]]);
 		}
 
 		const web = spawn('web-ext', webargs, { cwd: makeFolder });

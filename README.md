@@ -100,7 +100,7 @@ Example: ``npm run chrome -- -no-minify -debug``
 ### Firefox
 
 1. Be sure that the version from the Firefox add-ons site is not installed (don't know what it would do, maybe it just won't work)
-2. Clone the repo
+2. Clone the repo and move your terminal to the new folder
 3. Install dependencies ``npm install``
 4. Build ``npm run firefox``
 5. Go to [about:debugging](about:debugging)
@@ -112,7 +112,7 @@ Example: ``npm run chrome -- -no-minify -debug``
 ### Chrome
 
 1. Make sure it isn't already installed
-2. Clone the repo
+2. Clone the repo and move your terminal to the new folder
 3. Install dependencies ``npm install``
 4. Build ``npm run chrome``
 5. Go to [chrome://extensions/](chrome://extensions/)
@@ -120,6 +120,18 @@ Example: ``npm run chrome -- -no-minify -debug``
 7. Click *Load Unpacked*
 8. Select the *chromeBuild* folder
 9. Done !
+
+### Developing
+
+MyMangaDex now comes with a developing script.
+Make sure you have the repo and all dependencies installed (see above).
+Run ``npm run firefox:dev`` / ``npm run chrome:dev`` to watch and automatically rebuild and reload the extension.
+
+`chrome:dev` uses the chromium target with less support.
+`firefox:dev` has full support and accepts the following additional arguments:
+- `-profile name` Use existing profile. *This profile should **not** be used for daily use anymore (See [here](https://extensionworkshop.com/documentation/develop/web-ext-command-reference/#web-ext_run))*
+- `-mobile [device]` Connect to FireFox Android over `adb`. If not device is supplied, lists available devices.
+Example: ``npm run firefox:dev -- -mobile 73QPH18801900227``
 
 ## Useful links
 
