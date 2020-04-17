@@ -137,7 +137,8 @@ class MyMangaDex {
 				// Use Math.floor on the current chapter to avoid updating even tough it's the same if this is a sub chapter
 				let realChapter = Math.floor(this.manga.currentChapter.chapter);
 				let isHigher = (realChapter < 0 || realChapter > this.manga.lastMyAnimeListChapter);
-				if (!force && usePepper && !isHigher && (this.options.saveOnlyHigher || realChapter == this.manga.lastMyAnimeListChapter)) {
+				let isHigherDex = (isHigher || (this.manga.lastMangaDexChapter != -1 && this.manga.currentChapter.chapter > this.manga.lastMangaDexChapter));
+				if (!force && usePepper && !isHigherDex && this.options.saveOnlyHigher) {
 					if (this.options.confirmChapter) {
 						SimpleNotification.info({
 							title: "Not updated",
@@ -162,11 +163,13 @@ class MyMangaDex {
 					return;
 				}
 
-				let isNext = (realChapter < 0 ||
-					realChapter == this.manga.lastMyAnimeListChapter ||
-					(realChapter == this.manga.lastMyAnimeListChapter + 1 ||
-						(!this.options.saveOnlyHigher && realChapter == this.manga.lastMyAnimeListChapter - 1)));
-				if (!force && usePepper && this.options.saveOnlyNext && this.manga.lastMyAnimeListChapter > 0 && !isNext) {
+				/*let isNext = (realChapter < 0 ||
+					//realChapter == this.manga.lastMyAnimeListChapter ||
+					realChapter == this.manga.lastMyAnimeListChapter + 1); // ||
+						//(!this.options.saveOnlyHigher && realChapter == this.manga.lastMyAnimeListChapter - 1));*/
+				let maybeNext = isHigherDex && realChapter <= Math.floor(this.manga.lastMangaDexChapter)+1;
+				console.log(this.manga.currentChapter, this.manga.lastMangaDexChapter, isHigherDex, maybeNext);
+				if (!force && usePepper && this.options.saveOnlyNext && this.manga.lastMyAnimeListChapter > 0 && !maybeNext) {
 					if (this.options.confirmChapter) {
 						SimpleNotification.info({
 							title: "Not updated",
@@ -191,27 +194,30 @@ class MyMangaDex {
 					return;
 				}
 
+				let doUpdate = this.manga.lastMyAnimeListChapter != realChapter;
 				let oldStatus = this.manga.status;
 				if (this.mangaDexScore > 0) {
 					this.manga.score = this.mangaDexScore;
 				}
 				let { requestURL, body } = buildMyAnimeListBody(usePepper, this.manga, this.csrf, setStatus);
 
-				// Send the POST request to update the manga
-				await browser.runtime.sendMessage({
-					action: "fetch",
-					url: requestURL,
-					options: {
-						method: "POST",
-						body: body,
-						redirect: "follow",
-						credentials: "include",
-						headers: {
-							"Content-Type": "application/x-www-form-urlencoded",
-							"accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+				// Send the POST request to update the manga if there as a change
+				if (doUpdate) {
+					await browser.runtime.sendMessage({
+						action: "fetch",
+						url: requestURL,
+						options: {
+							method: "POST",
+							body: body,
+							redirect: "follow",
+							credentials: "include",
+							headers: {
+								"Content-Type": "application/x-www-form-urlencoded",
+								"accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+							}
 						}
-					}
-				});
+					});
+				}
 
 				if (usePepper) {
 					if (this.manga.status == 6) {
@@ -265,6 +271,7 @@ class MyMangaDex {
 			this.insertChapter(this.manga.currentChapter.chapter);
 		}
 		// Update local storage - after, it doesn't really matter
+		this.manga.lastMangaDexChapter = this.manga.currentChapter.chapter;
 		await updateLocalStorage(this.manga, this.options);
 		// Update History
 		if (this.options.updateHistoryPage && this.history) {
@@ -502,25 +509,47 @@ class MyMangaDex {
 	highlightChapters() {
 		if (!this.options.highlightChapters) return;
 		// Chapters list displayed
-		let chaptersList = Array.from(document.querySelector(".chapter-container").children).reverse();
+		let chaptersList;
+		try {
+			chaptersList = Array.from(document.querySelector(".chapter-container").children).reverse();
+		} catch (e) {
+			// probably because we're in reader, no chapters to highlight
+			return;
+		}
 
 		// Get the name of each "chapters" in the list - ignore first line
-		let hasChapterZero = false;
+		let firstChapter = undefined;
+		let foundNext = false;
+		let markFullChapter = undefined;
 		for (let i = 0; i < chaptersList.length - 1; i++) {
 			let element = chaptersList[i];
 			let chapterVolume = this.getVolumeChapterFromNode(element.firstElementChild.firstElementChild);
 			chapterVolume.chapterFloored = Math.floor(chapterVolume.chapter);
 
-			if (chapterVolume.chapter == 0) {
-				hasChapterZero = true;
+			if (firstChapter === undefined) {
+				firstChapter = chapterVolume.chapter;
+			}
+			// if is current chapter and subchapter matches, proceed as normal
+			if (markFullChapter === undefined && chapterVolume.chapter == this.manga.lastMangaDexChapter) {
+				markFullChapter = false;
+			}
+			// if is current chapter but subchapter doesn't match. must be first subchapter but lastMangaDexChapter does not correspond
+			// assume this means a sync from MAL and mark all subchapters read
+			if (markFullChapter === undefined && chapterVolume.chapterFloored != chapterVolume.chapter && this.manga.lastMangaDexChapter == chapterVolume.chapterFloored) {
+				markFullChapter = true;
 			}
 			// TODO: Also check volume if it saved
-			if ((!hasChapterZero && this.manga.lastMyAnimeListChapter == -1 && chapterVolume.chapterFloored == 1) ||
-				this.manga.lastMyAnimeListChapter + 1 == chapterVolume.chapterFloored) {
+			if (((this.manga.lastMyAnimeListChapter == -1 || this.manga.lastMangaDexChapter == -1) && chapterVolume.chapter == firstChapter) ||
+				((this.manga.lastMangaDexChapter == -1 || markFullChapter) && this.manga.lastMyAnimeListChapter + 1 == chapterVolume.chapterFloored) ||
+				(this.manga.lastMangaDexChapter != -1 && parseFloat(chapterVolume.chapter) > this.manga.lastMangaDexChapter &&
+					(foundNext === false || foundNext === chapterVolume.chapter) && !markFullChapter)) {
 				element.style.backgroundColor = this.options.nextChapterColor;
-			} else if (this.manga.lastMyAnimeListChapter == chapterVolume.chapterFloored) {
+				foundNext = parseFloat(chapterVolume.chapter);
+			} else if (this.manga.lastMyAnimeListChapter == chapterVolume.chapterFloored &&
+				(this.manga.lastMangaDexChapter == -1 || chapterVolume.chapter == this.manga.lastMangaDexChapter)) {
 				element.style.backgroundColor = this.options.lastReadColor;
-			} else if (this.manga.lastMangaDexChapter == chapterVolume.chapter) {
+			} else if (this.manga.lastMangaDexChapter == chapterVolume.chapter ||
+				(markFullChapter && this.manga.lastMangaDexChapter == chapterVolume.chapterFloored)) {
 				element.style.backgroundColor = this.options.lastOpenColors[0];
 				// If save all opened is on we highlight them
 			} else if (this.options.saveAllOpened) {
@@ -529,7 +558,11 @@ class MyMangaDex {
 				});
 				if (found !== undefined) {
 					element.style.backgroundColor = this.options.openedChaptersColor;
+				} else {
+					element.style.backgroundColor = ''; // clear previous highlights
 				}
+			} else {
+				element.style.backgroundColor = ''; // clear previous highlights
 			}
 		}
 	}
@@ -1179,24 +1212,42 @@ class MyMangaDex {
 	// END HELP / START PAGE
 
 	async chapterListPage() {
-		if (!this.options.highlightChapters && !this.options.hideLowerChapters &&
-			!this.options.showTooltips && !this.options.highlightNextChapter) {
+		if (!this.options.highlightChapters &&
+			!this.options.hideLowerChapters && !this.options.hideHigherChapters && !this.options.hideLastRead &&
+			!this.options.showTooltips) {
 			return;
 		} // Abort early if useless - no highlight, no hiding and no thumbnails
 		let groups = this.getChapterListGroups();
 		let lastChapter = groups.length;
 		let titleInformations = {};
 
+		// collect information
+		for (let i = 0; i < lastChapter; i++) {
+			let group = groups[i];
+			// Get title informations from LocalStorage
+			if (!(group.titleId in titleInformations)) {
+				titleInformations[group.titleId] = await storageGet(group.titleId);
+				if (titleInformations[group.titleId]) titleInformations[group.titleId].next = Infinity;
+			}
+			// if there is data, find the next chapter
+			if (titleInformations[group.titleId]) {
+				let chapterCount = group.chapters.length;
+				for (let j = 0; j < chapterCount; j++) {
+					let chapter = group.chapters[j];
+					if (chapter.value > titleInformations[group.titleId].last && Math.floor(chapter.value) <= titleInformations[group.titleId].last + 1) {
+						titleInformations[group.titleId].next = Math.min(titleInformations[group.titleId].next, chapter.value);
+					}
+				}
+			}
+		}
+
         /**
          * Hide Lower and Higher
          */
-		if (this.options.hideLowerChapters) {
+		if (this.options.hideLowerChapters || this.options.hideHigherChapters || this.options.hideLastRead) {
 			for (let i = 0; i < lastChapter; i++) {
 				let group = groups[i];
-				// Get title informations from LocalStorage
-				if (!(group.titleId in titleInformations)) {
-					titleInformations[group.titleId] = await storageGet(group.titleId);
-				}
+				
 				// If there is data
 				if (titleInformations[group.titleId]) {
 					let chapterCount = group.chapters.length;
@@ -1204,10 +1255,9 @@ class MyMangaDex {
 					for (let j = 0; j < chapterCount; j++) {
 						let chapter = group.chapters[j];
 						if ((this.options.hideHigherChapters &&
-							titleInformations[group.titleId].last < chapter.value &&
-							chapter.value >= Math.floor(titleInformations[group.titleId].last) + 2) ||
+							titleInformations[group.titleId].next < chapter.value) ||
 							(this.options.hideLowerChapters && titleInformations[group.titleId].last > chapter.value) ||
-							(this.options.hideLastRead && chapter.value == highestChapter && titleInformations[group.titleId].last == chapter.value)) {
+							(this.options.hideLastRead && titleInformations[group.titleId].last == chapter.value && titleInformations[group.titleId].next != Infinity)) {
 							chapter.node.classList.add("is-hidden-chapter");
 							chapter.hidden = true;
 						}
@@ -1277,10 +1327,6 @@ class MyMangaDex {
 			let colors = this.options.lastOpenColors, lastColor = colors.length, currentColor = 0;
 			for (let i = 0; i < lastChapter; i++) {
 				let group = groups[i];
-				// Get title informations from LocalStorage
-				if (!(group.titleId in titleInformations)) {
-					titleInformations[group.titleId] = await storageGet(group.titleId);
-				}
 				// If there is data
 				if (titleInformations[group.titleId] != undefined) {
 					let chapterCount = group.chapters.length;
@@ -1288,8 +1334,7 @@ class MyMangaDex {
 					for (let j = 0; j < chapterCount; j++) {
 						let chapter = group.chapters[j];
 						chapter.node.classList.add("has-fast-in-transition");
-						if (titleInformations[group.titleId].last < chapter.value &&
-							chapter.value < Math.floor(titleInformations[group.titleId].last) + 2) {
+						if (titleInformations[group.titleId].next == chapter.value) {
 							paintRow(chapter.node, this.options.nextChapterColor);
 							group.selected = j;
 							outerColor = this.options.nextChapterColor;
@@ -1493,14 +1538,7 @@ class MyMangaDex {
 		// Informations
 		await this.getTitleInfos();
 		await this.fetchMyAnimeList();
-		// Save LocalStorage to MAL values if it's higher
-		if (this.manga.lastMyAnimeListChapter > this.manga.lastMangaDexChapter) {
-			this.manga.lastMangaDexChapter = this.manga.lastMyAnimeListChapter;
-			if (this.options.saveAllOpened) {
-				this.insertChapter(this.manga.lastMangaDexChapter);
-			}
-			await updateLocalStorage(this.manga, this.options);
-		}
+
 		// Get MAL Url from the database
 		const delayed = !!document.querySelector("div.container > div.alert.alert-danger");
 		this.updateChapter(delayed);
@@ -1509,9 +1547,7 @@ class MyMangaDex {
 		}
 	}
 
-	async singleChapterEvent(event, firstRun) {
-		let data = event.detail.data;
-
+	async singleChapterEvent(data, firstRun) {
 		if (firstRun) {
 			this.manga.mangaDexId = data.manga_id;
 			this.manga.chapterId = data.id;
@@ -1528,7 +1564,6 @@ class MyMangaDex {
 			}
 		}
 
-		// If the new id is different
 		let oldChapter = undefined;
 		if (this.manga.chapterId != data.id) {
 			oldChapter = this.manga.currentChapter;
@@ -1555,15 +1590,15 @@ class MyMangaDex {
 		// -> custom events to communicate
 		function relayChapterEvent() {
 			window.reader.model.on("chapterchange", (data) => {
-				// note: due to some weird bug this function needs to have an actual body
-				// otherwise subsequent events aren't dispatched
-				document.dispatchEvent(new CustomEvent("mmdChapterChange", { detail: { data: data._data, title: data.manga.name } }));
+				// note: this function needs to have an actual body to avoid a return
+				// EventEmitter.js removes an event if return matches (default: true)
+				document.dispatchEvent(new CustomEvent("mmdChapterChange", { detail: data._data }));
 			});
 		}
 		injectScript(relayChapterEvent);
 
 		document.addEventListener("mmdChapterChange", async (event) => {
-			this.singleChapterEvent(event, firstRun);
+			this.singleChapterEvent(event.detail, firstRun);
 			firstRun = false;
 		});
 	}
