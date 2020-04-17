@@ -22,7 +22,7 @@ if (args[0] == 'stop') {
 			let pid = +fs.readFileSync('.devTmp/pid.txt');
 			if (pid) {
 				process.kill(pid, 'SIGINT');
-				console.log('Terminated',pid);
+				console.log('Terminated', pid);
 			}
 		} catch (e) {
 			console.log('Process already terminated');
@@ -34,7 +34,7 @@ if (args[0] == 'stop') {
 		try {
 			rimraf.sync('.devTmp');
 			break;
-		} catch (e) {}
+		} catch (e) { }
 	}
 	process.exit();
 }
@@ -292,7 +292,7 @@ if (['firefox', 'chrome'].includes(browser)) {
 		build();
 		const watch = require('node-watch');
 
-		let killweb = () => {};
+		let killweb = () => { };
 		const webargs = () => {
 			let target = browser;
 			if (browser == 'chrome') {
@@ -303,10 +303,10 @@ if (['firefox', 'chrome'].includes(browser)) {
 			let webargs = ['run', '--target', target, '--browser-console'];
 			let pos;
 			if ((pos = args.indexOf('-profile')) >= 0 && args.length > pos + 1) {
-				webargs = webargs.concat(['--firefox-profile', args[pos+1], '--keep-profile-changes']);
+				webargs = webargs.concat(['--firefox-profile', args[pos + 1], '--keep-profile-changes']);
 			}
 			if ((pos = args.indexOf('-mobile')) >= 0 && args.length > pos + 1) {
-				webargs = webargs.concat(['--android-device', args[pos+1]]);
+				webargs = webargs.concat(['--android-device', args[pos + 1]]);
 			}
 			return webargs;
 		};
@@ -316,10 +316,10 @@ if (['firefox', 'chrome'].includes(browser)) {
 			killweb = () => web.kill();
 
 			web.stdout.on('data', (data) => {
-				console.log(''+data+'\n');
+				console.log('' + data + '\n');
 			});
 			web.stderr.on('data', (data) => {
-				console.error(''+data+'\n');
+				console.error('' + data + '\n');
 			});
 			web.on('exit', () => process.exit());
 
@@ -334,10 +334,10 @@ if (['firefox', 'chrome'].includes(browser)) {
 				const web = spawn('web-ext', webargs(), {
 					cwd: makeFolder,
 					detached: true,
-					stdio: [ 'ignore', out, err ]
+					stdio: ['ignore', out, err]
 				});
 				web.unref();
-				return ''+web.pid;
+				return '' + web.pid;
 			}
 
 			// create web process if needed
@@ -354,13 +354,13 @@ if (['firefox', 'chrome'].includes(browser)) {
 				let pidfile = fs.createWriteStream('.devTmp/pid.txt', { flags: 'w+' });
 				pidfile.write(createProcess());
 				pidfile.cork();
-				pidfile.end();	
+				pidfile.end();
 			}
 
 			const connect = watch([".devTmp/out.log", ".devTmp/err.log"], (evt, name) => {
 				const content = fs.readFileSync(name);
 				if (!content || content == "") return;
-				console.log(content+'\n');
+				console.log(content + '\n');
 				fs.writeFileSync(name, ''); // clear file
 			});
 			process.on('SIGINT', () => {
@@ -386,7 +386,7 @@ if (['firefox', 'chrome'].includes(browser)) {
 				});
 			} else {
 				console.log(`Copying ${name}`);
-				fs.copyFileSync(name, makeFolder+'/'+name);
+				fs.copyFileSync(name, makeFolder + '/' + name);
 			}
 		});
 
