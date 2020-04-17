@@ -1151,7 +1151,7 @@ class MyMangaDex {
 		titleLinkName.className = "manga_title white";
 		titleLinkName.title = historyEntry.name;
 		titleLinkName.rel = "noreferrer noopener";
-		titleLinkName.href = ["/manga/", historyEntry.id].join("");
+		titleLinkName.href = ["/title/", historyEntry.id].join("");
 		titleLinkName.textContent = historyEntry.name;
 		let chapterInfo = document.createElement("p");
 		chapterInfo.className = "text-truncate m-0";
@@ -1606,7 +1606,7 @@ class MyMangaDex {
 			let node = mdTitles[i];
 			let chapterLink = node.querySelector("a[href^='/chapter/']");
 			let title = {
-				mangaDexId: Math.floor(/\/manga\/(\d+)\/.+./.exec(node.querySelector("a[href^='/manga/']").href)[1]),
+				mangaDexId: Math.floor(/\/title\/(\d+)\/.+./.exec(node.querySelector("a[href^='/title/']").href)[1]),
 				name: node.querySelector(".manga_title").textContent,
 				chapterId: Math.floor(/\/chapter\/(\d+)/.exec(chapterLink.href)[1]),
 				currentChapter: this.getVolumeChapterFromString(chapterLink.textContent)
@@ -1620,7 +1620,7 @@ class MyMangaDex {
 		// Display additionnal history
 		for (let i = this.history.list.length - 1; i >= 0; i--) {
 			let entry = this.history[this.history.list[i]];
-			let exist = container.querySelector(["a[href^='/manga/", entry.id, "']"].join(""));
+			let exist = container.querySelector(["a[href^='/title/", entry.id, "']"].join(""));
 			let entryNode;
 			if (!exist) {
 				entryNode = this.buildHistoryEntryNode(entry);
