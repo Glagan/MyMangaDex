@@ -4,7 +4,7 @@
  */
 
 /**
- * source: https: //stackoverflow.com/a/34491287/7794671
+ * source: https://stackoverflow.com/a/34491287
  * Count the number of properties of an object to test if it's empty
  * @param {Object} obj The object to test
  */
