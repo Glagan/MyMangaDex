@@ -538,7 +538,7 @@ class MyMangaDex {
 				markFullChapter = true;
 			}
 			// TODO: Also check volume if it saved
-			let maybeNext = (chapterVolume.chapterFloored + 1 <= Math.floor(this.manga.lastMangaDexChapter));
+			let maybeNext = (chapterVolume.chapterFloored <= Math.floor(this.manga.lastMangaDexChapter) + 1);
 			if (((this.manga.lastMyAnimeListChapter == -1 || this.manga.lastMangaDexChapter == -1) && chapterVolume.chapter == firstChapter) ||
 				((this.manga.lastMangaDexChapter == -1 || markFullChapter) && this.manga.lastMyAnimeListChapter + 1 == chapterVolume.chapterFloored) ||
 				(this.manga.lastMangaDexChapter != -1 && parseFloat(chapterVolume.chapter) > this.manga.lastMangaDexChapter && maybeNext &&
