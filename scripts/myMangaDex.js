@@ -43,7 +43,7 @@ class MyMangaDex {
 
 		// Choose page
 		if ((this.pageUrl.indexOf(urls.follows) > -1 && this.pageUrl.indexOf("/manga/") == -1) ||
-			(this.pageUrl.indexOf(urls.group) > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || (this.pageUrl.indexOf("/manga/") == -1 && this.pageUrl.indexOf("/comments/") == -1))) ||
+			(this.pageUrl.indexOf(urls.group) > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || (this.pageUrl.indexOf("/manga/") == -1 && this.pageUrl.indexOf("/comments") == -1))) ||
 			(this.pageUrl.indexOf(urls.user) > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || this.pageUrl.indexOf("/manga/") == -1))) {
 			this.chapterListPage();
 		} else if (this.pageUrl.indexOf(urls.search) > -1 ||
@@ -59,7 +59,7 @@ class MyMangaDex {
 			this.titlesListPage();
 		} else if (this.pageUrl.indexOf(urls.title) > -1 || this.pageUrl.indexOf(urls.manga) > -1) {
 			this.titlePage();
-		} else if (this.pageUrl.indexOf(urls.chapter) > -1) {
+		} else if (this.pageUrl.indexOf(urls.chapter) > -1 && this.pageUrl.indexOf("/comments") == -1) {
 			this.singleChapterPage();
 		} else if (this.pageUrl.indexOf(urls.history) > -1) {
 			this.historyPage();
