@@ -168,7 +168,6 @@ class MyMangaDex {
 					realChapter == this.manga.lastMyAnimeListChapter + 1); // ||
 						//(!this.options.saveOnlyHigher && realChapter == this.manga.lastMyAnimeListChapter - 1));*/
 				let maybeNext = isHigherDex && realChapter <= Math.floor(this.manga.lastMangaDexChapter)+1;
-				console.log(this.manga.currentChapter, this.manga.lastMangaDexChapter, isHigherDex, maybeNext);
 				if (!force && usePepper && this.options.saveOnlyNext && this.manga.lastMyAnimeListChapter > 0 && !maybeNext) {
 					if (this.options.confirmChapter) {
 						SimpleNotification.info({
@@ -202,7 +201,7 @@ class MyMangaDex {
 				let { requestURL, body } = buildMyAnimeListBody(usePepper, this.manga, this.csrf, setStatus);
 
 				// Send the POST request to update the manga if there as a change
-				if (doUpdate) {
+				if (force || doUpdate) {
 					await browser.runtime.sendMessage({
 						action: "fetch",
 						url: requestURL,
