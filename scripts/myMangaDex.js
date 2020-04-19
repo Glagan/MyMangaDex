@@ -1594,7 +1594,7 @@ class MyMangaDex {
 			volume: parseInt(data.volume) || 0,
 			chapter: parseFloat(data.chapter) || 0
 		};
-		const delayed = data.status != "OK";
+		const delayed = data.status != "OK" && data.status != "external";
 		this.updateChapter(delayed, oldChapter);
 		this.manga.chapterId = data.id;
 	}
