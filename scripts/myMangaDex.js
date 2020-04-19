@@ -134,8 +134,13 @@ class MyMangaDex {
 			this.manga.exist;
 
 		// make sure the following calculations still work
-		if (!doMyAnimeList)
+		if (!doMyAnimeList) {
 			this.manga.lastMyAnimeListChapter = this.manga.lastMangaDexChapter;
+			if (this.manga.lastMangaDexChapter == -1) {
+				this.manga.started = true;
+				this.manga.start_today = true;
+			}
+		}
 		const realChapter = Math.floor(this.manga.currentChapter.chapter);
 
 		if (!force && usePepper) {
@@ -238,7 +243,7 @@ class MyMangaDex {
 					} else {
 						this.notification(NOTIFY.SUCCESS, "Manga updated", "You started reading **" + this.manga.name + "** at chapter " + this.manga.lastMyAnimeListChapter, this.getCurrentThumbnail());
 					}
-				} else if (this.manga.lastMyAnimeListChapter >= 0 && doMyAnimeList &&
+				} else if (this.manga.lastMyAnimeListChapter >= 0 &&
 					(this.manga.status != 2 || (this.manga.status == 2 && this.manga.is_rereading) || oldStatus == 2)) {
 					this.notification(NOTIFY.SUCCESS, "Manga updated", "**" + this.manga.name + "** has been updated to chapter " + this.manga.lastMyAnimeListChapter + ((this.manga.total_chapter > 0) ? " out of " + this.manga.total_chapter : ""), this.getCurrentThumbnail());
 				}
@@ -252,10 +257,22 @@ class MyMangaDex {
 				}
 			}
 		}
+		
 		if (this.options.updateMDList &&
-			(this.manga.status != oldStatus || this.manga.completed !== undefined ||
-				this.options.updateOnlyInList && (!this.mangaDexStatus || this.mangaDexStatus != this.malToMdStatus(this.manga.status)))) {
-			this.mangaDexStatus = this.malToMdStatus(this.manga.status);
+			((
+				(doMyAnimeList && this.manga.status != oldStatus) ||
+				(!doMyAnimeList && this.mangaDexStatus == false)) ||
+			this.manga.completed !== undefined ||
+				(this.options.updateOnlyInList && (
+					!this.mangaDexStatus ||
+					(doMyAnimeList && this.mangaDexStatus != this.malToMdStatus(this.manga.status)))
+				))) {
+			if (doMyAnimeList) {
+				this.mangaDexStatus = this.malToMdStatus(this.manga.status);
+			} else {
+				this.mangaDexStatus = "Reading";
+				this.manga.status = 1;
+			}
 			await this.updateMangaDexList("manga_follow", this.manga.status);
 		}
 		
@@ -969,41 +986,45 @@ class MyMangaDex {
 		}
 		if (data === undefined || this.options.updateOnlyInList || outdatedMyAnimeList) {
 			// Fetch it from mangadex manga page
-			let data = await browser.runtime.sendMessage({
-				action: "fetch",
-				url: [domain, "title/", this.manga.mangaDexId].join(''),
-				options: {
-					method: "GET",
-					cache: "no-cache"
-				}
-			});
-			this.manga.lastTitle = Date.now();
-			// Scan the manga page for the mal icon and mal url
-			let myAnimeListURL = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(data.body);
-			// If regex is empty, there is no mal link, can't do anything
-			if (data == undefined && myAnimeListURL == null) {
-				this.notification(NOTIFY.ERROR, "No MyAnimeList ID", "Last open chapters are still saved.", this.mmdCrossedImage, true);
+			await this.fetchTitleInfos(outdatedMyAnimeList);
+		}
+	}
+
+	async fetchTitleInfos(outdatedMyAnimeList, notifications = true) {
+		let data = await browser.runtime.sendMessage({
+			action: "fetch",
+			url: [domain, "title/", this.manga.mangaDexId].join(''),
+			options: {
+				method: "GET",
+				cache: "no-cache"
 			}
-			if (myAnimeListURL != undefined) {
-				// If there is a mal link, add it and save it in local storage
-				this.manga.myAnimeListId = Math.floor(/.+\/(\d+)/.exec(myAnimeListURL[1])[1]);
+		});
+		this.manga.lastTitle = Date.now();
+		// Scan the manga page for the mal icon and mal url
+		let myAnimeListURL = /<a.+href='(.+)'>MyAnimeList<\/a>/.exec(data.body);
+		// If regex is empty, there is no mal link, can't do anything
+		if (data == undefined && myAnimeListURL == null && notifications) {
+			this.notification(NOTIFY.ERROR, "No MyAnimeList ID", "Last open chapters are still saved.", this.mmdCrossedImage, true);
+		}
+		if (myAnimeListURL != undefined) {
+			// If there is a mal link, add it and save it in local storage
+			this.manga.myAnimeListId = Math.floor(/.+\/(\d+)/.exec(myAnimeListURL[1])[1]);
+		}
+		if (outdatedMyAnimeList || myAnimeListURL != undefined) {
+			await updateLocalStorage(this.manga, this.options);
+		}
+		// Get the manga status on MangaDex
+		this.mangaDexLoggedIn = !/You need to log in to use this function\./.exec(data.body);
+		this.mangaDexStatus = false;
+		this.mangaDexScore = 0;
+		if (this.mangaDexLoggedIn) {
+			let status = /disabled dropdown-item manga_follow_button.+?<\/span>\s*(.+?)<\/a>/.exec(data.body);
+			if (status) {
+				this.mangaDexStatus = status[1].trim();
 			}
-			if (outdatedMyAnimeList || myAnimeListURL != undefined) {
-				await updateLocalStorage(this.manga, this.options);
-			}
-			// Get the manga status on MangaDex
-			this.mangaDexLoggedIn = !/You need to log in to use this function\./.exec(data.body);
-			this.mangaDexStatus = false;
-			this.mangaDexScore = 0;
-			if (this.mangaDexLoggedIn) {
-				let status = /disabled dropdown-item manga_follow_button.+?<\/span>\s*(.+?)<\/a>/.exec(data.body);
-				if (status) {
-					this.mangaDexStatus = status[1].trim();
-				}
-				let scoreRegex = /class='\s*disabled\s*dropdown-item\s*manga_rating_button'\s*id='(\d+)'/.exec(data.body);
-				if (scoreRegex) {
-					this.mangaDexScore = scoreRegex[1];
-				}
+			let scoreRegex = /class='\s*disabled\s*dropdown-item\s*manga_rating_button'\s*id='(\d+)'/.exec(data.body);
+			if (scoreRegex) {
+				this.mangaDexScore = scoreRegex[1];
 			}
 		}
 	}
@@ -1532,6 +1553,9 @@ class MyMangaDex {
 		// Informations
 		await this.getTitleInfos();
 		await this.fetchMyAnimeList();
+		if (this.mangaDexStatus === undefined) {
+			await this.fetchTitleInfos();
+		}
 
 		// Get MAL Url from the database
 		const delayed = !!document.querySelector("div.container > div.alert.alert-danger");
@@ -1555,6 +1579,10 @@ class MyMangaDex {
 
 			if (this.manga.exist && this.manga.is_approved) {
 				this.insertMyAnimeListButton(document.querySelector(".reader-controls-actions.col-auto.row.no-gutters.p-1").lastElementChild);
+			}
+
+			if (this.mangaDexStatus === undefined) {
+				await this.fetchTitleInfos(false);
 			}
 		}
 
