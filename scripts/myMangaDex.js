@@ -136,76 +136,78 @@ class MyMangaDex {
 		// make sure the following calculations still work
 		if (!doMyAnimeList)
 			this.manga.lastMyAnimeListChapter = this.manga.lastMangaDexChapter;
+		const realChapter = Math.floor(this.manga.currentChapter.chapter);
 
-		// If the current chapter is higher than the last read one
-		// Use Math.floor on the current chapter to avoid updating even tough it's the same if this is a sub chapter
-		let realChapter = Math.floor(this.manga.currentChapter.chapter);
-		let isHigher = (realChapter < 0 || realChapter > this.manga.lastMyAnimeListChapter);
-		let isHigherDex = (isHigher || (this.manga.lastMangaDexChapter != -1 && this.manga.currentChapter.chapter > this.manga.lastMangaDexChapter));
-		if (!force && usePepper && !isHigherDex && this.options.saveOnlyHigher) {
-			if (this.options.confirmChapter) {
-				SimpleNotification.info({
-					title: "Not updated",
-					image: this.getCurrentThumbnail(),
-					text: "Last read chapter on MyAnimelist is higher or equal to the current chapter and wasn't updated.\nYou can update it anyway or ignore this notification.",
-					buttons: [{
-						value: "Update", type: "success",
-						onClick: (notification) => {
-							notification.close();
-							this.updateManga(usePepper, setStatus, true);
-						}
-					}, {
-						value: "Close", type: "error",
-						onClick: (notification) => {
-							notification.close();
-						}
-					}]
-				}, { position: "bottom-left", closeOnClick: false, duration: 10000 });
-			} else {
-				this.notification(NOTIFY.INFO, "Not updated", "Last read chapter on MyAnimelist is higher or equal to the current chapter and wasn't updated.", this.getCurrentThumbnail());
+		if (!force && usePepper) {
+			// If the current chapter is higher than the last read one
+			// Use Math.floor on the current chapter to avoid updating even tough it's the same if this is a sub chapter
+			const isHigher = (realChapter < 0 || realChapter > this.manga.lastMyAnimeListChapter);
+			const isHigherDex = (isHigher || (this.manga.lastMangaDexChapter != -1 && this.manga.currentChapter.chapter > this.manga.lastMangaDexChapter));
+			if (!isHigherDex && this.options.saveOnlyHigher) {
+				if (this.options.confirmChapter) {
+					SimpleNotification.info({
+						title: "Not updated",
+						image: this.getCurrentThumbnail(),
+						text: "Last read chapter on MyAnimelist is higher or equal to the current chapter and wasn't updated.\nYou can update it anyway or ignore this notification.",
+						buttons: [{
+							value: "Update", type: "success",
+							onClick: (notification) => {
+								notification.close();
+								this.updateManga(usePepper, setStatus, true);
+							}
+						}, {
+							value: "Close", type: "error",
+							onClick: (notification) => {
+								notification.close();
+							}
+						}]
+					}, { position: "bottom-left", closeOnClick: false, duration: 10000 });
+				} else {
+					this.notification(NOTIFY.INFO, "Not updated", "Last read chapter on MyAnimelist is higher or equal to the current chapter and wasn't updated.", this.getCurrentThumbnail());
+				}
+				return;
 			}
-			return;
+
+			/*let isNext = (realChapter < 0 ||
+				//realChapter == this.manga.lastMyAnimeListChapter ||
+				realChapter == this.manga.lastMyAnimeListChapter + 1); // ||
+					//(!this.options.saveOnlyHigher && realChapter == this.manga.lastMyAnimeListChapter - 1));*/
+			const maybeNext = isHigherDex && realChapter <= Math.floor(this.manga.lastMangaDexChapter)+1;
+			if (this.options.saveOnlyNext && this.manga.lastMyAnimeListChapter > 0 && !maybeNext) {
+				if (this.options.confirmChapter) {
+					SimpleNotification.info({
+						title: "Not updated",
+						image: this.getCurrentThumbnail(),
+						text: "The current chapter is not the next one and it wasn't updated on **MyAnimelist**.\nYou can update it anyway or ignore this notification.",
+						buttons: [{
+							value: "Update", type: "success",
+							onClick: (notification) => {
+								notification.close();
+								this.updateManga(usePepper, setStatus, true);
+							}
+						}, {
+							value: "Close", type: "error",
+							onClick: (notification) => {
+								notification.close();
+							}
+						}]
+					}, { position: "bottom-left", closeOnClick: false, sticky: true });
+				} else {
+					this.notification(NOTIFY.INFO, "Not updated", "The current chapter is not the next one and it wasn't updated on **MyAnimelist**.", this.getCurrentThumbnail());
+				}
+				return;
+			}
 		}
 
-		/*let isNext = (realChapter < 0 ||
-			//realChapter == this.manga.lastMyAnimeListChapter ||
-			realChapter == this.manga.lastMyAnimeListChapter + 1); // ||
-				//(!this.options.saveOnlyHigher && realChapter == this.manga.lastMyAnimeListChapter - 1));*/
-		let maybeNext = isHigherDex && realChapter <= Math.floor(this.manga.lastMangaDexChapter)+1;
-		if (!force && usePepper && this.options.saveOnlyNext && this.manga.lastMyAnimeListChapter > 0 && !maybeNext) {
-			if (this.options.confirmChapter) {
-				SimpleNotification.info({
-					title: "Not updated",
-					image: this.getCurrentThumbnail(),
-					text: "The current chapter is not the next one and it wasn't updated on **MyAnimelist**.\nYou can update it anyway or ignore this notification.",
-					buttons: [{
-						value: "Update", type: "success",
-						onClick: (notification) => {
-							notification.close();
-							this.updateManga(usePepper, setStatus, true);
-						}
-					}, {
-						value: "Close", type: "error",
-						onClick: (notification) => {
-							notification.close();
-						}
-					}]
-				}, { position: "bottom-left", closeOnClick: false, sticky: true });
-			} else {
-				this.notification(NOTIFY.INFO, "Not updated", "The current chapter is not the next one and it wasn't updated on **MyAnimelist**.", this.getCurrentThumbnail());
-			}
-			return;
-		}
-
-		let doUpdate = doMyAnimeList && this.manga.lastMyAnimeListChapter != realChapter;
-		let oldStatus = this.manga.status;
+		const doUpdate = doMyAnimeList && this.manga.lastMyAnimeListChapter != realChapter;
+		const oldStatus = this.manga.status;
 		if (this.mangaDexScore > 0) {
 			this.manga.score = this.mangaDexScore;
 		}
 
 		// Send the POST request to update the manga if there as a change
 		if ((force && doMyAnimeList && this.manga.is_approved) || doUpdate) {
-			let { requestURL, body } = buildMyAnimeListBody(usePepper, this.manga, this.csrf, setStatus);
+			const { requestURL, body } = buildMyAnimeListBody(usePepper, this.manga, this.csrf, setStatus);
 			await browser.runtime.sendMessage({
 				action: "fetch",
 				url: requestURL,
