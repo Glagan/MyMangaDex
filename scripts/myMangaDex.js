@@ -206,9 +206,9 @@ class MyMangaDex {
 
 		const doUpdate = doMyAnimeList && this.manga.lastMyAnimeListChapter != realChapter;
 		const oldStatus = this.manga.status;
-		if (this.mangaDexScore > 0) {
+		/*if (this.mangaDexScore > 0) {
 			this.manga.score = this.mangaDexScore;
-		}
+		}*/
 
 		// Send the POST request to update the manga if there as a change
 		if ((force && doMyAnimeList && this.manga.is_approved) || doUpdate) {
