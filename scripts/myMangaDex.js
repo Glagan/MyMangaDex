@@ -1270,18 +1270,20 @@ class MyMangaDex {
 		this.manga.currentChapter = this.manga.currentChapter || { chapter: -1, volume: 0 };
 		if (markUnread) {
 			let updateLast = this.manga.lastMangaDexChapter == chapter;
+			if (updateLast) {
+				this.manga.currentChapter.chapter = 0;
+				this.manga.lastMangaDexChapter = 0;
+			}
 			this.manga.chapters = this.manga.chapters.filter(chap => {
 				// update to next smaller chapter
 				if (updateLast && chap < chapter) {
-					this.manga.currentChapter.chapter = chap;
-					this.manga.lastMangaDexChapter = chap;
 					updateLast = false;
 				}
 				return chap != chapter
 			});
 		} else {
 			this.insertChapter(chapter);
-			if (chapter > this.manga.lastMangaDexChapter) {
+			if (chapter > this.manga.lastMangaDexChapter || chapter > this.manga.lastMyAnimeListChapter) {
 				this.manga.currentChapter.chapter = chapter;
 				this.manga.lastMangaDexChapter = chapter;
 			}
@@ -1289,7 +1291,6 @@ class MyMangaDex {
 
 		if (this.manga.myAnimeListId && (!this.manga.lastMyAnimeListChapter || Math.floor(this.manga.lastMangaDexChapter) != this.manga.lastMyAnimeListChapter)) {
 			const { requestURL, body } = buildMyAnimeListBody(true, this.manga, this.csrf, this.manga.status);
-			// no need to wait until mal is informed
 			await browser.runtime.sendMessage({
 				action: "fetch",
 				url: requestURL,

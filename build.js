@@ -81,7 +81,8 @@ let manifest = {
 
 	content_scripts: [{
 		matches: [
-			'https://*.mangadex.org/follows/?',
+			'https://*.mangadex.org/follows',
+			'https://*.mangadex.org/follows/',
 			'https://*.mangadex.org/follows/manga/0/0/*',
 			'https://*.mangadex.org/follows/chapters/*',
 			'https://*.mangadex.org/manga*',
