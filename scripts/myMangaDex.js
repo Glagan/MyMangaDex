@@ -1553,7 +1553,7 @@ class MyMangaDex {
 		// Informations
 		await this.getTitleInfos();
 		await this.fetchMyAnimeList();
-		if (this.mangaDexStatus === undefined) {
+		if (this.mangaDexStatus === undefined && (this.options.updateMDList || this.options.updateOnlyInList)) {
 			await this.fetchTitleInfos();
 		}
 
@@ -1581,7 +1581,7 @@ class MyMangaDex {
 				this.insertMyAnimeListButton(document.querySelector(".reader-controls-actions.col-auto.row.no-gutters.p-1").lastElementChild);
 			}
 
-			if (this.mangaDexStatus === undefined) {
+			if (this.mangaDexStatus === undefined && (this.options.updateMDList || this.options.updateOnlyInList)) {
 				await this.fetchTitleInfos(false);
 			}
 		}
