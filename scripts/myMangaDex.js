@@ -72,7 +72,7 @@ class MyMangaDex {
 		}
 
 		// clean up existing nodes
-		const oldDomNodes = document.querySelectorAll("body > .gn-wrapper, #mmd-tooltip");
+		const oldDomNodes = document.querySelectorAll("body > .gn-wrapper, #mmd-tooltip, .nav-item.mmdNav");
 		oldDomNodes.forEach(node => node.remove());
 		const oldToolTips = document.querySelectorAll(".row[data-loaded=\"true\"]");
 		oldToolTips.forEach(node => node.removeAttribute("data-loaded"));
@@ -1262,9 +1262,12 @@ class MyMangaDex {
 		let chapter = +dataNode.dataset.chapter;
 
 		if (this.pageType != "title") {
-			this.manga = { mangaDexId: dataNode.dataset["manga-id"] };
+			this.manga = { mangaDexId: dataNode.dataset.mangaId };
 			await this.getTitleInfos();
+
+			if (this.manga.myAnimeListId) await this.fetchMyAnimeList();
 		}
+		this.manga.currentChapter = this.manga.currentChapter || { chapter: -1, volume: 0 };
 		if (markUnread) {
 			let updateLast = this.manga.lastMangaDexChapter == chapter;
 			this.manga.chapters = this.manga.chapters.filter(chap => {
@@ -1284,11 +1287,10 @@ class MyMangaDex {
 			}
 		}
 
-		if (Math.floor(this.manga.lastMangaDexChapter) != this.manga.lastMyAnimeListChapter) {
-			this.manga.lastMyAnimeListChapter = Math.floor(this.manga.lastMangaDexChapter);
+		if (this.manga.myAnimeListId && (!this.manga.lastMyAnimeListChapter || Math.floor(this.manga.lastMangaDexChapter) != this.manga.lastMyAnimeListChapter)) {
 			const { requestURL, body } = buildMyAnimeListBody(true, this.manga, this.csrf, this.manga.status);
 			// no need to wait until mal is informed
-			browser.runtime.sendMessage({
+			await browser.runtime.sendMessage({
 				action: "fetch",
 				url: requestURL,
 				options: {
@@ -1426,7 +1428,7 @@ class MyMangaDex {
 			if (hiddenCount > 0) {
 				let navBar = document.querySelector(".nav.nav-tabs");
 				let button = document.createElement("li");
-				button.className = "nav-item";
+				button.className = "nav-item mmdNav";
 				let link = document.createElement("a");
 				this.appendTextWithIcon(link, "eye", ["Show Hidden (", hiddenCount, ")"].join(""));
 				link.className = "nav-link"; link.href = "#";
