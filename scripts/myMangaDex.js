@@ -64,6 +64,15 @@ class MyMangaDex {
 		} else if (this.pageUrl.indexOf(urls.history) > -1) {
 			this.historyPage();
 		}
+
+		// clean up existing nodes
+		const oldDomNodes = document.querySelectorAll("body > .gn-wrapper, #mmd-tooltip");
+		oldDomNodes.forEach(node => node.remove());
+		const oldToolTips = document.querySelectorAll(".row[data-loaded=\"true\"]");
+		oldToolTips.forEach(node => node.removeAttribute("data-loaded"));
+
+		const eyes = document.querySelectorAll(".chapter-row .chapter_mark_read_button, .chapter-row .chapter_mark_unread_button");
+		eyes.forEach(eye => eye.addEventListener("click", this.handleEyeClick.bind(this, eye)));
 	}
 
 	// START HELP
@@ -676,8 +685,10 @@ class MyMangaDex {
 	}
 
 	createMyAnimeListModal() {
+		let modal = document.querySelector("#modal-mal");
+		if (modal) modal.remove();
 		// Container
-		let modal = document.createElement("div");
+		modal = document.createElement("div");
 		modal.id = "modal-mal";
 		modal.className = "modal show-advanced";
 		modal.tabIndex = -1;
@@ -1234,6 +1245,11 @@ class MyMangaDex {
 		return [domain, "images/manga/", this.manga.mangaDexId, ".thumb.jpg"].join('');
 	}
 
+	handleEyeClick(eye, event) {
+		const markUnread = eye.classList.contains('chapter_mark_unread_button');
+		return true;
+	}
+
 	// END HELP / START PAGE
 
 	async chapterListPage(checkUpdates = true) {
@@ -1276,7 +1292,7 @@ class MyMangaDex {
 								myAnimeListId: titleInformations[group.titleId].mal,
 								mangaDexId: group.titleId,
 								lastMangaDexChapter: titleInformations[group.titleId].last,
-								chapters: titleInformations[group.titleId].chapters
+								chapters: titleInformations[group.titleId].chapters || []
 							});
 							titleInformations[group.titleId].getsUpdated = true;
 							if (toUpdate.length == 7) {
@@ -1495,16 +1511,22 @@ class MyMangaDex {
 
 		// Informations
 		let parentNode = document.querySelector(".col-xl-9.col-lg-8.col-md-7");
-		let informationsRow = document.createElement("div");
-		informationsRow.className = "row m-0 py-1 px-0 border-top";
-		parentNode.insertBefore(informationsRow, parentNode.lastElementChild);
-		let informationsLabel = document.createElement("div");
-		informationsLabel.className = "col-lg-3 col-xl-2 strong";
-		informationsLabel.textContent = "Status:";
-		informationsRow.appendChild(informationsLabel);
-		this.informationsNode = document.createElement("div");
-		this.informationsNode.className = "col-lg-9 col-xl-10";
-		informationsRow.appendChild(this.informationsNode);
+		let informationsRow = document.querySelector(".mmdInfoRow");
+		if (!informationsRow) {
+			informationsRow = document.createElement("div");
+			informationsRow.className = "row m-0 py-1 px-0 border-top mmdInfoRow";
+			parentNode.insertBefore(informationsRow, parentNode.lastElementChild);
+			let informationsLabel = document.createElement("div");
+			informationsLabel.className = "col-lg-3 col-xl-2 strong";
+			informationsLabel.textContent = "Status:";
+			informationsRow.appendChild(informationsLabel);
+		}
+		this.informationsNode = document.querySelector(".mmdInfoNode");
+		if (!this.informationsNode) {
+			this.informationsNode = document.createElement("div");
+			this.informationsNode.className = "col-lg-9 col-xl-10 mmdInfoNode";
+			informationsRow.appendChild(this.informationsNode);
+		}
 
 		let appendErrorMessage = (message) => {
 			let messageNode = document.createElement("span");
@@ -1531,6 +1553,7 @@ class MyMangaDex {
 								updateLocalStorage(this.manga, this.options);
 							});
 						} else {
+							clearDomNode(this.informationsNode);
 							// Add a "Add to reading list" button
 							let quickAddReading = this.createQuickButton("Start Reading", 1);
 							// And a "Plan to read" button
