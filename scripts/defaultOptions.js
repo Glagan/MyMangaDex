@@ -42,7 +42,7 @@ let defaultOptions = {
 	updateOnlyInList: false,
 	historySize: 100,
 	updateMDList: false,
-	updateOnFollows: true,
+	updateOnFollows: false,
 	showTooltips: true,
 	showFullCover: false,
 	coverMaxHeight: 80,

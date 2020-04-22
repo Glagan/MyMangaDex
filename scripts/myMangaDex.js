@@ -72,10 +72,10 @@ class MyMangaDex {
 		}
 
 		// clean up existing nodes
-		const oldDomNodes = document.querySelectorAll("body > .gn-wrapper, #mmd-tooltip, .nav-item.mmdNav");
-		oldDomNodes.forEach(node => node.remove());
-		const oldToolTips = document.querySelectorAll(".row[data-loaded=\"true\"]");
-		oldToolTips.forEach(node => node.removeAttribute("data-loaded"));
+		// const oldDomNodes = document.querySelectorAll("body > .gn-wrapper, #mmd-tooltip, .nav-item.mmdNav");
+		// oldDomNodes.forEach(node => node.remove());
+		// const oldToolTips = document.querySelectorAll(".row[data-loaded=\"true\"]");
+		// oldToolTips.forEach(node => node.removeAttribute("data-loaded"));
 
 		const eyes = document.querySelectorAll(".chapter-row .chapter_mark_read_button, .chapter-row .chapter_mark_unread_button");
 		eyes.forEach(eye => eye.addEventListener("click", this.handleEyeClick.bind(this, eye)));
