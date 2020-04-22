@@ -2,6 +2,7 @@ const NOTIFY = { ERROR: "error", INFO: "info", SUCCESS: "success", WARNING: "war
 class MyMangaDex {
 	constructor() {
 		this.pageUrl = window.location.href;
+		this.pageType = "";
 		this.loggedMyAnimeList = true;
 		this.csrf = "";
 		this.manga = {
@@ -45,6 +46,7 @@ class MyMangaDex {
 		if ((this.pageUrl.indexOf(urls.follows) > -1 && this.pageUrl.indexOf("/manga/") == -1) ||
 			(this.pageUrl.indexOf(urls.group) > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || (this.pageUrl.indexOf("/manga/") == -1 && this.pageUrl.indexOf("/comments") == -1))) ||
 			(this.pageUrl.indexOf(urls.user) > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || this.pageUrl.indexOf("/manga/") == -1))) {
+			this.pageType = "chapterList";
 			this.chapterListPage(this.pageUrl.indexOf(urls.follows) > -1);
 		} else if (this.pageUrl.indexOf(urls.search) > -1 ||
 			this.pageUrl.indexOf(urls.oldSearch) > -1 ||
@@ -56,12 +58,16 @@ class MyMangaDex {
 			(this.pageUrl.indexOf(urls.follows) > -1 && this.pageUrl.indexOf("/manga/") > -1) ||
 			(this.pageUrl.indexOf(urls.group) > -1 && this.pageUrl.indexOf("/manga/") > -1) ||
 			(this.pageUrl.indexOf(urls.user) > -1 && this.pageUrl.indexOf("/manga/") > -1)) {
+			this.pageType = "titlesList";
 			this.titlesListPage();
 		} else if (this.pageUrl.indexOf(urls.title) > -1 || this.pageUrl.indexOf(urls.manga) > -1) {
+			this.pageType = "title";
 			this.titlePage();
 		} else if (this.pageUrl.indexOf(urls.chapter) > -1 && this.pageUrl.indexOf("/comments") == -1) {
+			this.pageType = "singleChapter";
 			this.singleChapterPage();
 		} else if (this.pageUrl.indexOf(urls.history) > -1) {
+			this.pageType = "history";
 			this.historyPage();
 		}
 
@@ -1245,8 +1251,62 @@ class MyMangaDex {
 		return [domain, "images/manga/", this.manga.mangaDexId, ".thumb.jpg"].join('');
 	}
 
-	handleEyeClick(eye, event) {
+	async handleEyeClick(eye, event) {
 		const markUnread = eye.classList.contains('chapter_mark_unread_button');
+		let dataNode = eye;
+		while (true) {
+			dataNode = dataNode.parentNode;
+			if (!dataNode || dataNode.dataset.chapter) break;
+		}
+		if (!dataNode) return;
+		let chapter = +dataNode.dataset.chapter;
+
+		if (this.pageType != "title") {
+			this.manga = { mangaDexId: dataNode.dataset["manga-id"] };
+			await this.getTitleInfos();
+		}
+		if (markUnread) {
+			let updateLast = this.manga.lastMangaDexChapter == chapter;
+			this.manga.chapters = this.manga.chapters.filter(chap => {
+				// update to next smaller chapter
+				if (updateLast && chap < chapter) {
+					this.manga.currentChapter.chapter = chap;
+					this.manga.lastMangaDexChapter = chap;
+					updateLast = false;
+				}
+				return chap != chapter
+			});
+		} else {
+			this.insertChapter(chapter);
+			if (chapter > this.manga.lastMangaDexChapter) {
+				this.manga.currentChapter.chapter = chapter;
+				this.manga.lastMangaDexChapter = chapter;
+			}
+		}
+
+		if (Math.floor(this.manga.lastMangaDexChapter) != this.manga.lastMyAnimeListChapter) {
+			this.manga.lastMyAnimeListChapter = Math.floor(this.manga.lastMangaDexChapter);
+			const { requestURL, body } = buildMyAnimeListBody(true, this.manga, this.csrf, this.manga.status);
+			// no need to wait until mal is informed
+			browser.runtime.sendMessage({
+				action: "fetch",
+				url: requestURL,
+				options: {
+					method: "POST",
+					body: body,
+					redirect: "follow",
+					credentials: "include",
+					headers: {
+						"Content-Type": "application/x-www-form-urlencoded",
+						"accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+					}
+				}
+			});
+		}
+
+		// no need to wait until it's saved
+		updateLocalStorage(this.manga, this.options);
+		if (this.pageType == "title") this.highlightChapters();
 		return true;
 	}
 
