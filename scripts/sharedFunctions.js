@@ -158,29 +158,29 @@ async function loadOptions() {
 		if ((data.version != defaultOptions.version) ||
 			(data.version == defaultOptions.version && data.subVersion != defaultOptions.subVersion)) {
 			// Fix history wrong progress
-            /*let history = await storageGet("history");
-            if (history) {
-                Object.keys(history).forEach(md_id => {
-                    if (md_id == 'list') return;
-                    if (history[md_id]) {
-                        if (history[md_id].progress == null) {
-                            history[md_id].progress = {
-                                volume: 0,
-                                chapter: 0
-                            };
-                        } else if (typeof history[md_id].progress != 'object') {
-                            history[md_id].progress = {
-                                volume: 0,
-                                chapter: history[md_id].progress
-                            };
-                        }
-                    } else {
-                        history[md_id] = undefined;
-                    }
-                });
-            } else {
-                history = { list: [] };
-            }
+			/*let history = await storageGet("history");
+			if (history) {
+				Object.keys(history).forEach(md_id => {
+					if (md_id == 'list') return;
+					if (history[md_id]) {
+						if (history[md_id].progress == null) {
+							history[md_id].progress = {
+								volume: 0,
+								chapter: 0
+							};
+						} else if (typeof history[md_id].progress != 'object') {
+							history[md_id].progress = {
+								volume: 0,
+								chapter: history[md_id].progress
+							};
+						}
+					} else {
+						history[md_id] = undefined;
+					}
+				});
+			} else {
+				history = { list: [] };
+			}
 			await storageSet("history", history);*/
 			if (data.version == 2.3 && data.subVersion == 10) {
 				SimpleNotification.info({
@@ -208,12 +208,18 @@ async function updateLocalStorage(manga, options) {
 			manga.lastMangaDexChapter = manga.currentChapter.chapter;
 		}
 	}
-	await storageSet(manga.mangaDexId, {
+	nManga = {
 		mal: manga.myAnimeListId,
 		last: manga.lastMangaDexChapter,
-		chapters: manga.chapters,
-		lastTitle: manga.lastTitle
-	});
+		chapters: manga.chapters
+	};
+	if (manga.myAnimeListId == 0 || options.updateHistoryPage) {
+		nManga.lastTitle = manga.lastTitle; // only save time if needed
+	}
+	if (manga.myAnimeListId != 0 && options.updateOnFollows) {
+		nManga.lastMAL = manga.lastMAL; // only save time if needed
+	}
+	await storageSet(manga.mangaDexId, nManga);
 	// Show a notification for updated last opened if there is no MyAnimeList id
 	if (options.showNotifications && manga.myAnimeListId == 0 &&
 		manga.currentChapter && manga.currentChapter.chapter > manga.lastMangaDexChapter) {

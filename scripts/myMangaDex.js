@@ -45,7 +45,7 @@ class MyMangaDex {
 		if ((this.pageUrl.indexOf(urls.follows) > -1 && this.pageUrl.indexOf("/manga/") == -1) ||
 			(this.pageUrl.indexOf(urls.group) > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || (this.pageUrl.indexOf("/manga/") == -1 && this.pageUrl.indexOf("/comments") == -1))) ||
 			(this.pageUrl.indexOf(urls.user) > -1 && (this.pageUrl.indexOf("/chapters/") > -1 || this.pageUrl.indexOf("/manga/") == -1))) {
-			this.chapterListPage();
+			this.chapterListPage(this.pageUrl.indexOf(urls.follows) > -1);
 		} else if (this.pageUrl.indexOf(urls.search) > -1 ||
 			this.pageUrl.indexOf(urls.oldSearch) > -1 ||
 			this.pageUrl.indexOf(urls.oldTitles) > -1 ||
@@ -68,14 +68,21 @@ class MyMangaDex {
 
 	// START HELP
 
-	async fetchMyAnimeList() {
-		if (this.manga.myAnimeListId < 1) {
-			this.fetched = false;
+	async fetchMyAnimeList(manga = undefined) {
+		if (manga === undefined) {
+			manga = this.manga;
+
+			if (manga.myAnimeListId < 1) {
+				this.fetched = false;
+				return;
+			}
+			this.fetched = true;
+		} else if (manga.myAnimeListId < 1) {
 			return;
 		}
 		let data = await browser.runtime.sendMessage({
 			action: "fetch",
-			url: "https://myanimelist.net/ownlist/manga/" + this.manga.myAnimeListId + "/edit?hideLayout",
+			url: "https://myanimelist.net/ownlist/manga/" + manga.myAnimeListId + "/edit?hideLayout",
 			options: {
 				method: "GET",
 				cache: "no-cache",
@@ -83,7 +90,6 @@ class MyMangaDex {
 				redirect: "follow",
 			}
 		});
-		this.fetched = true;
 		if (data.status >= 500) {
 			this.notification(NOTIFY.ERROR, "MyAnimeList error", "MyAnimeList is unreacheable.");
 			// init and set if it was redirected - redirected often means not in list or not approved
@@ -101,7 +107,8 @@ class MyMangaDex {
 		} else {
 			// CSRF Token
 			this.csrf = /'csrf_token'\scontent='(.{40})'/.exec(data.body)[1];
-			processMyAnimeListResponse(this.manga, data.body);
+			manga.lastMAL = Date.now();
+			processMyAnimeListResponse(manga, data.body);
 		}
 		return data;
 	}
@@ -1029,27 +1036,30 @@ class MyMangaDex {
 		}
 	}
 
-	insertChapter(chapter) {
-		if (this.manga.chapters.indexOf(chapter) === -1) {
-			if (this.manga.chapters.length == 0) {
-				this.manga.chapters.push(chapter);
+	insertChapter(chapter, manga = undefined) {
+		if (manga === undefined) {
+			manga = this.manga;
+		}
+		if (manga.chapters.indexOf(chapter) === -1) {
+			if (manga.chapters.length == 0) {
+				manga.chapters.push(chapter);
 			} else {
 				let i = 0;
-				let max = this.manga.chapters.length;
+				let max = manga.chapters.length;
 				let higher = true;
 				// Chapters are ordered
 				while (i < max && higher) {
-					if (this.manga.chapters[i] < chapter) {
+					if (manga.chapters[i] < chapter) {
 						higher = false;
 					} else {
 						i++;
 					}
 				}
-				this.manga.chapters.splice(i, 0, chapter);
+				manga.chapters.splice(i, 0, chapter);
 
 				// Check the length
-				while (this.manga.chapters.length > this.options.maxChapterSaved) {
-					this.manga.chapters.pop();
+				while (manga.chapters.length > this.options.maxChapterSaved) {
+					manga.chapters.pop();
 				}
 			}
 		}
@@ -1226,7 +1236,7 @@ class MyMangaDex {
 
 	// END HELP / START PAGE
 
-	async chapterListPage() {
+	async chapterListPage(checkUpdates = true) {
 		if (!this.options.highlightChapters &&
 			!this.options.hideLowerChapters && !this.options.hideHigherChapters && !this.options.hideLastRead &&
 			!this.options.showTooltips) {
@@ -1237,23 +1247,64 @@ class MyMangaDex {
 		let titleInformations = {};
 
 		// collect information
+		let toUpdate = [];
+		checkTitles: // label for breaking loop
 		for (let i = 0; i < lastChapter; i++) {
 			let group = groups[i];
 			// Get title informations from LocalStorage
 			if (!(group.titleId in titleInformations)) {
 				titleInformations[group.titleId] = await storageGet(group.titleId);
-				if (titleInformations[group.titleId]) titleInformations[group.titleId].next = Infinity;
+				if (titleInformations[group.titleId]) {
+					titleInformations[group.titleId].next = Infinity;
+					titleInformations[group.titleId].getsUpdated = false;
+				}
 			}
 			// if there is data, find the next chapter
 			if (titleInformations[group.titleId]) {
 				let chapterCount = group.chapters.length;
 				for (let j = 0; j < chapterCount; j++) {
 					let chapter = group.chapters[j];
-					if (chapter.value > titleInformations[group.titleId].last && Math.floor(chapter.value) <= titleInformations[group.titleId].last + 1) {
-						titleInformations[group.titleId].next = Math.min(titleInformations[group.titleId].next, chapter.value);
+					if (chapter.value > titleInformations[group.titleId].last) {
+						if (Math.floor(chapter.value) <= titleInformations[group.titleId].last + 1) {
+							titleInformations[group.titleId].next = Math.min(titleInformations[group.titleId].next, chapter.value);
+						}
+						// if check for updates, has mal title and last checked more than 12 hours ago (12*60*60*1000ms)
+						if (checkUpdates && this.options.updateOnFollows &&
+							!titleInformations[group.titleId].getsUpdated && titleInformations[group.titleId].mal != 0 &&
+							(!titleInformations[group.titleId].lastMAL || (Date.now() - titleInformations[group.titleId].lastMAL) >= 43200000)) {
+							toUpdate.push({
+								myAnimeListId: titleInformations[group.titleId].mal,
+								mangaDexId: group.titleId,
+								lastMangaDexChapter: titleInformations[group.titleId].last,
+								chapters: titleInformations[group.titleId].chapters
+							});
+							titleInformations[group.titleId].getsUpdated = true;
+							if (toUpdate.length == 7) {
+								break checkTitles; // need to update now
+							}
+							break;
+						}
 					}
 				}
 			}
+		}
+		if (toUpdate.length) {
+			for (var i = 0; i < toUpdate.length; i++) {
+				if (!this.loggedMyAnimeList) break;
+				let manga = toUpdate[i];
+
+				let ret = await this.fetchMyAnimeList(manga);
+				if (ret.status >= 200 && ret.status < 400 && this.loggedMyAnimeList && manga.is_approved) {
+					manga.currentChapter = manga.currentChapter || {};
+					manga.currentChapter.chapter = Math.max(manga.lastMyAnimeListChapter, manga.lastMangaDexChapter);
+					if (this.options.saveAllOpened) {
+						this.insertChapter(manga.currentChapter.chapter, manga);
+					}			
+					await updateLocalStorage(manga, this.options);
+				}
+			}
+			this.chapterListPage(false);
+			return;
 		}
 
         /**
