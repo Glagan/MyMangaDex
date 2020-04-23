@@ -1545,6 +1545,8 @@ class MyMangaDex {
 				this.tooltipContainer = document.createElement("div");
 				this.tooltipContainer.id = "mmd-tooltip";
 				document.body.appendChild(this.tooltipContainer);
+			} else {
+				this.clearDomNode(this.tooltipContainer);
 			}
 			for (let i = 0; i < lastChapter; i++) {
 				let group = groups[i];
