@@ -1375,6 +1375,7 @@ class MyMangaDex {
 								lastMangaDexChapter: titleInformations[group.titleId].last,
 								chapters: titleInformations[group.titleId].chapters || []
 							});
+							titleInformations[group.titleId].next = Infinity;
 							titleInformations[group.titleId].getsUpdated = true;
 							break; // no need to check this title any more
 						}
