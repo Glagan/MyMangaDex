@@ -1568,7 +1568,7 @@ class MyMangaDex {
          * Tooltips
          */
     // only add tooltips on first iteration
-		if (this.options.showTooltips && (!checkUpdates || !toUpdate.length)) {
+		if (this.options.showTooltips) {
 			if (!this.tooltipContainer && !(this.tooltipContainer = document.querySelector("#mmd-tooltip"))) {
 				this.tooltipContainer = document.createElement("div");
 				this.tooltipContainer.id = "mmd-tooltip";
