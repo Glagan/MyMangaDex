@@ -435,72 +435,98 @@ class MyMangaDex {
 		tooltip.style.top = [top, "px"].join("");
 	}
 
-	tooltip(node, id, chapters = []) {
+	tooltip(node, id, chapters = [], options = undefined) {
 		// Create tooltip
-		let tooltip = document.createElement("div");
-		tooltip.className = "mmd-tooltip loading";
-		tooltip.style.left = "-5000px";
-		tooltip.style.maxHeight = [(window.innerHeight - 10) * (this.options.coverMaxHeight / 100), "px"].join("");
-		let spinner = document.createElement("i");
-		spinner.className = "fas fa-circle-notch fa-spin";
-		tooltip.appendChild(spinner);
-		this.tooltipContainer.appendChild(tooltip);
-		// Thumbnail
-		let tooltipThumb = document.createElement("img");
-		tooltipThumb.className = "mmd-thumbnail loading";
-		tooltipThumb.style.maxHeight = [(window.innerHeight - 10) * (this.options.coverMaxHeight / 100), "px"].join("");
-		tooltip.appendChild(tooltipThumb);
+		options = options || {};
+		let domId = ["mmd-tooltip-", id].join("");
+		let tooltip = document.getElementById(domId);
+		let tooltipThumb, spinner;
+
+		if (!tooltip) {
+			tooltip = document.createElement("div");
+			tooltip.className = "mmd-tooltip loading";
+			tooltip.id = domId;
+			tooltip.style.left = "-5000px";
+			tooltip.style.maxHeight = [(window.innerHeight - 10) * (this.options.coverMaxHeight / 100), "px"].join("");
+			spinner = document.createElement("i");
+			spinner.className = "fas fa-circle-notch fa-spin";
+			tooltip.appendChild(spinner);
+			this.tooltipContainer.appendChild(tooltip);
+			// Thumbnail
+			tooltipThumb = document.createElement("img");
+			tooltipThumb.className = "mmd-thumbnail loading";
+			tooltipThumb.style.maxHeight = [(window.innerHeight - 10) * (this.options.coverMaxHeight / 100), "px"].join("");
+			tooltip.appendChild(tooltipThumb);
+		}
 
 		// Append the chapters if there is
 		if (this.options.saveAllOpened && chapters.length > 0) {
 			tooltip.classList.add("has-chapters"); // Add a border below the image
-			let chaptersContainer = document.createElement("div");
-			chaptersContainer.className = "mmd-tooltip-content";
-			let max = Math.min(5, chapters.length);
-			for (let i = 0; i < max; i++) {
-				this.appendTextWithIcon(chaptersContainer, "eye", chapters[i]);
-				chaptersContainer.appendChild(document.createElement("br"));
+			let add = false;
+			let chaptersContainer = tooltip.querySelector(".mmd-tooltip-content");
+			if (!chaptersContainer) {
+				chaptersContainer = document.createElement("div");
+				chaptersContainer.className = "mmd-tooltip-content";
+				tooltip.appendChild(chaptersContainer);
+				add = true;
+			} else if (options.clear) {
+				options.clear = false;
+				clearDomNode(chaptersContainer);
+				add = true;
 			}
-			tooltip.appendChild(chaptersContainer);
-		}
-
-		tooltipThumb.addEventListener("load", () => {
-			delete node.dataset.loading;
-			node.dataset.loaded = true;
-			// Remove the spinner
-			spinner.remove();
-			tooltip.classList.remove("loading");
-			tooltip.style.left = "-5000px";
-			tooltipThumb.classList.remove("loading");
-			// Update position
-			if (tooltip.classList.contains("active")) {
-				setTimeout(() => {
-					this.updateTooltipPosition(tooltip, node);
-				}, 1);
-			}
-		});
-		let extensions = ['jpg', 'png', 'jpeg', 'gif'];
-		tooltipThumb.addEventListener("error", () => {
-			if (this.options.showFullCover) {
-				let tryNumber = Math.floor(tooltipThumb.dataset.ext);
-				if (Math.floor(tooltipThumb.dataset.ext) < extensions.length) {
-					tooltipThumb.src = [domain, "images/manga/", id, ".", extensions[tryNumber]].join('');
-					tooltipThumb.dataset.ext = tryNumber + 1;
-				} else {
-					tooltipThumb.src = '';
+			if (add) {
+				let max = Math.min(5, chapters.length);
+				for (let i = 0; i < max; i++) {
+					if (!isNaN(chapters[i])) {
+						this.appendTextWithIcon(chaptersContainer, "eye", chapters[i]);
+						chaptersContainer.appendChild(document.createElement("br"));
+					}
 				}
 			}
-		});
+		}
+
+		if (tooltipThumb) {
+			tooltipThumb.addEventListener("load", () => {
+				delete tooltip.dataset.loading;
+				tooltip.dataset.loaded = true;
+				// Remove the spinner
+				spinner.remove();
+				tooltip.classList.remove("loading");
+				tooltip.style.left = "-5000px";
+				tooltipThumb.classList.remove("loading");
+				// Update position
+				if (tooltip.classList.contains("active")) {
+					setTimeout(() => {
+						this.updateTooltipPosition(tooltip, node);
+					}, 1);
+				}
+			});
+			let extensions = ['jpg', 'png', 'jpeg', 'gif'];
+			tooltipThumb.addEventListener("error", () => {
+				if (this.options.showFullCover) {
+					let tryNumber = Math.floor(tooltipThumb.dataset.ext);
+					if (Math.floor(tooltipThumb.dataset.ext) < extensions.length) {
+						tooltipThumb.src = [domain, "images/manga/", id, ".", extensions[tryNumber]].join('');
+						tooltipThumb.dataset.ext = tryNumber + 1;
+					} else {
+						tooltipThumb.src = '';
+					}
+				}
+			});
+		} else {
+			tooltipThumb = tooltip.querySelector(".mmd-thumbnail");
+			spinner = tooltip.querySelector(".fa-spin");
+		}
 		// Events
 		let activateTooltip = (rightColumn) => {
 			tooltip.dataset.column = rightColumn;
 			tooltip.classList.add("active");
-			if (node.dataset.loading) {
+			if (tooltip.dataset.loading) {
 				this.updateTooltipPosition(tooltip, node);
 				return;
 			}
-			if (!node.dataset.loaded) {
-				node.dataset.loading = true;
+			if (!tooltip.dataset.loaded) {
+				tooltip.dataset.loading = true;
 				// Will trigger 'load' event
 				if (this.options.showFullCover) {
 					tooltipThumb.src = [domain, "images/manga/", id, ".jpg"].join('');
@@ -1545,19 +1571,23 @@ class MyMangaDex {
 				this.tooltipContainer = document.createElement("div");
 				this.tooltipContainer.id = "mmd-tooltip";
 				document.body.appendChild(this.tooltipContainer);
-			} else {
-				this.clearDomNode(this.tooltipContainer);
 			}
 			for (let i = 0; i < lastChapter; i++) {
 				let group = groups[i];
-				let chapterCount = group.chapters.length;
-				// Add events
-				for (let j = 0; j < chapterCount; j++) {
-					this.tooltip(
-						group.chapters[j].node,
-						group.titleId,
-						(titleInformations[group.titleId]) ? titleInformations[group.titleId].chapters : []
-					);
+				if (!titleInformations[group.titleId] || checkTitle(group.titleId)) {
+					let chapterCount = group.chapters.length;
+					titleInformations[group.titleId] = titleInformations[group.titleId] || {};
+					// clear the chapters on first title tooltip
+					titleInformations[group.titleId].options = titleInformations[group.titleId].options || { clear: true };
+					// Add events
+					for (let j = 0; j < chapterCount; j++) {
+						this.tooltip(
+							group.chapters[j].node,
+							group.titleId,
+							titleInformations[group.titleId].chapters || [],
+							titleInformations[group.titleId].options
+						);
+					}
 				}
 			}
 		}
@@ -1565,8 +1595,12 @@ class MyMangaDex {
 
 		// set all toUpdate to false
 		if (!checkUpdates || !toUpdate.length) {
-			for (title in titleInformations) {
-				if (titleInformations[title].getsUpdated) titleInformations[title].getsUpdated = false;
+			for (let title in titleInformations) {
+				if (titleInformations[title])
+					if (titleInformations[title].getsUpdated)
+						titleInformations[title].getsUpdated = false;
+					if (titleInformations[title].options)
+						delete titleInformations[title].options;
 			}
 		}
 	}
