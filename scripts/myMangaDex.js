@@ -1444,25 +1444,30 @@ class MyMangaDex {
 
 			let navBar = document.querySelector(".nav.nav-tabs");
 			let button = document.querySelector(".mmdNav-hidden");
-			if (button) button.remove();
+			let show = false;
+			if (button) {
+				show = !!button.firstChild.dataset.show;
+				button.remove();
+			}
 
 			if (hiddenCount > 0) {
 				button = document.createElement("li");
 				button.className = "nav-item mmdNav mmdNav-hidden";
 				let link = document.createElement("a");
-				this.appendTextWithIcon(link, "eye", ["Show Hidden (", hiddenCount, ")"].join(""));
+				this.appendTextWithIcon(link, "eye", [!show ? "Show Hidden (" : "Hide Hidden (", hiddenCount, ")"].join(""));
+				if (show) link.dataset.show = true;
 				link.className = "nav-link"; link.href = "#";
 				link.addEventListener("click", event => {
 					event.preventDefault();
 					clearDomNode(link);
-					if (event.target.dataset.show == undefined) {
-						event.target.dataset.show = true;
+					if (!link.dataset.show) {
+						link.dataset.show = true;
 						this.appendTextWithIcon(link, "eye", ["Hide Hidden (", hiddenCount, ")"].join(""));
 						rows.forEach(node => {
 							node.classList.add("is-visible");
 						});
 					} else {
-						delete event.target.dataset.show;
+						delete link.dataset.show;
 						this.appendTextWithIcon(link, "eye", ["Show Hidden (", hiddenCount, ")"].join(""));
 						rows.forEach(node => {
 							node.classList.remove("is-visible");
@@ -1536,7 +1541,7 @@ class MyMangaDex {
          */
     // only add tooltips on first iteration
 		if (this.options.showTooltips && (!checkUpdates || !toUpdate.length)) {
-			if (!this.tooltipContainer) {
+			if (!this.tooltipContainer && !(this.tooltipContainer = document.querySelector("#mmd-tooltip"))) {
 				this.tooltipContainer = document.createElement("div");
 				this.tooltipContainer.id = "mmd-tooltip";
 				document.body.appendChild(this.tooltipContainer);
