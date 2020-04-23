@@ -1367,8 +1367,8 @@ class MyMangaDex {
 						}
 						// if check for updates, has mal title and last checked more than 12 hours ago (12*60*60*1000ms)
 						if (checkUpdates && this.options.updateOnFollows && toUpdate.length < 7 &&
-							!titleInformations[group.titleId].getsUpdated && titleInformations[group.titleId].mal != 0 /*&&
-							(!titleInformations[group.titleId].lastMAL || (Date.now() - titleInformations[group.titleId].lastMAL) >= 43200000)*/) {
+							!titleInformations[group.titleId].getsUpdated && titleInformations[group.titleId].mal != 0 &&
+							(!titleInformations[group.titleId].lastMAL || (Date.now() - titleInformations[group.titleId].lastMAL) >= 43200000)) {
 							toUpdate.push({
 								myAnimeListId: titleInformations[group.titleId].mal,
 								mangaDexId: group.titleId,

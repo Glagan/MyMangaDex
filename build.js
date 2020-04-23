@@ -169,6 +169,7 @@ let dev = false;
 if (args.indexOf('-dev') >= 0) {
 	dev = true;
 	noMinify = true;
+	debug = true;
 }
 
 console.log(`Building for ${browser}`);
