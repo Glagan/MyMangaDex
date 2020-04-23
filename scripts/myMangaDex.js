@@ -1323,11 +1323,14 @@ class MyMangaDex {
 		} // Abort early if useless - no highlight, no hiding and no thumbnails
 		let groups = this.getChapterListGroups();
 		let lastChapter = groups.length;
-		let titleInformations = {};
+		let titleInformations = this.titleInformations || {};
+		this.titleInformations = titleInformations; // save object reference
+
+		const checkTitle = id => ((checkUpdates && !titleInformations[id].getsUpdated) ||
+			(!checkUpdates && titleInformations[id].getsUpdated));
 
 		// collect information
 		let toUpdate = [];
-		checkTitles: // label for breaking loop
 		for (let i = 0; i < lastChapter; i++) {
 			let group = groups[i];
 			// Get title informations from LocalStorage
@@ -1335,22 +1338,29 @@ class MyMangaDex {
 				titleInformations[group.titleId] = await storageGet(group.titleId);
 				if (titleInformations[group.titleId]) {
 					titleInformations[group.titleId].next = Infinity;
-					titleInformations[group.titleId].getsUpdated = false;
+					titleInformations[group.titleId].getsUpdated = !checkUpdates;
 				}
 			}
+
 			// if there is data, find the next chapter
-			if (titleInformations[group.titleId]) {
+			// no need to check the title if an update is fetched anyways
+			// but if it's the next pass, check it
+			if (titleInformations[group.titleId] && checkTitle(group.titleId)) {
 				let chapterCount = group.chapters.length;
+
 				for (let j = 0; j < chapterCount; j++) {
 					let chapter = group.chapters[j];
+
+					// if higher chapter
 					if (chapter.value > titleInformations[group.titleId].last) {
+						// might be next
 						if (Math.floor(chapter.value) <= titleInformations[group.titleId].last + 1) {
 							titleInformations[group.titleId].next = Math.min(titleInformations[group.titleId].next, chapter.value);
 						}
 						// if check for updates, has mal title and last checked more than 12 hours ago (12*60*60*1000ms)
-						if (checkUpdates && this.options.updateOnFollows &&
-							!titleInformations[group.titleId].getsUpdated && titleInformations[group.titleId].mal != 0 &&
-							(!titleInformations[group.titleId].lastMAL || (Date.now() - titleInformations[group.titleId].lastMAL) >= 43200000)) {
+						if (checkUpdates && this.options.updateOnFollows && toUpdate.length < 7 &&
+							!titleInformations[group.titleId].getsUpdated && titleInformations[group.titleId].mal != 0 /*&&
+							(!titleInformations[group.titleId].lastMAL || (Date.now() - titleInformations[group.titleId].lastMAL) >= 43200000)*/) {
 							toUpdate.push({
 								myAnimeListId: titleInformations[group.titleId].mal,
 								mangaDexId: group.titleId,
@@ -1358,32 +1368,30 @@ class MyMangaDex {
 								chapters: titleInformations[group.titleId].chapters || []
 							});
 							titleInformations[group.titleId].getsUpdated = true;
-							if (toUpdate.length == 7) {
-								break checkTitles; // need to update now
-							}
-							break;
+							break; // no need to check this title any more
 						}
 					}
 				}
 			}
 		}
 		if (toUpdate.length) {
-			for (var i = 0; i < toUpdate.length; i++) {
-				if (!this.loggedMyAnimeList) break;
-				let manga = toUpdate[i];
+			(async toUpdate => {
+				for (var i = 0; i < toUpdate.length; i++) {
+					if (!this.loggedMyAnimeList) break;
+					let manga = toUpdate[i];
 
-				let ret = await this.fetchMyAnimeList(manga);
-				if (ret.status >= 200 && ret.status < 400 && this.loggedMyAnimeList && manga.is_approved) {
-					manga.currentChapter = manga.currentChapter || {};
-					manga.currentChapter.chapter = Math.max(manga.lastMyAnimeListChapter, manga.lastMangaDexChapter);
-					if (this.options.saveAllOpened) {
-						this.insertChapter(manga.currentChapter.chapter, manga);
-					}			
-					await updateLocalStorage(manga, this.options);
+					let ret = await this.fetchMyAnimeList(manga);
+					if (ret.status >= 200 && ret.status < 400 && this.loggedMyAnimeList && manga.is_approved) {
+						manga.currentChapter = manga.currentChapter || {};
+						manga.currentChapter.chapter = Math.max(manga.lastMyAnimeListChapter, manga.lastMangaDexChapter);
+						if (this.options.saveAllOpened) {
+							this.insertChapter(manga.currentChapter.chapter, manga);
+						}			
+						await updateLocalStorage(manga, this.options);
+					}
 				}
-			}
-			this.chapterListPage(false);
-			return;
+				this.chapterListPage(false);
+			})(toUpdate); // run in background (async)
 		}
 
         /**
@@ -1394,7 +1402,7 @@ class MyMangaDex {
 				let group = groups[i];
 				
 				// If there is data
-				if (titleInformations[group.titleId]) {
+				if (titleInformations[group.titleId] && checkTitle(group.titleId)) {
 					let chapterCount = group.chapters.length;
 					let highestChapter = Math.max.apply(Math, group.chapters.map(e => { return e.value; }));
 					for (let j = 0; j < chapterCount; j++) {
@@ -1428,8 +1436,11 @@ class MyMangaDex {
 			let hiddenCount = rows.length;
 			if (hiddenCount > 0) {
 				let navBar = document.querySelector(".nav.nav-tabs");
-				let button = document.createElement("li");
-				button.className = "nav-item mmdNav";
+				let button = document.querySelector(".mmdNav-hidden");
+				if (button) button.remove();
+
+				button = document.createElement("li");
+				button.className = "nav-item mmdNav mmdNav-hidden";
 				let link = document.createElement("a");
 				this.appendTextWithIcon(link, "eye", ["Show Hidden (", hiddenCount, ")"].join(""));
 				link.className = "nav-link"; link.href = "#";
@@ -1473,26 +1484,33 @@ class MyMangaDex {
 			for (let i = 0; i < lastChapter; i++) {
 				let group = groups[i];
 				// If there is data
-				if (titleInformations[group.titleId] != undefined) {
+				if (titleInformations[group.titleId]) {
 					let chapterCount = group.chapters.length;
 					let outerColor = colors[currentColor];
 					for (let j = 0; j < chapterCount; j++) {
 						let chapter = group.chapters[j];
 						chapter.node.classList.add("has-fast-in-transition");
-						if (titleInformations[group.titleId].next == chapter.value) {
-							paintRow(chapter.node, this.options.nextChapterColor);
-							group.selected = j;
-							outerColor = this.options.nextChapterColor;
-						} else if (titleInformations[group.titleId].last < chapter.value) {
-							paintRow(chapter.node, this.options.higherChaptersColor);
-						} else if (titleInformations[group.titleId].last > chapter.value) {
-							paintRow(chapter.node, this.options.lowerChaptersColor);
-						} else if (titleInformations[group.titleId].last == chapter.value) {
-							paintRow(chapter.node, colors[currentColor]);
-							group.selected = j;
+
+						// toggle is loading
+						if (titleInformations[group.titleId].getsUpdated)
+							chapter.node.classList.toggle("is-loading", checkUpdates);
+
+						if (checkTitle(group.titleId)) {
+							if (titleInformations[group.titleId].next == chapter.value) {
+								paintRow(chapter.node, this.options.nextChapterColor);
+								group.selected = j;
+								outerColor = this.options.nextChapterColor;
+							} else if (titleInformations[group.titleId].last < chapter.value) {
+								paintRow(chapter.node, this.options.higherChaptersColor);
+							} else if (titleInformations[group.titleId].last > chapter.value) {
+								paintRow(chapter.node, this.options.lowerChaptersColor);
+							} else if (titleInformations[group.titleId].last == chapter.value) {
+								paintRow(chapter.node, colors[currentColor]);
+								group.selected = j;
+							}
 						}
 					}
-					if (group.selected > 0) {
+					if (group.selected > 0 && checkTitle(group.titleId)) {
 						for (let j = 0; j < chapterCount; j++) {
 							if (j == group.selected || group.chapters[j].hidden || group.chapters[j].value == group.chapters[group.selected].value) continue;
 							group.chapters[j].node.firstElementChild.style.backgroundColor = outerColor;
@@ -1506,7 +1524,8 @@ class MyMangaDex {
         /**
          * Tooltips
          */
-		if (this.options.showTooltips) {
+    // only add tooltips on first iteration
+		if (this.options.showTooltips && (!checkUpdates || !toUpdate.length)) {
 			this.tooltipContainer = document.createElement("div");
 			this.tooltipContainer.id = "mmd-tooltip";
 			document.body.appendChild(this.tooltipContainer);
