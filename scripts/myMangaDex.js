@@ -1283,7 +1283,6 @@ class MyMangaDex {
 				}
 				return chap != chapter
 			});
-			console.log(this.manga.chapters);
 		} else {
 			this.insertChapter(chapter);
 			if (chapter > this.manga.lastMangaDexChapter || chapter > this.manga.lastMyAnimeListChapter) {
@@ -1308,6 +1307,7 @@ class MyMangaDex {
 					}
 				}
 			});
+			this.manga.lastMAL = Date.now();
 		}
 
 		// no need to wait until it's saved
@@ -1551,6 +1551,14 @@ class MyMangaDex {
 						(titleInformations[group.titleId]) ? titleInformations[group.titleId].chapters : []
 					);
 				}
+			}
+		}
+
+
+		// set all toUpdate to false
+		if (!checkUpdates || !toUpdate.length) {
+			for (title in titleInformations) {
+				if (titleInformations[title].getsUpdated) titleInformations[title].getsUpdated = false;
 			}
 		}
 	}
