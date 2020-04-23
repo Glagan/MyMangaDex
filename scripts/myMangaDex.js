@@ -1277,10 +1277,13 @@ class MyMangaDex {
 			this.manga.chapters = this.manga.chapters.filter(chap => {
 				// update to next smaller chapter
 				if (updateLast && chap < chapter) {
+					this.manga.currentChapter.chapter = chap;
+					this.manga.lastMangaDexChapter = chap;
 					updateLast = false;
 				}
 				return chap != chapter
 			});
+			console.log(this.manga.chapters);
 		} else {
 			this.insertChapter(chapter);
 			if (chapter > this.manga.lastMangaDexChapter || chapter > this.manga.lastMyAnimeListChapter) {
@@ -1309,7 +1312,12 @@ class MyMangaDex {
 
 		// no need to wait until it's saved
 		updateLocalStorage(this.manga, this.options);
-		if (this.pageType == "title") this.highlightChapters();
+		if (this.pageType == "title") {
+			this.highlightChapters();
+		} else if (this.pageType == "chapterList") {
+			delete this.titleInformations[this.manga.mangaDexId];
+			this.chapterListPage(false);
+		}
 		return true;
 	}
 
@@ -1407,13 +1415,11 @@ class MyMangaDex {
 					let highestChapter = Math.max.apply(Math, group.chapters.map(e => { return e.value; }));
 					for (let j = 0; j < chapterCount; j++) {
 						let chapter = group.chapters[j];
-						if ((this.options.hideHigherChapters &&
+						chapter.hidden = ((this.options.hideHigherChapters &&
 							titleInformations[group.titleId].next < chapter.value) ||
 							(this.options.hideLowerChapters && titleInformations[group.titleId].last > chapter.value) ||
-							(this.options.hideLastRead && titleInformations[group.titleId].last == chapter.value && titleInformations[group.titleId].next != Infinity)) {
-							chapter.node.classList.add("is-hidden-chapter");
-							chapter.hidden = true;
-						}
+							(this.options.hideLastRead && titleInformations[group.titleId].last == chapter.value && titleInformations[group.titleId].next != Infinity));
+						chapter.node.classList.toggle("is-hidden-chapter", chapter.hidden);
 					}
 					if (group.chapters[0].hidden) {
 						// Display the title on the first not hidden chapter
@@ -1434,11 +1440,12 @@ class MyMangaDex {
 			// Button
 			let rows = document.querySelectorAll(".is-hidden-chapter");
 			let hiddenCount = rows.length;
-			if (hiddenCount > 0) {
-				let navBar = document.querySelector(".nav.nav-tabs");
-				let button = document.querySelector(".mmdNav-hidden");
-				if (button) button.remove();
 
+			let navBar = document.querySelector(".nav.nav-tabs");
+			let button = document.querySelector(".mmdNav-hidden");
+			if (button) button.remove();
+
+			if (hiddenCount > 0) {
 				button = document.createElement("li");
 				button.className = "nav-item mmdNav mmdNav-hidden";
 				let link = document.createElement("a");
@@ -1507,6 +1514,8 @@ class MyMangaDex {
 							} else if (titleInformations[group.titleId].last == chapter.value) {
 								paintRow(chapter.node, colors[currentColor]);
 								group.selected = j;
+							} else {
+								paintRow(chapter.node, '');
 							}
 						}
 					}
@@ -1526,9 +1535,11 @@ class MyMangaDex {
          */
     // only add tooltips on first iteration
 		if (this.options.showTooltips && (!checkUpdates || !toUpdate.length)) {
-			this.tooltipContainer = document.createElement("div");
-			this.tooltipContainer.id = "mmd-tooltip";
-			document.body.appendChild(this.tooltipContainer);
+			if (!this.tooltipContainer) {
+				this.tooltipContainer = document.createElement("div");
+				this.tooltipContainer.id = "mmd-tooltip";
+				document.body.appendChild(this.tooltipContainer);
+			}
 			for (let i = 0; i < lastChapter; i++) {
 				let group = groups[i];
 				let chapterCount = group.chapters.length;
