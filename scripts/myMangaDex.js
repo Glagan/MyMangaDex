@@ -896,12 +896,12 @@ class MyMangaDex {
 			});
 
 			await this.updateManga(false, status, true);
-			if (this.informationsNode != undefined) {
-				this.insertMyAnimeListInformations();
-			}
 			this.notification(NOTIFY.SUCCESS, "Manga Updated", undefined, this.myAnimeListImage);
 			this.modalControl(false);
 			this.highlightChapters(); // Highlight last again
+			if (this.informationsNode != undefined) {
+				this.insertMyAnimeListInformations();
+			}
 		});
 		modalFooter.appendChild(modalSave);
 
@@ -1420,7 +1420,7 @@ class MyMangaDex {
 				for (var i = 0; i < toUpdate.length; i++) {
 					if (!this.loggedMyAnimeList) break;
 					let manga = toUpdate[i];
-					
+
 					let ret = await this.fetchMyAnimeList(manga);
 					if (ret.status >= 200 && ret.status < 400 && this.loggedMyAnimeList && manga.is_approved) {
 						manga.currentChapter = manga.currentChapter || {};
