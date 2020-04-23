@@ -1277,6 +1277,10 @@ class MyMangaDex {
 		return [domain, "images/manga/", this.manga.mangaDexId, ".thumb.jpg"].join('');
 	}
 
+	timeout(ms) {
+		return new Promise(resolve => setTimeout(resolve, ms));
+	}
+
 	async handleEyeClick(eye, event) {
 		const markUnread = eye.classList.contains('chapter_mark_unread_button');
 		let dataNode = eye;
@@ -1416,7 +1420,7 @@ class MyMangaDex {
 				for (var i = 0; i < toUpdate.length; i++) {
 					if (!this.loggedMyAnimeList) break;
 					let manga = toUpdate[i];
-
+					
 					let ret = await this.fetchMyAnimeList(manga);
 					if (ret.status >= 200 && ret.status < 400 && this.loggedMyAnimeList && manga.is_approved) {
 						manga.currentChapter = manga.currentChapter || {};
@@ -1426,6 +1430,7 @@ class MyMangaDex {
 						}			
 						await updateLocalStorage(manga, this.options);
 					}
+					await this.timeout(1000);
 				}
 				this.chapterListPage(false);
 			})(toUpdate); // run in background (async)
