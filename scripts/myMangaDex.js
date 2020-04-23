@@ -1294,6 +1294,8 @@ class MyMangaDex {
 			if (this.manga.myAnimeListId) await this.fetchMyAnimeList();
 		}
 		this.manga.currentChapter = this.manga.currentChapter || { chapter: -1, volume: 0 };
+		this.manga.lastMangaDexChapter = this.manga.lastMangaDexChapter || this.manga.currentChapter.chapter;
+		this.manga.chapters = this.manga.chapters || [];
 		if (markUnread) {
 			let updateLast = this.manga.lastMangaDexChapter == chapter;
 			if (updateLast) {
@@ -1318,7 +1320,7 @@ class MyMangaDex {
 		}
 
 		if (this.manga.myAnimeListId && (!this.manga.lastMyAnimeListChapter || Math.floor(this.manga.lastMangaDexChapter) != this.manga.lastMyAnimeListChapter)) {
-			const { requestURL, body } = buildMyAnimeListBody(true, this.manga, this.csrf, this.manga.status);
+			const { requestURL, body } = buildMyAnimeListBody(true, this.manga, this.csrf, this.manga.status || 1);
 			await browser.runtime.sendMessage({
 				action: "fetch",
 				url: requestURL,
@@ -1599,7 +1601,7 @@ class MyMangaDex {
 				if (titleInformations[title])
 					if (titleInformations[title].getsUpdated)
 						titleInformations[title].getsUpdated = false;
-					if (titleInformations[title].options)
+					if (titleInformations[title].options) // make sure to update tooltips (eye-click)
 						delete titleInformations[title].options;
 			}
 		}
