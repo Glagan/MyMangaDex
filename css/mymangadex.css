@@ -1,3 +1,27 @@
+/* Animation */
+@keyframes pulse {
+	0% {
+		background-color: rgba(120, 197, 213, 0.5);
+		box-shadow: 0px 0px 4px 1px #78C5D5;
+	}
+    25% {
+		background-color: rgba(121, 194, 104, 0.5);
+		box-shadow: 0px 0px 4px 1px #79C268;
+	}
+    50% {
+		background-color: rgba(245, 214, 61, 0.5);
+		box-shadow: 0px 0px 4px 1px #F5D63D;
+	}
+    75% {
+		background-color: rgba(232, 104, 162, 0.5);
+		box-shadow: 0px 0px 4px 1px #E868A1;
+	}
+    100% {
+		background-color: rgba(191, 99, 166, 0.5);
+		box-shadow: 0px 0px 4px 1px #BF63A6;
+	}
+}
+
 /* Tooltips */
 .mmd-tooltip {
     display: block;
@@ -43,10 +67,10 @@
 }
 .is-loading {
     animation-name: pulse;
-    animation-duration: 2s;
+    animation-duration: 4s;
     animation-timing-function: ease-in-out;
     animation-direction: alternate;
-    animation-iteration-count: infinite;
+	animation-iteration-count: infinite;
 }
 .has-transition {
     transition: all 0.2s cubic-bezier(0.455, 0.03, 0.515, 0.955);

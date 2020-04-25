@@ -82,6 +82,7 @@ let manifest = {
 	content_scripts: [{
 		matches: [
 			'https://*.mangadex.org/follows',
+			'https://*.mangadex.org/follows/',
 			'https://*.mangadex.org/follows/manga/0/0/*',
 			'https://*.mangadex.org/follows/chapters/*',
 			'https://*.mangadex.org/manga*',
@@ -168,6 +169,7 @@ let dev = false;
 if (args.indexOf('-dev') >= 0) {
 	dev = true;
 	noMinify = true;
+	debug = true;
 }
 
 console.log(`Building for ${browser}`);
