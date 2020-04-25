@@ -66,7 +66,7 @@ class OptionsManager {
 			// All events that update the value of the input
 			["input", "change", "cut", "paste", "keyup"].forEach(function (eventType) {
 				element.addEventListener(eventType, event => {
-					document.querySelector("[data-color='" + field + "']").style.backgroundColor = event.target.value;
+					document.querySelector(`[data-color='${field}']`).style.backgroundColor = event.target.value;
 				});
 			});
 		});
@@ -95,13 +95,13 @@ class OptionsManager {
 		// Default buttons
 		document.querySelectorAll("[data-default]").forEach(element => {
 			element.addEventListener("click", () => {
-				let inputField = document.querySelector("[data-option='" + element.dataset.default + "']");
+				let inputField = document.querySelector(`[data-option='${element.dataset.default}']`);
 				if ("type" in inputField.dataset && inputField.dataset.type == "checkbox") {
 					this.updateCheckbox(inputField, defaultOptions[element.dataset.default]);
 				} else {
 					inputField.value = defaultOptions[element.dataset.default];
 					if (inputField.dataset.color !== undefined) {
-						document.querySelector("[data-color='" + element.dataset.default + "']").style.backgroundColor = defaultOptions[element.dataset.default];
+						document.querySelector(`[data-color='${element.dataset.default}']`).style.backgroundColor = defaultOptions[element.dataset.default];
 					}
 				}
 			});
@@ -120,7 +120,7 @@ class OptionsManager {
 				document.body.appendChild(downloadLink);
 				downloadLink.download = "mymangadex_export.json";
 				downloadLink.target = "_blank";
-				downloadLink.href = ["data:application/json;charset=utf-8,", encodeURIComponent(JSON.stringify(data))].join("");
+				downloadLink.href = `data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(data))}`;
 				downloadLink.click();
 				downloadLink.remove();
 				delete this.downloadSaveButton.dataset.busy;
@@ -225,7 +225,7 @@ class OptionsManager {
 			} else {
 				element.value = this.options[element.dataset.option];
 				if (element.dataset.color !== undefined) {
-					document.querySelector("[data-color='" + element.dataset.option + "']").style.backgroundColor = element.value;
+					document.querySelector(`[data-color='${element.dataset.option}']`).style.backgroundColor = element.value;
 				}
 			}
 		});
@@ -449,7 +449,7 @@ class OptionsManager {
 			this.flashBackground(false);
 			return;
 		} else {
-			this.importInformations.textContent = "Entries in the save: " + (Object.keys(importedData).length - 1);
+			this.importInformations.textContent = `Entries in the save: ${Object.keys(importedData).length - 1}`;
 		}
 		// Log out of online save
 		this.toggleOnlinePanels(importedData.options.isLoggedIn);
@@ -539,13 +539,13 @@ class OptionsManager {
 			this.logAndScroll(LOG.SUCCESS, "Done fetching MyAnimeList manga.");
 			return;
 		}
-		this.logAndScroll(LOG.INFO, "Fetching MyAnimeList manga from " + offset + " to " + (offset + 300));
+		this.logAndScroll(LOG.INFO, `Fetching MyAnimeList manga from ${offset} to ${offset + 300}`);
 
 		for (let i = 0; i < 3; ++i) {
 			try {
 				let response = await browser.runtime.sendMessage({
 					action: "fetch",
-					url: "https://myanimelist.net/mangalist/" + username + "/load.json?offset=" + offset + "&status=7",
+					url: `https://myanimelist.net/mangalist/${username}/load.json?offset=${offset}&status=7`,
 					options: {
 						method: "GET",
 						redirect: "follow",
@@ -592,11 +592,11 @@ class OptionsManager {
 	}
 
 	async listMangaDex(page = 1, max_page = 1, type = 0) {
-		this.logAndScroll(LOG.INFO, "Fetching MangaDex follow page manga " + page + ((max_page > 1) ? " of " + max_page : ""));
+		this.logAndScroll(LOG.INFO, `Fetching MangaDex follow page manga ${page}${max_page > 1 ? ` of ${max_page}` : ""}`);
 		try {
 			let response = await browser.runtime.sendMessage({
 				action: "fetch",
-				url: [this.domain, "follows/manga/", type, "/0/", page, "/"].join(''),
+				url: `${this.domain}follows/manga/${type}/0/${page}/`,
 				options: {
 					method: "GET",
 					redirect: "follow",
@@ -640,7 +640,7 @@ class OptionsManager {
 	}
 
 	async updateLocalFromMDMAL(index = 0) {
-		this.logAndScroll(LOG.INFO, "Updating " + (index + 1) + "/" + this.mangaDexMangaList.length);
+		this.logAndScroll(LOG.INFO, `Updating ${index + 1}/${this.mangaDexMangaList.length}`);
 
 		// Wait 1000ms
 		await this.sleep(1000);
@@ -650,7 +650,7 @@ class OptionsManager {
 		try {
 			let response = await browser.runtime.sendMessage({
 				action: "fetch",
-				url: [this.domain, "title/", this.mangaDexMangaList[index]].join(''),
+				url: `${this.domain}title/${this.mangaDexMangaList[index]}`,
 				options: {
 					method: "GET",
 					cache: "no-cache"
@@ -680,7 +680,7 @@ class OptionsManager {
 			// If regex is empty, there is no mal link, can't do anything
 			if (manga.myAnimeListId == 0) {
 				// insert in local storage
-				this.logAndScroll(LOG.WARNING, "> " + mangaName + " set to Chapter 0 (No MyAnimeList entry)");
+				this.logAndScroll(LOG.WARNING, `> ${mangaName} set to Chapter 0 (No MyAnimeList entry)`);
 				await updateLocalStorage(manga, this.options);
 				index++;
 				if (index < this.mangaDexMangaList.length) {
@@ -703,7 +703,7 @@ class OptionsManager {
 				}
 
 				// Update last open for the manga
-				this.logAndScroll(LOG.SUCCESS, "> " + mangaName + " set to Chapter " + manga.currentChapter.chapter);
+				this.logAndScroll(LOG.SUCCESS, `> ${mangaName} set to Chapter ${manga.currentChapter.chapter}`);
 				await updateLocalStorage(manga, this.options);
 				index++;
 				if (index < this.mangaDexMangaList.length) {
@@ -715,7 +715,7 @@ class OptionsManager {
 			return (true);
 		} catch (error) {
 			this.flashBackground(false);
-			this.logAndScroll(LOG.DANGER, "Updating " + (index + 1) + " Failed");
+			this.logAndScroll(LOG.DANGER, `Updating ${index + 1} Failed`);
 			console.error(error);
 
 			// Keep going
@@ -751,8 +751,8 @@ class OptionsManager {
 		this.logOutput = this.exportOutput;
 		this.logOutput.style.display = "block";
 		clearDomNode(this.logOutput);
-		this.logAndScroll(LOG.INFO, "Starting... don't close the options page. Some requests can be long on failure, " +
-			"don\'t close the page until there is a \"Done for real\" notifications.");
+		this.logAndScroll(LOG.INFO, `Starting... don't close the options page. Some requests can be long on failure,
+			don't close the page until there is a "Done for real" notifications.`);
 		await this.setDomain();
 
 		// Do the same process for every status
@@ -763,7 +763,7 @@ class OptionsManager {
 				return (this.abortExport());
 			}
 
-			this.logAndScroll(LOG.INFO, "Updating manga with the status " + s);
+			this.logAndScroll(LOG.INFO, `Updating manga with the status ${s}`);
 			// Arrays with the data in this.mangaDexMangaList
 			this.mangaDexMangaList = [];
 			await this.listMangaDex(1, 1, s);
@@ -784,17 +784,17 @@ class OptionsManager {
 					return (this.abortExport());
 				}
 
-				this.logAndScroll(LOG.INFO, "Updating #" + this.mangaDexMangaList[i]);
+				this.logAndScroll(LOG.INFO, `Updating #${this.mangaDexMangaList[i]}`);
 				let current = await storageGet(this.mangaDexMangaList[i]);
 
 				// Get the MAL id
 				let needLocalUpdate = false;
 				if (current == null) {
 					needLocalUpdate = true;
-					this.logAndScroll(LOG.INFO, "Trying to find a MyAnimeList id for #" + this.mangaDexMangaList[i]);
+					this.logAndScroll(LOG.INFO, `Trying to find a MyAnimeList id for #${this.mangaDexMangaList[i]}`);
 					let response = await browser.runtime.sendMessage({
 						action: "fetch",
-						url: [this.domain, "title/", this.mangaDexMangaList[i]].join(''),
+						url: `${this.domain}title/${this.mangaDexMangaList[i]}`,
 						options: {
 							method: "GET",
 							cache: "no-cache"
@@ -854,15 +854,15 @@ class OptionsManager {
 						if (manga.in_list) {
 							if (current.last > manga.lastMyAnimeListChapter) {
 								await this.updateMyAnimeList(manga, s);
-								this.logAndScroll(LOG.INFO, "> MyAnimeList #" + current.mal + " updated with chapter " + current.last);
+								this.logAndScroll(LOG.INFO, `> MyAnimeList #${current.mal} updated with chapter ${current.last}`);
 							} else {
-								this.logAndScroll(LOG.INFO, "> MyAnimeList #" + current.mal + " NOT updated since it is up to date.");
+								this.logAndScroll(LOG.INFO, `> MyAnimeList #${current.mal} NOT updated since it is up to date.`);
 								manga.lastMangaDexChapter = manga.lastMyAnimeListChapter;
 								needLocalUpdate = true;
 							}
 						} else { // Else update MAL
 							await this.updateMyAnimeList(manga, s);
-							this.logAndScroll(LOG.INFO, "> MyAnimeList #" + current.mal + " added with chapter " + current.last);
+							this.logAndScroll(LOG.INFO, `> MyAnimeList #${current.mal} added with chapter ${current.last}`);
 						}
 					} else {
 						this.logAndScroll(LOG.INFO, "The manga is still pending approval on MyAnimelist and can't be updated, skip.");
@@ -889,7 +889,7 @@ class OptionsManager {
 					return;
 				}
 			}
-			this.logAndScroll(LOG.SUCCESS, "Status " + s + " done.");
+			this.logAndScroll(LOG.SUCCESS, `Status ${s} done.`);
 		}
 
 		// Done
@@ -905,7 +905,7 @@ class OptionsManager {
 			}
 			let data = await browser.runtime.sendMessage({
 				action: "fetch",
-				url: "https://myanimelist.net/ownlist/manga/" + manga.myAnimeListId + "/edit?hideLayout",
+				url: `https://myanimelist.net/ownlist/manga/${manga.myAnimeListId}/edit?hideLayout`,
 				options: {
 					method: "GET",
 					redirect: "follow",
@@ -982,7 +982,7 @@ class OptionsManager {
 						return (false);
 					}
 				} else {
-					this.logAndScroll(LOG.DANGER, "Error updating the manga. error: " + error);
+					this.logAndScroll(LOG.DANGER, `Error updating the manga. error: ${error}`);
 					return (false);
 				}
 			}
@@ -1036,7 +1036,7 @@ class OptionsManager {
 		if (response.status == undefined) {
 			Object.keys(response).forEach(key => {
 				let errorName = document.createElement("b");
-				errorName.textContent = key + ": ";
+				errorName.textContent = `${key}: `;
 				this.onlineError.appendChild(errorName);
 				this.onlineError.appendChild(document.createTextNode(response[key].join(", "))); // List of errors
 				this.onlineError.appendChild(document.createElement("br"));
@@ -1182,7 +1182,7 @@ class OptionsManager {
 		try {
 			let response = await browser.runtime.sendMessage({
 				action: "fetch",
-				url: this.options.onlineURL + "user/self/export",
+				url: `${this.options.onlineURL}user/self/export`,
 				options: {
 					method: "GET",
 					headers: {
@@ -1287,7 +1287,7 @@ class OptionsManager {
 		try {
 			let response = await browser.runtime.sendMessage({
 				action: "fetch",
-				url: this.options.onlineURL + "user/self/import",
+				url: `${this.options.onlineURL}user/self/import`,
 				options: {
 					method: "POST",
 					headers: {
@@ -1332,7 +1332,7 @@ class OptionsManager {
 		try {
 			let response = await browser.runtime.sendMessage({
 				action: "fetch",
-				url: this.options.onlineURL + "user/self",
+				url: `${this.options.onlineURL}user/self`,
 				options: {
 					method: "DELETE",
 					headers: {
@@ -1387,7 +1387,7 @@ class OptionsManager {
 		try {
 			let response = await browser.runtime.sendMessage({
 				action: "fetch",
-				url: this.options.onlineURL + "user/self",
+				url: `${this.options.onlineURL}user/self`,
 				options: {
 					method: "POST",
 					headers: {
@@ -1422,7 +1422,7 @@ class OptionsManager {
 		try {
 			let response = await browser.runtime.sendMessage({
 				action: "fetch",
-				url: this.options.onlineURL + "user/self/token/refresh",
+				url: `${this.options.onlineURL}user/self/token/refresh`,
 				options: {
 					method: "GET",
 					headers: {
@@ -1457,7 +1457,7 @@ class OptionsManager {
 		try {
 			let response = await browser.runtime.sendMessage({
 				action: "fetch",
-				url: this.options.onlineURL + "user/self/token",
+				url: `${this.options.onlineURL}user/self/token`,
 				options: {
 					method: "GET",
 					headers: {
@@ -1486,7 +1486,7 @@ class OptionsManager {
 		try {
 			let response = await browser.runtime.sendMessage({
 				action: "fetch",
-				url: this.options.onlineURL + "user/self/export",
+				url: `${this.options.onlineURL}user/self/export`,
 				options: {
 					method: "GET",
 					headers: {
@@ -1527,7 +1527,7 @@ class OptionsManager {
 						chapter: Math.floor(title.chapter)
 					};
 				});
-				this.downloadOnlineButton.href = "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(body));
+				this.downloadOnlineButton.href = `data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(body))}`;
 				this.downloadOnlineButton.click();
 				this.downloadOnlineButton.href = "";
 			} else {
@@ -1543,7 +1543,7 @@ class OptionsManager {
 		try {
 			await browser.runtime.sendMessage({
 				action: "fetch",
-				url: this.options.onlineURL + "user/self/options",
+				url: `${this.options.onlineURL}user/self/options`,
 				options: {
 					method: "POST",
 					headers: {

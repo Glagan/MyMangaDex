@@ -225,8 +225,8 @@ async function updateLocalStorage(manga, options) {
 		manga.currentChapter && manga.currentChapter.chapter > manga.lastMangaDexChapter) {
 		SimpleNotification.success({
 			title: "Manga updated",
-			image: [domain, "images/manga/", manga.mangaDexId, ".thumb.jpg"].join(''),
-			text: [manga.name, " last open Chapter as been updated to ", manga.lastMangaDexChapter].join(''),
+			image: `${domain}images/manga/${manga.mangaDexId}.thumb.jpg`,
+			text: `${manga.name} last open Chapter as been updated to ${manga.lastMangaDexChapter}`,
 		}, { position: "bottom-left" });
 	}
 	// Update online
@@ -252,7 +252,7 @@ async function updateLocalStorage(manga, options) {
 		try {
 			let response = await browser.runtime.sendMessage({
 				action: "fetch",
-				url: options.onlineURL + "user/self/title/" + manga.mangaDexId,
+				url: `${options.onlineURL}user/self/title/${manga.mangaDexId}`,
 				options: {
 					method: "POST",
 					mode: "cors",
@@ -278,7 +278,7 @@ async function updateLocalStorage(manga, options) {
 				SimpleNotification.error({
 					title: "Couldn't save Online",
 					image: "https://ramune.nikurasu.org/mymangadex/128b.png",
-					text: "The Online Service might have a problem, or your credentials has been changed.\nYou have been **logged out**, go to the options to log in again.",
+					text: "The Online Service might have a problem, or your credentials have been changed.\nYou have been **logged out**, go to the options to log in again.",
 					buttons: {
 						value: "Open Options",
 						type: "message",
@@ -364,7 +364,7 @@ function processMyAnimeListResponse(manga, text) {
 }
 
 function buildMyAnimeListBody(usePepper, manga, csrf, status = 1) {
-	let requestURL = "https://myanimelist.net/ownlist/manga/" + manga.myAnimeListId + "/edit?hideLayout";
+	let requestURL = `https://myanimelist.net/ownlist/manga/${manga.myAnimeListId}/edit?hideLayout`;
 	if (usePepper) {
 		// Status is always set to reading, or we complet it if it's the last chapter, and so we fill the finish_date
 		manga.status = (manga.status == 2 || (manga.total_chapter > 0 && manga.currentChapter.chapter >= manga.total_chapter)) ? 2 : status;
@@ -394,7 +394,7 @@ function buildMyAnimeListBody(usePepper, manga, csrf, status = 1) {
 		// Start reading manga if it's the first chapter
 		if (!manga.in_list) {
 			// We have to change the url if we're adding the manga to the list, not editing
-			requestURL = "https://myanimelist.net/ownlist/manga/add?selected_manga_id=" + manga.myAnimeListId + "&hideLayout";
+			requestURL = `https://myanimelist.net/ownlist/manga/add?selected_manga_id=${manga.myAnimeListId}&hideLayout`;
 			manga.in_list = true;
 			manga.started = true;
 		}
@@ -413,32 +413,32 @@ function buildMyAnimeListBody(usePepper, manga, csrf, status = 1) {
 
 	// Prepare the body
 	let body = "entry_id=0&";
-	body += "manga_id=" + manga.myAnimeListId + "&";
-	body += encodeURIComponent("add_manga[status]") + "=" + manga.status + "&";
-	body += encodeURIComponent("add_manga[num_read_volumes]") + "=" + manga.currentChapter.volume + "&";
+	body += `manga_id=${manga.myAnimeListId}&`;
+	body += `${encodeURIComponent("add_manga[status]")}=${manga.status}&`;
+	body += `${encodeURIComponent("add_manga[num_read_volumes]")}=${manga.currentChapter.volume}&`;
 	body += "last_completed_vol=&";
-	body += encodeURIComponent("add_manga[num_read_chapters]") + "=" + manga.lastMyAnimeListChapter + "&";
-	body += encodeURIComponent("add_manga[score]") + "=" + manga.score + "&";
-	body += encodeURIComponent("add_manga[start_date][day]") + "=" + manga.start_date.day + "&";
-	body += encodeURIComponent("add_manga[start_date][month]") + "=" + manga.start_date.month + "&";
-	body += encodeURIComponent("add_manga[start_date][year]") + "=" + manga.start_date.year + "&";
-	body += encodeURIComponent("add_manga[finish_date][day]") + "=" + manga.finish_date.day + "&";
-	body += encodeURIComponent("add_manga[finish_date][month]") + "=" + manga.finish_date.month + "&";
-	body += encodeURIComponent("add_manga[finish_date][year]") + "=" + manga.finish_date.year + "&";
-	body += encodeURIComponent("add_manga[tags]") + "=" + encodeURIComponent(manga.tags) + "&";
-	body += encodeURIComponent("add_manga[priority]") + "=" + manga.priority + "&";
-	body += encodeURIComponent("add_manga[storage_type]") + "=" + manga.storage_type + "&";
-	body += encodeURIComponent("add_manga[num_retail_volumes]") + "=" + manga.retail_volumes + "&";
-	body += encodeURIComponent("add_manga[num_read_times]") + "=" + manga.total_reread + "&";
-	body += encodeURIComponent("add_manga[reread_value]") + "=" + manga.reread_value + "&";
-	body += encodeURIComponent("add_manga[comments]") + "=" + encodeURIComponent(manga.comments) + "&";
-	body += encodeURIComponent("add_manga[is_asked_to_discuss]") + "=" + manga.ask_to_discuss + "&";
-	body += encodeURIComponent("add_manga[sns_post_type]") + "=" + manga.sns_post_type + "&";
+	body += `${encodeURIComponent("add_manga[num_read_chapters]")}=${manga.lastMyAnimeListChapter}&`;
+	body += `${encodeURIComponent("add_manga[score]")}=${manga.score}&`;
+	body += `${encodeURIComponent("add_manga[start_date][day]")}=${manga.start_date.day}&`;
+	body += `${encodeURIComponent("add_manga[start_date][month]")}=${manga.start_date.month}&`;
+	body += `${encodeURIComponent("add_manga[start_date][year]")}=${manga.start_date.year}&`;
+	body += `${encodeURIComponent("add_manga[finish_date][day]")}=${manga.finish_date.day}&`;
+	body += `${encodeURIComponent("add_manga[finish_date][month]")}=${manga.finish_date.month}&`;
+	body += `${encodeURIComponent("add_manga[finish_date][year]")}=${manga.finish_date.year}&`;
+	body += `${encodeURIComponent("add_manga[tags]")}=${encodeURIComponent(manga.tags)}&`;
+	body += `${encodeURIComponent("add_manga[priority]")}=${manga.priority}&`;
+	body += `${encodeURIComponent("add_manga[storage_type]")}=${manga.storage_type}&`;
+	body += `${encodeURIComponent("add_manga[num_retail_volumes]")}=${manga.retail_volumes}&`;
+	body += `${encodeURIComponent("add_manga[num_read_times]")}=${manga.total_reread}&`;
+	body += `${encodeURIComponent("add_manga[reread_value]")}=${manga.reread_value}&`;
+	body += `${encodeURIComponent("add_manga[comments]")}=${encodeURIComponent(manga.comments)}&`;
+	body += `${encodeURIComponent("add_manga[is_asked_to_discuss]")}=${manga.ask_to_discuss}&`;
+	body += `${encodeURIComponent("add_manga[sns_post_type]")}=${manga.sns_post_type}&`;
 	if (manga.is_rereading) {
-		body += encodeURIComponent("add_manga[is_rereading]") + "=1&";
+		body += `${encodeURIComponent("add_manga[is_rereading]")}=1&`;
 	}
 	body += "submitIt=0&";
-	body += encodeURIComponent("csrf_token") + "=" + csrf;
+	body += `${encodeURIComponent("csrf_token")}=${csrf}`;
 
 	return {
 		requestURL: requestURL,
