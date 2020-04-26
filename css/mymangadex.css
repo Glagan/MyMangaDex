@@ -96,3 +96,19 @@
 .mmd-background-info {
     background-color: rgba(2, 136, 209, 0.2);
 }
+
+/* History */
+.history-up {
+	box-shadow: 0 0 6px -1px rgb(87, 200, 46);
+	border: 1px solid rgb(87, 200, 46);
+}
+.history-up .car-caption {
+	background-color: rgba(87, 200, 46, 0.75);
+}
+.history-down {
+	box-shadow: 0 0 6px 1px rgb(60, 145, 219);
+	border: 1px solid rgb(60, 145, 219);
+}
+.history-down .car-caption {
+	background-color: rgba(60, 145, 219, 0.75);
+}

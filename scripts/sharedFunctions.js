@@ -37,18 +37,19 @@ function injectScript(func) {
  */
 async function storageGet(key) {
 	try {
-		if (key !== null) {
+		const objectKey = typeof key === 'object';
+		if (key !== null && !objectKey) {
 			key = key + "";
 		}
 		let res;
 		if (CHROME) {
 			await browser.storage.local.get((key === null) ? null : key, function (result) {
-				res = (key === null) ? result : result[key];
+				res = (key === null || objectKey) ? result : result[key];
 			});
 			return res;
 		} else {
 			res = await browser.storage.local.get((key === null) ? null : key);
-			return (key === null) ? res : res[key];
+			return (key === null || objectKey) ? res : res[key];
 		}
 	} catch (error) {
 		console.error(browser.runtime.lastError);
@@ -157,31 +158,6 @@ async function loadOptions() {
 		// Fix the save on version updates
 		if ((data.version != defaultOptions.version) ||
 			(data.version == defaultOptions.version && data.subVersion != defaultOptions.subVersion)) {
-			// Fix history wrong progress
-			/*let history = await storageGet("history");
-			if (history) {
-				Object.keys(history).forEach(md_id => {
-					if (md_id == 'list') return;
-					if (history[md_id]) {
-						if (history[md_id].progress == null) {
-							history[md_id].progress = {
-								volume: 0,
-								chapter: 0
-							};
-						} else if (typeof history[md_id].progress != 'object') {
-							history[md_id].progress = {
-								volume: 0,
-								chapter: history[md_id].progress
-							};
-						}
-					} else {
-						history[md_id] = undefined;
-					}
-				});
-			} else {
-				history = { list: [] };
-			}
-			await storageSet("history", history);*/
 			if (data.version == 2.3 && data.subVersion == 10) {
 				SimpleNotification.info({
 					title: "Update 2.3.11",

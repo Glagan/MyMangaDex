@@ -41,6 +41,7 @@ let defaultOptions = {
 	updateHistoryPage: false,
 	updateOnlyInList: false,
 	historySize: 100,
+	checkHistoryLatest: false,
 	updateMDList: false,
 	updateOnFollows: false,
 	showTooltips: true,

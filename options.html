@@ -1,522 +1,682 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <meta charset="utf-8">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/solid.css" integrity="sha384-Rw5qeepMFvJVEZdSo1nDQD5B6wX0m7c5Z/pLNvjkB14W6Yki1hKbSEQaX9ffUbWe" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/brands.css" integrity="sha384-VGCZwiSnlHXYDojsRqeMn3IVvdzTx5JEuHgqZ3bYLCLUBV8rvihHApoA1Aso2TZA" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/fontawesome.css" integrity="sha384-GVa9GOgVQgOk+TNYXu7S/InPTfSDTtBalSgkgqQ7sCik56N9ztlkoTr2f/T44oKV" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" media="all" href="css/mymangadex.css">
-    <link rel="stylesheet" type="text/css" media="all" href="css/options.css">
-    <link rel="stylesheet" type="text/css" media="all" href="third_party/simpleNotification.min.css">
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+		integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/solid.css"
+		integrity="sha384-Rw5qeepMFvJVEZdSo1nDQD5B6wX0m7c5Z/pLNvjkB14W6Yki1hKbSEQaX9ffUbWe" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/brands.css"
+		integrity="sha384-VGCZwiSnlHXYDojsRqeMn3IVvdzTx5JEuHgqZ3bYLCLUBV8rvihHApoA1Aso2TZA" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/fontawesome.css"
+		integrity="sha384-GVa9GOgVQgOk+TNYXu7S/InPTfSDTtBalSgkgqQ7sCik56N9ztlkoTr2f/T44oKV" crossorigin="anonymous">
+	<link rel="stylesheet" type="text/css" media="all" href="css/mymangadex.css">
+	<link rel="stylesheet" type="text/css" media="all" href="css/options.css">
+	<link rel="stylesheet" type="text/css" media="all" href="third_party/simpleNotification.min.css">
 </head>
+
 <body>
-    <button id="save" class="btn btn-success"><i class="fas fa-save"></i> Save</button>
-    <div class="container-fluid py-2">
-        <div class="row">
-            <div class="col">
-                <div class="text-container p-2 mb-3">
-                    Github page <i class="fab fa-github"></i> <a href="https://github.com/Glagan/MyMangaDex" target="blank">https://github.com/Glagan/MyMangaDex</a><br>
-                    Open an issue if you have any problem.
-                </div>
-            </div>
-        </div>
-        <!-- Colors -->
-        <div class="row">
-            <div class="col-sm-12 col-md-3">
-                <h1 class="text-container py-2 px-2"><i class="fas fa-palette"></i> Colors</h1>
-            </div>
-            <div class="col">
-                <div class="alert alert-info">Colors that exist in <a href="http://www.color-hex.com/color-names.html" target="blank">HTML</a> are accepted but you can also use a value like <b>#RRGGBB</b>, <b>rgb(r,g,b)</b> or with alpha channel <b>rgba(r,g,b,a)</b>.</div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Last read color <a data-default="lastReadColor" class="btn btn-sm btn-secondary"><i
-                                class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Color of the last read chapter on MyAnimeList.</p>
-                    <div class="input-group">
-                        <input type="text" data-option="lastReadColor" data-type="text" data-color="true" class="form-control" />
-                        <div class="input-group-append">
-                            <span class="input-group-text" data-color="lastReadColor"></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Last open colors <a id="defaultLastOpenColors" class="btn btn-sm btn-secondary"><i
-                                class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">List of colors used to highlight chapters in chapters lists.</p>
-                    <div id="lastOpenColors" class="px-0 my-auto">
-                        <div id="addColorRow" class="col px-0 pb-2 my-auto">
-                            <a id="addColor" class="btn btn-success"><i class="fas fa-plus-circle"></i> Add a color</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Lower chapters color <a data-default="lowerChaptersColor" class="btn btn-sm btn-secondary"><i
-                                class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Color used if <kbd>Hide lower chapters</kbd> is set to false.</p>
-                    <div class="input-group">
-                        <input type="text" data-option="lowerChaptersColor" data-type="text" data-color="true" class="form-control" />
-                        <div class="input-group-append">
-                            <span class="input-group-text" data-color="lowerChaptersColor"></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Higher chapters color <a data-default="higherChaptersColor" class="btn btn-sm btn-secondary"><i
-                                class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Color used if <kbd>Hide higher chapters</kbd> is set to false.<br/>Set to <b>transparent</b> if you don't wish to highlight.</p>
-                    <div class="input-group">
-                        <input type="text" data-option="higherChaptersColor" data-type="text" data-color="true" class="form-control" />
-                        <div class="input-group-append">
-                            <span class="input-group-text" data-color="higherChaptersColor"></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Next chapter color <a data-default="nextChapterColor" class="btn btn-sm btn-secondary"><i
-                                class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Color used to highlight the next chapter for a title.<br/>Set to <b>transparent</b> if you don't wish to highlight.</p>
-                    <div class="input-group">
-                        <input type="text" data-option="nextChapterColor" data-type="text" data-color="true" class="form-control" />
-                        <div class="input-group-append">
-                            <span class="input-group-text" data-color="nextChapterColor"></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Opened chapters color <a data-default="openedChaptersColor" class="btn btn-sm btn-secondary"><i
-                                class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Color used to highlight all opened chapters in a title page.</p>
-                    <div class="input-group">
-                        <input type="text" data-option="openedChaptersColor" data-type="text" data-color="true" class="form-control" />
-                        <div class="input-group-append">
-                            <span class="input-group-text" data-color="openedChaptersColor"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Global -->
-        <div class="row">
-            <div class="col-sm-12 col-md-3">
-                <h1 class="text-container py-2 px-2"><i class="fas fa-globe"></i> Global</h1>
-            </div>
-            <div class="col">
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Update MangaDex list <a data-default="updateMDList" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Automatically update your MangaDex list when needed. The list is updated when you start reading, add to plan to read, start re-reading and is set to the same status when you edit informations in the modal.</p>
-                    <div data-option="updateMDList" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Update on Follows page <a data-default="updateOnFollows" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Automatically check if new chapters have already been read (on MyAnimeList). Only checks the first 7 with unread higher chapters.</p>
-                    <div data-option="updateOnFollows" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Show notifications <a data-default="showNotifications" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Display notifications in the bottom left corner. Do not disable error notifications, see below.</p>
-                    <div data-option="showNotifications" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Show error notifications <a data-default="showErrors" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Display all error notifications.</p>
-                    <div data-option="showErrors" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Bigger MangaDex history <a data-default="updateHistoryPage" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Save your last read chapters and display them in the <a href="https://mangadex.org/history" rel="noreferrer noopener">History</a> page.</p>
-                    <div data-option="updateHistoryPage" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">MangaDex history size <a data-default="historySize" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">The size of your MangaDex <a href="https://mangadex.org/history" rel="noreferrer noopener">History</a>. (If <b>Bigger MangaDex history</b> is activated)</p>
-                    <div class="px-0">
-                        <input data-option="historySize" data-type="number" type="number" min="1" max="500" class="form-control" />
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Chapter List Page -->
-        <div class="row">
-            <div class="col-sm-12 col-md-3">
-                <h1 class="text-container py-2 px-2"><i class="fas fa-bookmark"></i> Chapters list pages</h1>
-            </div>
-            <div class="col">
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Hide <b>lower</b> chapters <a data-default="hideLowerChapters" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Hide all chapters that are inferior to your last read chapter on MangaDex.</p>
-                    <div data-option="hideLowerChapters" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Hide <b>higher</b> chapters <a data-default="hideHigherChapters" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Hide all chapters that are higher than your last read chapter on MangaDex.</p>
-                    <div data-option="hideHigherChapters" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Hide <b>last read</b> chapter <a data-default="hideLastRead" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Hide your last read chapter on MangaDex <b>if there isn't any higher chapter</b>.</p>
-                    <div data-option="hideLastRead" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Highlight chapters <a data-default="highlightChapters" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">If this option is disabled, no colors will be used. Does not prevent the <kbd>Hide lower chapters</kbd> and <kbd>Show tooltips</kbd> options to be applied.</p>
-                    <div data-option="highlightChapters" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Show tooltips (Thumbnails) <a data-default="showTooltips" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Display tooltips containing a thumbnail of the manga and the list of the last 5 read chapters on chapters and title lists. No tooltips are added if there is already one.</p>
-                    <div data-option="showTooltips" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Show full size cover <a data-default="showFullCover" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Display the full cover of a title instead of it's thumbnail.<br><b>Some covers can be <i>big</i> and slow to load depending on your connection.</b></p>
-                    <div data-option="showFullCover" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Full Size cover height <a data-default="coverMaxHeight" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">The full cover of a title can be <b>big</b> but you can adjust the maximum <b>height</b> it will take.<br/>This option is the percentage of your screen height a tooltip can take <b>at best</b>.</p>
-                    <div class="px-0">
-                        <input data-option="coverMaxHeight" data-type="number" type="number" min="1" max="100" class="form-control" />
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Chapter Page -->
-        <div class="row">
-            <div class="col-sm-12 col-md-3">
-                <h1 class="text-container py-2 px-2"><i class="fas fa-file"></i> Chapter page</h1>
-            </div>
-            <div class="col">
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Save higher chapters only <a data-default="saveOnlyHigher" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">If this option is enabled, your MyAnimeList will be updated to the chapter you are reading only if it is higher than your current last read chapter.</p>
-                    <div data-option="saveOnlyHigher" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Save next chapter only <a data-default="saveOnlyNext" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Update MyAnimeList only if the chapter you are reading is a following chapter of your last read chapter.</p>
-                    <div data-option="saveOnlyNext" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Confirm to update chapter <a data-default="confirmChapter" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Show a notification with a confirm button when reading a chapter higher than your previous chapter (with <b>Save next chapter only</b>), or a lower chapter (<b>Save higher chapters only</b>).</p>
-                    <div data-option="confirmChapter" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Save all opened chapters <a data-default="saveAllOpened" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Save a list of all opened chapters for each manga to highlight them in a title page and display them inside tooltips.</p>
-                    <div data-option="saveAllOpened" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Number of saved chapters <a data-default="maxChapterSaved" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Limit to the list of saved chapters to avoid using a lot of storage (100 is already a good enough value).</p>
-                    <div class="px-0">
-                        <input data-option="maxChapterSaved" data-type="number" type="number" min="1" max="400" class="form-control" />
-                    </div>
-                </div>
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Update only if in MangaDex list <a data-default="updateOnlyInList" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p class="d-none d-xl-block">Update <b>MyAnimeList</b> only if the title have a status on <b>MangaDex</b>.<br />
-                    A confirm button to still update the title can be displayed if <b>Confirm to update chapter</b> is enabled.</p>
-                    <div data-option="updateOnlyInList" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Export -->
-        <div class="row">
-            <div class="col-sm-12 col-md-3">
-                <h1 class="text-container py-2 px-2"><i class="fas fa-download"></i> Export (MMD)</h1>
-            </div>
-            <div class="col">
-                <div class="text-container p-2 mb-3">
-                    <div class="form-group">
-                        <p>Click the area to select your save, then use <kbd>CTRL + C</kbd> or right-click and then copy.</p>
-                        <textarea class="form-control" id="save-content" placeholder="Press Refresh to display your save file"></textarea>
-                        <div class="text-right mt-2">
-                            <a id="download-save" download="export.json" target="_blank" class="btn btn-primary">Download</a>
-                            <button id="refresh-save" class="btn btn-primary">Refresh</button>
-                            <button id="copy-save" class="btn btn-primary d-none">Copy</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Import -->
-        <div class="row">
-            <div class="col-sm-12 col-md-3">
-                <h1 class="text-container py-2 px-2"><i class="fas fa-upload"></i> Import (MMD)</h1>
-            </div>
-            <div class="col">
-                <div class="text-container p-2 mb-3">
-                    <p>You can import your <strong>MyMangaDex</strong> data that you exported, paste your save or select your file save and click <strong>Import</strong>. Options <strong>are</strong> override.<br>
-                    Merging your data will <i>merge</i> the saved opened chapters, and pick the highest last opened chapter for each manga.</p>
-                    <div class="alert alert-danger">This will erase your <b>current</b> save, export it if you don't want to lose it.</div>
-                    <form id="save-import">
-                        <textarea class="form-control" name="save" placeholder="Exported Save (JSON)"></textarea>
-                        <div id="importInformations"></div>
-                        <div class="text-right mt-2">
-                            <input id="saveUploadButton" type="file" class="btn btn-primary" />
-                            <button id="importSubmitButton" type="submit" class="btn btn-primary">Import</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <!-- MAL Export -->
-        <div class="row">
-            <div class="col-sm-12 col-md-3">
-                <h1 class="text-container py-2 px-2"><i class="fas fa-download"></i> Export (MAL)</h1>
-            </div>
-            <div class="col">
-                <div class="text-container p-2 mb-3">
-                    <p>Update your <b>MyAnimeList</b> manga list by updating or adding all titles on your <b>MangaDex</b> follow list that have a <b>MyAnimeList</b> id.</p>
-                    <div class="alert alert-info">You can be extra careful and <a href="https://myanimelist.net/panel.php?go=export">export</a> your MyAnimeList before using this feature.</div>
-                    <form id="mal-export" class="text-center form-inline justify-content-md-center mx-auto">
-                        <button type="submit" class="btn btn-primary mb-2">Export</button>
-                    </form>
-                    <ul id="malExportStatus" class="list-group">
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <!-- MAL Import -->
-        <div class="row">
-            <div class="col-sm-12 col-md-3">
-                <h1 class="text-container py-2 px-2"><i class="fas fa-upload"></i> Import (MAL)</h1>
-            </div>
-            <div class="col">
-                <div class="text-container p-2 mb-3">
-                    <p>Update your <b>MyMangaDex</b> last opened chapter with data from MyAnimeList for every title you follow on <b>MangaDex</b>. If <kbd>saveAllOpened</kbd> is enabled, a list of chapters is generated.</p>
-                    <div class="alert alert-info">This functionality doesn't add any manga to your <b>MangaDex</b> follow list, it only update <b>MyMangaDex</b> storage.</div>
-                    <div class="alert alert-danger">This will erase your <b>current</b> <i>MyMangaDex</i> save, export it if you don't want to lose it.</div>
-                    <form id="mal-import" class="text-center form-inline justify-content-md-center mx-auto">
-                        <div class="form-group mx-sm-3 mb-2 input-group">
-                            <input type="text" class="form-control" name="username" placeholder="MyAnimeList username">
-                            <div class="input-group-append">
-                                <button type="submit" class="btn btn-primary">Import</button>
-                            </div>
-                        </div>
-                    </form>
-                    <ul id="malImportStatus" class="list-group">
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <!-- Online Save -->
-        <div class="row">
-            <div class="col-sm-12 col-md-3">
-                <h1 class="text-container py-2 px-2"><i class="fas fa-globe"></i> Online Save</h1>
-            </div>
-            <div class="col">
-                <div class="form-group text-container p-2">
-                    <label class="font-weight-bold">Online Save <a data-default="onlineSave" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                    <p>Online Save will update your data on a MMD Online Save instance, which you can find <a href="https://github.com/Glagan/MMD-Online-Save">here</a>. I propose a default one hosted on my site <a href="https://mmd.nikurasu.org">nikurasu</a>.</p>
-                    <div id="onlineServiceInfo" class="alert alert-info">You can't currently host your own MMD Online Save for Firefox (working only on Chrome) since permissions don't allow me to make requests to a domain which isn't in the extension manifest, and I can't know what domain you will use.</div>
-                    <p>You only need to set a Username and Password, then when you need to use your data on another computer or another device, log in and your data will be imported.</p>
-                    <p>All data is still saved locally, and the extension only use local storage to retrieve data, you can disable online save and delete all of your saved data at any time.<br />
-                    What Online Save do is updating your save online every time your save is updated locally.</p>
-                    <div data-option="onlineSave" data-type="checkbox" class="col px-0 my-auto input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
-                        </div>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-secondary input-append col px-2 active">Disabled</button>
-                        </div>
-                    </div>
-                </div>
-                <div id="onlineOptions">
-                    <!-- Logged in -->
-                    <div id="loggedInPanel" class="text-container p-2 mb-3">
-                        <div class="alert alert-info">You are currently <b>LOGGED IN</b>.</div>
-                        <div class="alert alert-warning"><b>Import Online</b> will <b>replace</b> your local save with your online save, save it before importing if you don't want to lose it.<br>
-                        <b>Export Online</b> will <b>replace</b> your online save, you can download it before exporting if you don't want to lose it.</div>
-                        <div class="row no-gutters input-group">
-                            <div class="col-sm-12 col-md-8 text-center">
-                                <button class="btn btn-primary mr-2 my-2" data-button-protect="importOnline"><i class="fas fa-download"></i> Import Online</button>
-                                <button class="btn btn-primary mr-2 my-2" data-button-protect="exportOnline"><i class="fas fa-upload"></i> Export Online</button>
-                            </div>
-                            <div class="col-sm-12 col-md-4 text-center">
-                                <button class="btn btn-danger my-2" data-button-protect="logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Logged out -->
-                    <div id="loggedOutPanel" class="text-container p-2 mb-3">
-                        <div class="alert alert-info">You are currently <b>LOGGED OUT</b>.</div>
-                        <p>To connect, fill the following fields and press <b>Login</b> or <b>Register</b> if you don't have an account on this service.</p>
-                        <div class="input-group justify-content-center">
-                            <button class="btn btn-primary mr-2" data-button-protect="login"><i class="fas fa-sign-in-alt"></i> Login</button>
-                            <button class="btn btn-primary" data-button-protect="register"><i class="fas fa-user-plus"></i> Register</button>
-                        </div>
-                    </div>
-                    <div id="onlineSuccess" class="alert alert-success"></div>
-                    <div id="onlineError" class="alert alert-danger"></div>
-                    <!-- Values -->
-                    <form id="onlineForm">
-                        <div id="onlineURLPanel" class="form-group text-container p-2">
-                            <label class="font-weight-bold">Online URL <a data-default="onlineURL" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                            <p class="d-none d-xl-block">The URL of the online service.</p>
-                            <div class="px-0">
-                                <input type="text" name="onlineURL" placeholder="URL" class="form-control" />
-                            </div>
-                        </div>
-                        <div class="form-group text-container p-2">
-                            <label class="font-weight-bold">Username <a data-default="username" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                            <p class="d-none d-xl-block">Your username on the service.</p>
-                            <div class="px-0">
-                                <input type="text" name="username" placeholder="Username" class="form-control" />
-                            </div>
-                        </div>
-                        <div class="form-group text-container p-2">
-                            <label class="font-weight-bold">Password <a data-default="password" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
-                            <p class="d-none d-xl-block">Your password on the service.</p>
-                            <div class="px-0">
-                                <input type="password" name="password" placeholder="Password" class="form-control" />
-                            </div>
-                        </div>
-                    </form>
-                    <!-- Management when online -->
-                    <div id="onlineAdvancedPanel" class="text-container p-2 mb-3">
-                        <div class="row no-gutters text-center">
-                            <div class="col-sm-12 col-md-6 text-center">
-                                <button class="btn btn-secondary mr-2 my-2" data-button-protect="receiveToken"><i class="fas fa-download"></i> Receive Token</button>
-                                <button class="btn btn-secondary mr-2 my-2" data-button-protect="refreshToken"><i class="fas fa-wrench"></i> Refresh Token</button>
-                                <button class="btn btn-secondary mr-2 my-2" data-button-protect="update"><i class="fas fa-edit"></i> Update Credentials</button>
-                            </div>
-                            <div class="col-sm-12 col-md-6 text-center">
-                                <a class="btn btn-info mr-2 my-2" download="export.json" id="downloadOnline" target="_blank" data-button-protect="downloadOnline"><i class="fas fa-download"></i> Download</a>
-                                <button class="btn btn-danger my-2" id="deleteOnline" data-button-protect="deleteOnline"><i class="fas fa-trash"></i> Delete Online</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Delete -->
-        <div class="row">
-            <div class="col-sm-12 col-md-3">
-                <h1 class="text-container py-2 px-2"><i class="fas fa-trash"></i> Delete</h1>
-            </div>
-            <div class="col">
-                <div class="text-container p-2 mb-3">
-                    <p>Delete all of your data. A new save will be created with default parameters.</p>
-                    <div class="alert alert-danger">This will erase your <b>current</b> save, export it or save it online if you don't want to lose it. <b>Not reversible.</b></div>
-                    <p><button id="delete-save" class="btn btn-danger font-2 d-block mx-auto">Delete</button></p>
-            </div>
-        </div>
-    </div>
-    <!-- Scripts -->
-    <script src="scripts/Options.js"></script>
+	<button id="save" class="btn btn-success"><i class="fas fa-save"></i> Save</button>
+	<div class="container-fluid py-2">
+		<div class="row">
+			<div class="col">
+				<div class="text-container p-2 mb-3">
+					Github page <i class="fab fa-github"></i> <a href="https://github.com/Glagan/MyMangaDex"
+						target="blank">https://github.com/Glagan/MyMangaDex</a><br>
+					Open an issue if you have any problem.
+				</div>
+			</div>
+		</div>
+		<!-- Colors -->
+		<div class="row">
+			<div class="col-sm-12 col-md-3">
+				<h1 class="text-container py-2 px-2"><i class="fas fa-palette"></i> Colors</h1>
+			</div>
+			<div class="col">
+				<div class="alert alert-info">Colors that exist in <a href="http://www.color-hex.com/color-names.html"
+						target="blank">HTML</a> are accepted but you can also use a value like <b>#RRGGBB</b>,
+					<b>rgb(r,g,b)</b> or with alpha channel <b>rgba(r,g,b,a)</b>.</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Last read color <a data-default="lastReadColor"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Color of the last read chapter on MyAnimeList.</p>
+					<div class="input-group">
+						<input type="text" data-option="lastReadColor" data-type="text" data-color="true"
+							class="form-control" />
+						<div class="input-group-append">
+							<span class="input-group-text" data-color="lastReadColor"></span>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Last open colors <a id="defaultLastOpenColors"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">List of colors used to highlight chapters in chapters lists.</p>
+					<div id="lastOpenColors" class="px-0 my-auto">
+						<div id="addColorRow" class="col px-0 pb-2 my-auto">
+							<a id="addColor" class="btn btn-success"><i class="fas fa-plus-circle"></i> Add a color</a>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Lower chapters color <a data-default="lowerChaptersColor"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Color used if <kbd>Hide lower chapters</kbd> is set to false.</p>
+					<div class="input-group">
+						<input type="text" data-option="lowerChaptersColor" data-type="text" data-color="true"
+							class="form-control" />
+						<div class="input-group-append">
+							<span class="input-group-text" data-color="lowerChaptersColor"></span>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Higher chapters color <a data-default="higherChaptersColor"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Color used if <kbd>Hide higher chapters</kbd> is set to false.<br />Set
+						to <b>transparent</b> if you don't wish to highlight.</p>
+					<div class="input-group">
+						<input type="text" data-option="higherChaptersColor" data-type="text" data-color="true"
+							class="form-control" />
+						<div class="input-group-append">
+							<span class="input-group-text" data-color="higherChaptersColor"></span>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Next chapter color <a data-default="nextChapterColor"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Color used to highlight the next chapter for a title.<br />Set to
+						<b>transparent</b> if you don't wish to highlight.</p>
+					<div class="input-group">
+						<input type="text" data-option="nextChapterColor" data-type="text" data-color="true"
+							class="form-control" />
+						<div class="input-group-append">
+							<span class="input-group-text" data-color="nextChapterColor"></span>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Opened chapters color <a data-default="openedChaptersColor"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Color used to highlight all opened chapters in a title page.</p>
+					<div class="input-group">
+						<input type="text" data-option="openedChaptersColor" data-type="text" data-color="true"
+							class="form-control" />
+						<div class="input-group-append">
+							<span class="input-group-text" data-color="openedChaptersColor"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Chapter List Page -->
+		<div class="row">
+			<div class="col-sm-12 col-md-3">
+				<h1 class="text-container py-2 px-2"><i class="fas fa-bookmark"></i> Chapters list pages</h1>
+			</div>
+			<div class="col">
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Hide <b>lower</b> chapters <a data-default="hideLowerChapters"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Hide all chapters that are inferior to your last read chapter on
+						MangaDex.</p>
+					<div data-option="hideLowerChapters" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Hide <b>higher</b> chapters <a data-default="hideHigherChapters"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Hide all chapters that are higher than your last read chapter on
+						MangaDex.</p>
+					<div data-option="hideHigherChapters" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Hide <b>last read</b> chapter <a data-default="hideLastRead"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Hide your last read chapter on MangaDex <b>if there isn't any higher
+							chapter</b>.</p>
+					<div data-option="hideLastRead" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Highlight chapters <a data-default="highlightChapters"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">If this option is disabled, no colors will be used. Does not prevent
+						the <kbd>Hide lower chapters</kbd> and <kbd>Show tooltips</kbd> options to be applied.</p>
+					<div data-option="highlightChapters" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Show tooltips (Thumbnails) <a data-default="showTooltips"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Display tooltips containing a thumbnail of the manga and the list of
+						the last 5 read chapters on chapters and title lists. No tooltips are added if there is already
+						one.</p>
+					<div data-option="showTooltips" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Show full size cover <a data-default="showFullCover"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Display the full cover of a title instead of it's thumbnail.<br><b>Some
+							covers can be <i>big</i> and slow to load depending on your connection.</b></p>
+					<div data-option="showFullCover" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Full Size cover height <a data-default="coverMaxHeight"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">The full cover of a title can be <b>big</b> but you can adjust the
+						maximum <b>height</b> it will take.<br />This option is the percentage of your screen height a
+						tooltip can take <b>at best</b>.</p>
+					<div class="px-0">
+						<input data-option="coverMaxHeight" data-type="number" type="number" min="1" max="100"
+							class="form-control" />
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Chapter Page -->
+		<div class="row">
+			<div class="col-sm-12 col-md-3">
+				<h1 class="text-container py-2 px-2"><i class="fas fa-file"></i> Chapter page</h1>
+			</div>
+			<div class="col">
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Save higher chapters only <a data-default="saveOnlyHigher"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">If this option is enabled, your MyAnimeList will be updated to the
+						chapter you are reading only if it is higher than your current last read chapter.</p>
+					<div data-option="saveOnlyHigher" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Save next chapter only <a data-default="saveOnlyNext"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Update MyAnimeList only if the chapter you are reading is a following
+						chapter of your last read chapter.</p>
+					<div data-option="saveOnlyNext" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Confirm to update chapter <a data-default="confirmChapter"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Show a notification with a confirm button when reading a chapter higher
+						than your previous chapter (with <b>Save next chapter only</b>), or a lower chapter (<b>Save
+							higher chapters only</b>).</p>
+					<div data-option="confirmChapter" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Save all opened chapters <a data-default="saveAllOpened"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Save a list of all opened chapters for each manga to highlight them in
+						a title page and display them inside tooltips.</p>
+					<div data-option="saveAllOpened" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Number of saved chapters <a data-default="maxChapterSaved"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Limit to the list of saved chapters to avoid using a lot of storage
+						(100 is already a good enough value).</p>
+					<div class="px-0">
+						<input data-option="maxChapterSaved" data-type="number" type="number" min="1" max="400"
+							class="form-control" />
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Update only if in MangaDex list <a data-default="updateOnlyInList"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Update <b>MyAnimeList</b> only if the title have a status on
+						<b>MangaDex</b>.<br />
+						A confirm button to still update the title can be displayed if <b>Confirm to update chapter</b>
+						is enabled.</p>
+					<div data-option="updateOnlyInList" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Global -->
+		<div class="row">
+			<div class="col-sm-12 col-md-3">
+				<h1 class="text-container py-2 px-2"><i class="fas fa-globe"></i> Global</h1>
+			</div>
+			<div class="col">
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Update MangaDex list <a data-default="updateMDList"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Automatically update your MangaDex list when needed. The list is
+						updated when you start reading, add to plan to read, start re-reading and is set to the same
+						status when you edit informations in the modal.</p>
+					<div data-option="updateMDList" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Update on Follows page <a data-default="updateOnFollows"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Automatically check if new chapters have already been read (on
+						MyAnimeList). Only checks the first 7 with unread higher chapters.</p>
+					<div data-option="updateOnFollows" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Show notifications <a data-default="showNotifications"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Display notifications in the bottom left corner. Do not disable error
+						notifications, see below.</p>
+					<div data-option="showNotifications" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Show error notifications <a data-default="showErrors"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Display all error notifications.</p>
+					<div data-option="showErrors" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- History -->
+		<div class="row">
+			<div class="col-sm-12 col-md-3">
+				<h1 class="text-container py-2 px-2"><i class="fas fa-history"></i> History</h1>
+			</div>
+			<div class="col">
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Bigger MangaDex history <a data-default="updateHistoryPage"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Save your last read chapters and display them in the <a
+							href="https://mangadex.org/history" rel="noreferrer noopener">History</a> page.</p>
+					<div data-option="updateHistoryPage" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">MangaDex history size <a data-default="historySize"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">The size of your MangaDex <a href="https://mangadex.org/history"
+							rel="noreferrer noopener">History</a>. (If <b>Bigger MangaDex history</b> is activated)</p>
+					<div class="px-0">
+						<input data-option="historySize" data-type="number" type="number" min="1" max="500"
+							class="form-control" />
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Check latest chapters <a data-default="checkHistoryLatest"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">Check if you read the latest chapters available on <b>MangaDex</b> by
+						fetching the <b>Follow page</b>.<br />
+						Some entries in your history will be highlighted with the following color:
+						<ul>
+							<li>Green: You read the latest found chapter or more.</li>
+							<li>Blue: There is a new chapter available.</li>
+						</ul>
+						If an entry is not highlighted, <b>MyMangaDex</b> couldn't find if there was a new chapter.
+					</p>
+					<div data-option="checkHistoryLatest" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Export -->
+		<div class="row">
+			<div class="col-sm-12 col-md-3">
+				<h1 class="text-container py-2 px-2"><i class="fas fa-download"></i> Export (MMD)</h1>
+			</div>
+			<div class="col">
+				<div class="text-container p-2 mb-3">
+					<div class="form-group">
+						<p>Click the area to select your save, then use <kbd>CTRL + C</kbd> or right-click and then
+							copy.</p>
+						<textarea class="form-control" id="save-content"
+							placeholder="Press Refresh to display your save file"></textarea>
+						<div class="text-right mt-2">
+							<a id="download-save" download="export.json" target="_blank"
+								class="btn btn-primary">Download</a>
+							<button id="refresh-save" class="btn btn-primary">Refresh</button>
+							<button id="copy-save" class="btn btn-primary d-none">Copy</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Import -->
+		<div class="row">
+			<div class="col-sm-12 col-md-3">
+				<h1 class="text-container py-2 px-2"><i class="fas fa-upload"></i> Import (MMD)</h1>
+			</div>
+			<div class="col">
+				<div class="text-container p-2 mb-3">
+					<p>You can import your <strong>MyMangaDex</strong> data that you exported, paste your save or select
+						your file save and click <strong>Import</strong>. Options <strong>are</strong> override.<br>
+						Merging your data will <i>merge</i> the saved opened chapters, and pick the highest last opened
+						chapter for each manga.</p>
+					<div class="alert alert-danger">This will erase your <b>current</b> save, export it if you don't
+						want to lose it.</div>
+					<form id="save-import">
+						<textarea class="form-control" name="save" placeholder="Exported Save (JSON)"></textarea>
+						<div id="importInformations"></div>
+						<div class="text-right mt-2">
+							<input id="saveUploadButton" type="file" class="btn btn-primary" />
+							<button id="importSubmitButton" type="submit" class="btn btn-primary">Import</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<!-- MAL Export -->
+		<div class="row">
+			<div class="col-sm-12 col-md-3">
+				<h1 class="text-container py-2 px-2"><i class="fas fa-download"></i> Export (MAL)</h1>
+			</div>
+			<div class="col">
+				<div class="text-container p-2 mb-3">
+					<p>Update your <b>MyAnimeList</b> manga list by updating or adding all titles on your
+						<b>MangaDex</b> follow list that have a <b>MyAnimeList</b> id.</p>
+					<div class="alert alert-info">You can be extra careful and <a
+							href="https://myanimelist.net/panel.php?go=export">export</a> your MyAnimeList before using
+						this feature.</div>
+					<form id="mal-export" class="text-center form-inline justify-content-md-center mx-auto">
+						<button type="submit" class="btn btn-primary mb-2">Export</button>
+					</form>
+					<ul id="malExportStatus" class="list-group">
+					</ul>
+				</div>
+			</div>
+		</div>
+		<!-- MAL Import -->
+		<div class="row">
+			<div class="col-sm-12 col-md-3">
+				<h1 class="text-container py-2 px-2"><i class="fas fa-upload"></i> Import (MAL)</h1>
+			</div>
+			<div class="col">
+				<div class="text-container p-2 mb-3">
+					<p>Update your <b>MyMangaDex</b> last opened chapter with data from MyAnimeList for every title you
+						follow on <b>MangaDex</b>. If <kbd>saveAllOpened</kbd> is enabled, a list of chapters is
+						generated.</p>
+					<div class="alert alert-info">This functionality doesn't add any manga to your <b>MangaDex</b>
+						follow list, it only update <b>MyMangaDex</b> storage.</div>
+					<div class="alert alert-danger">This will erase your <b>current</b> <i>MyMangaDex</i> save, export
+						it if you don't want to lose it.</div>
+					<form id="mal-import" class="text-center form-inline justify-content-md-center mx-auto">
+						<div class="form-group mx-sm-3 mb-2 input-group">
+							<input type="text" class="form-control" name="username" placeholder="MyAnimeList username">
+							<div class="input-group-append">
+								<button type="submit" class="btn btn-primary">Import</button>
+							</div>
+						</div>
+					</form>
+					<ul id="malImportStatus" class="list-group">
+					</ul>
+				</div>
+			</div>
+		</div>
+		<!-- Online Save -->
+		<div class="row">
+			<div class="col-sm-12 col-md-3">
+				<h1 class="text-container py-2 px-2"><i class="fas fa-globe"></i> Online Save</h1>
+			</div>
+			<div class="col">
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">Online Save <a data-default="onlineSave"
+							class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+								class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p>Online Save will update your data on a MMD Online Save instance, which you can find <a
+							href="https://github.com/Glagan/MMD-Online-Save">here</a>. I propose a default one hosted on
+						my site <a href="https://mmd.nikurasu.org">nikurasu</a>.</p>
+					<div id="onlineServiceInfo" class="alert alert-info">You can't currently host your own MMD Online
+						Save for Firefox (working only on Chrome) since permissions don't allow me to make requests to a
+						domain which isn't in the extension manifest, and I can't know what domain you will use.</div>
+					<p>You only need to set a Username and Password, then when you need to use your data on another
+						computer or another device, log in and your data will be imported.</p>
+					<p>All data is still saved locally, and the extension only use local storage to retrieve data, you
+						can disable online save and delete all of your saved data at any time.<br />
+						What Online Save do is updating your save online every time your save is updated locally.</p>
+					<div data-option="onlineSave" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+				<div id="onlineOptions">
+					<!-- Logged in -->
+					<div id="loggedInPanel" class="text-container p-2 mb-3">
+						<div class="alert alert-info">You are currently <b>LOGGED IN</b>.</div>
+						<div class="alert alert-warning"><b>Import Online</b> will <b>replace</b> your local save with
+							your online save, save it before importing if you don't want to lose it.<br>
+							<b>Export Online</b> will <b>replace</b> your online save, you can download it before
+							exporting if you don't want to lose it.</div>
+						<div class="row no-gutters input-group">
+							<div class="col-sm-12 col-md-8 text-center">
+								<button class="btn btn-primary mr-2 my-2" data-button-protect="importOnline"><i
+										class="fas fa-download"></i> Import Online</button>
+								<button class="btn btn-primary mr-2 my-2" data-button-protect="exportOnline"><i
+										class="fas fa-upload"></i> Export Online</button>
+							</div>
+							<div class="col-sm-12 col-md-4 text-center">
+								<button class="btn btn-danger my-2" data-button-protect="logout"><i
+										class="fas fa-sign-out-alt"></i> Logout</button>
+							</div>
+						</div>
+					</div>
+					<!-- Logged out -->
+					<div id="loggedOutPanel" class="text-container p-2 mb-3">
+						<div class="alert alert-info">You are currently <b>LOGGED OUT</b>.</div>
+						<p>To connect, fill the following fields and press <b>Login</b> or <b>Register</b> if you don't
+							have an account on this service.</p>
+						<div class="input-group justify-content-center">
+							<button class="btn btn-primary mr-2" data-button-protect="login"><i
+									class="fas fa-sign-in-alt"></i> Login</button>
+							<button class="btn btn-primary" data-button-protect="register"><i
+									class="fas fa-user-plus"></i> Register</button>
+						</div>
+					</div>
+					<div id="onlineSuccess" class="alert alert-success"></div>
+					<div id="onlineError" class="alert alert-danger"></div>
+					<!-- Values -->
+					<form id="onlineForm">
+						<div id="onlineURLPanel" class="form-group text-container p-2">
+							<label class="font-weight-bold">Online URL <a data-default="onlineURL"
+									class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+										class="d-none d-xl-inline"> Restore default</span></a></label>
+							<p class="d-none d-xl-block">The URL of the online service.</p>
+							<div class="px-0">
+								<input type="text" name="onlineURL" placeholder="URL" class="form-control" />
+							</div>
+						</div>
+						<div class="form-group text-container p-2">
+							<label class="font-weight-bold">Username <a data-default="username"
+									class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+										class="d-none d-xl-inline"> Restore default</span></a></label>
+							<p class="d-none d-xl-block">Your username on the service.</p>
+							<div class="px-0">
+								<input type="text" name="username" placeholder="Username" class="form-control" />
+							</div>
+						</div>
+						<div class="form-group text-container p-2">
+							<label class="font-weight-bold">Password <a data-default="password"
+									class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span
+										class="d-none d-xl-inline"> Restore default</span></a></label>
+							<p class="d-none d-xl-block">Your password on the service.</p>
+							<div class="px-0">
+								<input type="password" name="password" placeholder="Password" class="form-control" />
+							</div>
+						</div>
+					</form>
+					<!-- Management when online -->
+					<div id="onlineAdvancedPanel" class="text-container p-2 mb-3">
+						<div class="row no-gutters text-center">
+							<div class="col-sm-12 col-md-6 text-center">
+								<button class="btn btn-secondary mr-2 my-2" data-button-protect="receiveToken"><i
+										class="fas fa-download"></i> Receive Token</button>
+								<button class="btn btn-secondary mr-2 my-2" data-button-protect="refreshToken"><i
+										class="fas fa-wrench"></i> Refresh Token</button>
+								<button class="btn btn-secondary mr-2 my-2" data-button-protect="update"><i
+										class="fas fa-edit"></i> Update Credentials</button>
+							</div>
+							<div class="col-sm-12 col-md-6 text-center">
+								<a class="btn btn-info mr-2 my-2" download="export.json" id="downloadOnline"
+									target="_blank" data-button-protect="downloadOnline"><i class="fas fa-download"></i>
+									Download</a>
+								<button class="btn btn-danger my-2" id="deleteOnline"
+									data-button-protect="deleteOnline"><i class="fas fa-trash"></i> Delete
+									Online</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Delete -->
+		<div class="row">
+			<div class="col-sm-12 col-md-3">
+				<h1 class="text-container py-2 px-2"><i class="fas fa-trash"></i> Delete</h1>
+			</div>
+			<div class="col">
+				<div class="text-container p-2 mb-3">
+					<p>Delete all of your data. A new save will be created with default parameters.</p>
+					<div class="alert alert-danger">This will erase your <b>current</b> save, export it or save it
+						online if you don't want to lose it. <b>Not reversible.</b></div>
+					<p><button id="delete-save" class="btn btn-danger font-2 d-block mx-auto">Delete</button></p>
+				</div>
+			</div>
+		</div>
+		<!-- Scripts -->
+		<script src="scripts/Options.js"></script>
 </body>
+
 </html>
