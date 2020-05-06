@@ -115,6 +115,8 @@ class OptionsManager {
 			if (this.downloadSaveButton.dataset.busy === undefined) {
 				this.downloadSaveButton.dataset.busy = true;
 				let data = await storageGet(null);
+				delete data.options.token;
+				delete data.options.username;
 				let downloadLink = document.createElement("a");
 				downloadLink.style.display = "none";
 				document.body.appendChild(downloadLink);
@@ -130,6 +132,8 @@ class OptionsManager {
 			// Load save
 			this.copySave.classList.add("d-none");
 			let data = await storageGet(null);
+			delete data.options.token;
+			delete data.options.username;
 			this.saveContent.value = JSON.stringify(data);
 			this.copySave.classList.remove("d-none");
 		});

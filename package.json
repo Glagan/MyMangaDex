@@ -1,15 +1,15 @@
 {
 	"name": "mymangadex",
-	"version": "2.3.22",
+	"version": "2.4.0",
 	"description": "Automatically update your MyAnimeList manga list when reading on MangaDex.",
 	"main": "build.js",
 	"dependencies": {
 		"rimraf": "^3.0.2",
-		"terser": "^4.6.11",
+		"terser": "^4.6.13",
 		"web-ext": "^4.2.0"
 	},
 	"devDependencies": {
-		"node-watch": "^0.6.3"
+		"node-watch": "^0.6.4"
 	},
 	"scripts": {
 		"firefox": "node build firefox",

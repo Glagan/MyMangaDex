@@ -40,6 +40,8 @@ async function storageGet(key) {
 		const objectKey = typeof key === 'object';
 		if (key !== null && !objectKey) {
 			key = key + "";
+		} else if (objectKey && Array.isArray(key)) {
+			key = key.map(k => k + "");
 		}
 		let res;
 		if (CHROME) {
@@ -154,17 +156,55 @@ async function loadOptions() {
 					}
 				}, { sticky: true, position: "bottom-left" });
 			}
+
+			// Convert old History from <2.3
+			if (data.version < 2.4) {
+				// Convert everything
+				let save = await storageGet(null);
+				if (save.history !== undefined) {
+					// Move everything from save.history to each titles in the "root" of the save
+					for (const titleId in save.history) {
+						if (titleId == 'list') continue;
+						const historyEntry = save.history[titleId];
+						// Create the title if it doesn't exists for some reason
+						if (!save[titleId]) {
+							save[titleId] = {
+								chapters: [],
+								last: -1,
+								mal: 0,
+							};
+						}
+						// Move the values from historyEntry
+						Object.assign(save[titleId], {
+							chapterId: historyEntry.chapter,
+							lastRead: historyEntry.lastRead,
+							name: historyEntry.name,
+							progress: historyEntry.progress,
+						});
+					}
+					// Erase *History* list of entries to a list of IDs
+					save.history = save.history.list;
+					await storageSet(null, save);
+					// Done :)
+					SimpleNotification.info({
+						title: "History enhancements",
+						image: mmdImage,
+						text: "The History feature has been updated in **2.4** !\nIt required some modifications in the Save, if you notice any error please open an issue.",
+						buttons: {
+							value: "Open Options",
+							type: "message",
+							onClick: (n) => {
+								n.close();
+								browser.runtime.sendMessage({ action: "openOptions" });
+							}
+						}
+					}, { sticky: true, position: "bottom-left" });
+				}
+			}
 		}
 		// Fix the save on version updates
 		if ((data.version != defaultOptions.version) ||
 			(data.version == defaultOptions.version && data.subVersion != defaultOptions.subVersion)) {
-			if (data.version == 2.3 && data.subVersion == 10) {
-				SimpleNotification.info({
-					title: "Update 2.3.11",
-					image: mmdImage,
-					text: "Version **2.3.11** has been released, it should fix weird things with Ch.0/Oneshot.\nIf something else is now bugged because of that please report it.\nYou can also hide the Last Read chapter in lists."
-				}, { sticky: true, position: "bottom-left" });
-			}
 			data.version = defaultOptions.version;
 			data.subVersion = defaultOptions.subVersion;
 			fixed = true;
@@ -176,6 +216,31 @@ async function loadOptions() {
 	}
 }
 
+/**
+ * Save format:
+ * {
+ * 		-- Key is a MangaDex ID
+ * 		[key: number]: {
+ * 			last: number,
+ * 			lastTitle: number,
+ * 			lastMAL: number,
+ * 			mal: number,
+ * 			chapters: number[],
+ * 			-- With history enabled
+ * 			chapterId: number,
+ * 			lastRead: number,
+ * 			name: string,
+ * 			highest: number,
+ * 			progress: {
+ *				chapter: number,
+ *				volume: number
+ *			}
+ * 		},
+ * 		-- List of all IDs in the History
+ * 		history: number[],
+ * 		options: ... See defaultOptions.js
+ * }
+ */
 async function updateLocalStorage(manga, options) {
 	if (manga.currentChapter) {
 		if (options.saveOnlyHigher) {
@@ -187,8 +252,17 @@ async function updateLocalStorage(manga, options) {
 	nManga = {
 		mal: manga.myAnimeListId,
 		last: manga.lastMangaDexChapter,
-		chapters: manga.chapters
+		chapters: manga.chapters,
 	};
+	if (options.updateHistoryPage) {
+		Object.assign(nManga, {
+			highest: manga.highest,
+			chapterId: manga.chapterId,
+			lastRead: manga.lastRead,
+			name: manga.name,
+			progress: manga.progress,
+		});
+	}
 	if (manga.myAnimeListId == 0 || options.updateHistoryPage) {
 		nManga.lastTitle = manga.lastTitle; // only save time if needed
 	}

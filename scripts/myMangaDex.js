@@ -301,13 +301,13 @@ class MyMangaDex {
 		if (this.options.saveAllOpened && this.manga.currentChapter) {
 			this.insertChapter(this.manga.currentChapter.chapter);
 		}
+		// Update History -- Before saving LocalStorage
+		if (this.options.updateHistoryPage) {
+			this.saveTitleInHistory(this.manga);
+		}
 		// Update local storage - after, it doesn't really matter
 		this.manga.lastMangaDexChapter = this.manga.currentChapter.chapter;
 		await updateLocalStorage(this.manga, this.options);
-		// Update History
-		if (this.options.updateHistoryPage && this.history) {
-			this.saveTitleInHistory(this.manga);
-		}
 	}
 
 	async quickAddOnMyAnimeList(status) {
@@ -1166,32 +1166,29 @@ class MyMangaDex {
 	}
 
 	async saveTitleInHistory(manga) {
-		this.history = await this.history;
-		if (this.history == undefined || this.history == null || isEmpty(this.history)) {
-			this.history = { list: [] };
+		// Load History and initialize if it's empty
+		if (!this.history) {
+			this.history = await storageGet("history");
 		}
-		if (this.history[manga.mangaDexId] == undefined) {
-			this.history[manga.mangaDexId] = {
-				name: manga.name,
-				id: manga.mangaDexId
-			};
-		} else {
-			let index = this.history.list.indexOf(manga.mangaDexId);
-			if (index >= 0) {
-				this.history.list.splice(index, 1);
-			}
+		if (this.history == undefined) {
+			this.history = [];
 		}
-		this.history[manga.mangaDexId].progress = manga.currentChapter;
-		this.history[manga.mangaDexId].chapter = manga.chapterId;
-		this.history[manga.mangaDexId].lastRead = Date.now();
-		this.history.list.push(manga.mangaDexId);
-		if (this.history.list.length > this.options.historySize) {
-			let diff = this.history.list.length - this.options.historySize;
-			for (let i = 0; i < diff; i++) {
-				delete this.history[this.history.list[i]];
-			}
-			this.history.list.splice(0, diff);
+		// Remove the manga id to the list if it's in -- it's added back at the end
+		let index = this.history.indexOf(manga.mangaDexId);
+		if (index >= 0) {
+			this.history.splice(index, 1);
 		}
+		this.history.push(manga.mangaDexId);
+		// Cut history if it's too long
+		if (this.history.length > this.options.historySize) {
+			let diff = this.history.length - this.options.historySize;
+			this.history.splice(0, diff);
+		}
+		// Update manga to storage History informations
+		manga.name = manga.name;
+		manga.progress = manga.currentChapter;
+		manga.chapter = manga.chapterId;
+		manga.lastRead = Date.now();
 		await storageSet("history", this.history);
 	}
 
@@ -1212,23 +1209,23 @@ class MyMangaDex {
 		return string.join("");
 	}
 
-	setCardLastRead(card, titleTimestamp, readTimestamp) {
+	setCardLastRead(card, title) {
 		card.dataset.toggle = "tooltip";
 		card.dataset.placement = "bottom";
 		card.dataset.html = true;
-		let date = new Date(readTimestamp);
-		let title = [];
-		if (readTimestamp) {
-			title.push(`${date.getUTCDate()} ${date.toDateString().split(' ')[1]} ${date.getUTCFullYear()} ${date.toTimeString().split(' ')[0]}`);
+		let date = new Date(title.lastTitle);
+		let content = [];
+		if (title.lastTitle) {
+			content.push(`${date.getUTCDate()} ${date.toDateString().split(' ')[1]} ${date.getUTCFullYear()} ${date.toTimeString().split(' ')[0]}`);
 		}
-		if (titleTimestamp) {
-			date = new Date(titleTimestamp);
-			title.push(`<span style="color:rgb(51,152,182)"> ${date.getUTCDate()} ${date.toDateString().split(' ')[1]} ${date.getUTCFullYear()} ${date.toTimeString().split(' ')[0]}</span>`);
+		if (title.lastRead) {
+			date = new Date(title.lastRead);
+			content.push(`<span style="color:rgb(51,152,182)"> ${date.getUTCDate()} ${date.toDateString().split(' ')[1]} ${date.getUTCFullYear()} ${date.toTimeString().split(' ')[0]}</span>`);
 		}
-		card.title = title.join("<br>");
+		card.title = content.join("<br>");
 	}
 
-	buildHistoryEntryNode(historyEntry) {
+	buildHistoryEntryNode(id, title) {
 		// Build
 		let container = document.createElement("div");
 		container.className = "large_logo rounded position-relative mx-1 my-2 has-transition";
@@ -1236,11 +1233,11 @@ class MyMangaDex {
 		hover.className = "hover";
 		let titleLinkImage = document.createElement("a");
 		titleLinkImage.rel = "noreferrer noopener";
-		titleLinkImage.href = `/manga/${historyEntry.id}`;
+		titleLinkImage.href = `/manga/${id}`;
 		let titleImage = document.createElement("img");
 		titleImage.className = "rounded";
-		titleImage.title = historyEntry.name;
-		titleImage.src = `/images/manga/${historyEntry.id}.large.jpg`;
+		titleImage.title = title.name;
+		titleImage.src = `/images/manga/${id}.large.jpg`;
 		titleImage.style.width = "100%";
 		let informationsContainer = document.createElement("div");
 		informationsContainer.className = "car-caption px-2 py-1";
@@ -1248,17 +1245,17 @@ class MyMangaDex {
 		titleName.className = "text-truncate m-0";
 		let titleLinkName = document.createElement("a");
 		titleLinkName.className = "manga_title white";
-		titleLinkName.title = historyEntry.name;
+		titleLinkName.title = title.name;
 		titleLinkName.rel = "noreferrer noopener";
-		titleLinkName.href = `/title/${historyEntry.id}`;
-		titleLinkName.textContent = historyEntry.name;
+		titleLinkName.href = `/title/${id}`;
+		titleLinkName.textContent = title.name;
 		let chapterInfo = document.createElement("p");
 		chapterInfo.className = "text-truncate m-0";
 		let chapterLink = document.createElement("a");
 		chapterLink.className = "white";
 		chapterLink.rel = "noreferrer noopener";
-		chapterLink.href = `/chapter/${historyEntry.chapter}`;
-		chapterLink.textContent = this.chapterStringFromObject(historyEntry.progress);
+		chapterLink.href = `/chapter/${title.chapterId}`;
+		chapterLink.textContent = this.chapterStringFromObject(title.progress);
 		// Append
 		titleName.appendChild(titleLinkName);
 		chapterInfo.appendChild(chapterLink);
@@ -1770,17 +1767,12 @@ class MyMangaDex {
 		chapter = document.querySelector("meta[property='og:image']").content;
 		this.manga.mangaDexId = Math.floor(/manga\/(\d+)\.thumb.+/.exec(chapter)[1]);
 		this.manga.chapterId = Math.floor(/\/(\d+)\/?/.exec(document.querySelector("meta[property='og:url']").content)[1]);
-		// History
-		if (this.options.updateHistoryPage) {
-			this.history = storageGet("history");
-		}
 		// Informations
 		await this.getTitleInfos();
 		await this.fetchMyAnimeList();
 		if (this.mangaDexStatus === undefined && (this.options.updateMDList || this.options.updateOnlyInList)) {
 			await this.fetchTitleInfos();
 		}
-
 		// Get MAL Url from the database
 		const delayed = !!document.querySelector("div.container > div.alert.alert-danger");
 		this.updateChapter(delayed);
@@ -1794,9 +1786,6 @@ class MyMangaDex {
 			this.manga.mangaDexId = data.manga_id;
 			this.manga.chapterId = data.id;
 
-			if (this.options.updateHistoryPage) {
-				this.history = storageGet("history");
-			}
 			// Informations
 			await this.getTitleInfos();
 			await this.fetchMyAnimeList();
@@ -1910,16 +1899,18 @@ class MyMangaDex {
 			infoNode.textContent = `Your last ${this.options.historySize} read titles are listed below.`;
 		};
 		resetInfo();
-		// Load history
+		// Load history -- and related Titles
+		let localTitles = {};
 		this.history = await storageGet("history");
 		if (this.history == undefined) {
-			this.history = { list: [] };
+			this.history = [];
 			await storageSet("history", this.history);
+		} else if (this.history.length > 0) {
+			localTitles = await storageGet(this.history);
 		}
 		// Add current elements to the history - first one is inserted last
 		let mdTitles = Array.from(document.querySelectorAll(".large_logo.rounded.position-relative.mx-1.my-2")).reverse();
-		for (let i = 0, max = mdTitles.length; i < max; i++) {
-			let node = mdTitles[i];
+		for (const node of mdTitles) {
 			let chapterLink = node.querySelector("a[href^='/chapter/']");
 			let title = {
 				mangaDexId: Math.floor(/\/title\/(\d+)\/.+./.exec(node.querySelector("a[href^='/title/']").href)[1]),
@@ -1927,27 +1918,38 @@ class MyMangaDex {
 				chapterId: Math.floor(/\/chapter\/(\d+)/.exec(chapterLink.href)[1]),
 				currentChapter: this.getVolumeChapterFromString(chapterLink.textContent)
 			};
+			// Create a new Title if it doesn't exists -- it will be saved in the next condition
+			if (localTitles[title.mangaDexId] == undefined) {
+				localTitles[title.mangaDexId] = {
+					chapters: [],
+					last: -1,
+					mal: 0,
+				};
+			}
 			// Save only if the title isn't already in the list or if the chapter is different
-			if (!this.history[title.mangaDexId] ||
-				Math.floor(this.history[title.mangaDexId].chapter) != title.chapterId) {
+			if (this.history.indexOf(title.mangaDexId) < 0 ||
+				localTitles[title.mangaDexId].chapterId != title.chapterId) {
+				Object.assign(localTitles[title.mangaDexId], title);
 				await this.saveTitleInHistory(title);
+				await storageSet(title.mangaDexId, localTitles[title.mangaDexId]);
 			}
 		}
 		// Display additionnal history
 		let historyCards = {};
-		for (let i = this.history.list.length - 1; i >= 0; i--) {
-			let entry = this.history[this.history.list[i]];
-			let exist = container.querySelector(`a[href^='/title/${entry.id}']`);
-			let entryNode;
-			if (!exist) {
-				entryNode = this.buildHistoryEntryNode(entry);
-				container.insertBefore(entryNode, container.lastElementChild);
-			} else {
-				entryNode = exist.parentElement.parentElement;
+		for (const titleId of this.history) {
+			const title = localTitles[titleId];
+			if (title !== undefined) {
+				let exist = container.querySelector(`a[href^='/title/${titleId}']`);
+				let entryNode;
+				if (!exist) {
+					entryNode = this.buildHistoryEntryNode(titleId, title);
+					container.insertBefore(entryNode, container.lastElementChild);
+				} else {
+					entryNode = exist.parentElement.parentElement;
+				}
+				this.setCardLastRead(entryNode, title);
+				historyCards[titleId] = entryNode;
 			}
-			let title = await storageGet(entry.id);
-			this.setCardLastRead(entryNode, (title || {}).lastTitle, entry.lastRead);
-			historyCards[entry.id] = entryNode;
 		}
 		// Enable jQuery tooltips
 		if (CHROME) {
@@ -1960,19 +1962,32 @@ class MyMangaDex {
 		}
 		// Check latests chapters
 		if (this.options.checkHistoryLatest) {
+			// Highligh with current state
+			for (const titleId in localTitles) {
+				const title = localTitles[titleId];
+				if (title.highest !== undefined && historyCards[titleId] !== undefined) {
+					if (title.highest <= title.last) {
+						historyCards[titleId].classList.add('history-up');
+					} else if (title.highest > title.last) {
+						historyCards[titleId].classList.add('history-down');
+					}
+				}
+			}
+			// Load auto-update
 			const parser = new DOMParser();
+			const historySize = Object.keys(historyCards).length;
 			const checkHistoryLatest = async () => {
 				resetInfo();
-				let localTitles = {};
 				let currentPage = 1;
-				const historySize = Object.keys(historyCards).length;
 				let statedTitles = 0;
 				let status = document.createElement('span');
 				infoNode.appendChild(status);
 				let timer = document.createElement('span');
 				timer.textContent = '30:00';
 				// Fetch follow page until all titles have a state
-				while (currentPage < 20 && statedTitles < historySize) {
+				let toUpdate = [];
+				let alreadyLoaded = [];
+				while (currentPage <= 2 && statedTitles < historySize) {
 					// Display loading status
 					status.textContent = ` Loading Follow page ${currentPage}, found ${statedTitles} out of ${historySize} Titles.`;
 					// Wait between MangaDex requests
@@ -1981,18 +1996,24 @@ class MyMangaDex {
 					}
 					let titles = await this.fetchFollowPage(parser, currentPage);
 					if (titles) {
-						// Filter found titles to avoid loading them multiple times
-						let localIds = Object.keys(localTitles);
-						let titleIds = Object.keys(titles).filter(id => {
-							return localIds.indexOf(id) < 0;
+						// Filter found titles to avoid loading them again for nothing
+						const foundIds = Object.keys(titles);
+						let titleIds = foundIds.filter(id => {
+							return alreadyLoaded.indexOf(id) < 0;
 						});
-						// Get local data for new found titles
-						Object.assign(localTitles, await storageGet(titleIds));
+						// Make alreadyLoaded unique
+						alreadyLoaded.push(...foundIds);
+						alreadyLoaded.filter((id, pos) => {
+							return alreadyLoaded.indexOf(id) == pos;
+						});
+						// Update local data for new found titles
+						if (titleIds.length > 0) {
+							Object.assign(localTitles, await storageGet(titleIds));
+						}
 						for (const titleId in titles) {
 							const highestChapter = titles[titleId];
-							const inHistory = historyCards[titleId] !== undefined;
 							// Only update if it hasn't been already, the chapter is in local save and has an history card
-							if (titleIds.indexOf(titleId) >= 0 && localTitles[titleId] !== undefined && inHistory) {
+							if (localTitles[titleId] !== undefined && historyCards[titleId] !== undefined) {
 								historyCards[titleId].classList.remove('history-up', 'history-down');
 								if (highestChapter <= localTitles[titleId].last) {
 									historyCards[titleId].classList.add('history-up');
@@ -2000,6 +2021,11 @@ class MyMangaDex {
 									historyCards[titleId].classList.add('history-down');
 								}
 								statedTitles++;
+								// Update highest chapter for the titles
+								if (localTitles[titleId].highest < highestChapter) {
+									localTitles[titleId].highest = highestChapter;
+									toUpdate.push(titleId);
+								}
 							}
 						}
 					} else {
@@ -2021,6 +2047,14 @@ class MyMangaDex {
 						checkHistoryLatest();
 					}
 				}, 1000);
+				// Update localTitles found with an highest chapter
+				if (toUpdate.length > 0) {
+					let updateObject = {};
+					for (const id of toUpdate) {
+						updateObject[id] = localTitles[id];
+					}
+					await storageSet(null, updateObject);
+				}
 			};
 			checkHistoryLatest();
 		}
