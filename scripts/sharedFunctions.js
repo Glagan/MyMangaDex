@@ -238,6 +238,9 @@ async function loadOptions() {
  * 		},
  * 		-- List of all IDs in the History
  * 		history: number[],
+ *		initializedHistory: boolean,
+ * 		lastHistory: number,
+ * 		lastHistoryPage: number,
  * 		options: ... See defaultOptions.js
  * }
  */

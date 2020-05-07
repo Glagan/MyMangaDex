@@ -98,6 +98,9 @@
 }
 
 /* History */
+#history {
+	padding-top: 1rem;
+}
 .history-up {
 	box-shadow: 0 0 6px -1px rgb(87, 200, 46);
 	border: 1px solid rgb(87, 200, 46);

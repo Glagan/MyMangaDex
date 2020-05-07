@@ -1863,6 +1863,7 @@ class MyMangaDex {
 	 * Return an object of highest chapters found in the follow page with title IDs as keys
 	 */
 	async fetchFollowPage(parser, page) {
+		const before = Date.now();
 		const response = await browser.runtime.sendMessage({
 			action: "fetch",
 			url: `https://mangadex.org/follows/chapters/1/${page}/`,
@@ -1873,22 +1874,43 @@ class MyMangaDex {
 				redirect: "follow",
 			}
 		});
+		let result = {
+			titles: false,
+			isLastPage: false,
+			maxPage: 0,
+			requestTime: Date.now() - before
+		};
 		if (response.status >= 200 && response.status < 400) {
+			// Get titles
 			const body = parser.parseFromString(response.body, "text/html");
 			const rows = body.querySelectorAll('[data-manga-id]');
-			let titles = {};
+			result.titles = {};
 			rows.forEach(element => {
 				const id = element.dataset.mangaId;
 				const chapter = parseFloat(element.dataset.chapter);
-				if (titles[id] === undefined) {
-					titles[id] = chapter;
+				if (result.titles[id] === undefined) {
+					result.titles[id] = chapter;
 				} else {
-					titles[id] = Math.max(titles[id], chapter);
+					result.titles[id] = Math.max(result.titles[id], chapter);
 				}
 			});
-			return titles;
+			// Last page
+			const lastPageNode = body.querySelector('nav > ul.pagination > li.disabled:last-child');
+			result.isLastPage = lastPageNode != null;
+			// Page count
+			if (result.isLastpage) {
+				result.maxPage = page;
+			} else {
+				const maxPageNode = body.querySelector('nav > ul.pagination > .page-item:last-child > a[href^="/follows/chapters/1/"]');
+				if (maxPageNode) {
+					const res = /\/follows\/chapters\/1\/(\d+)\/?/.exec(maxPageNode.href);
+					result.maxPage = (res !== null) ? Math.floor(res[1]) : page;
+				}
+			}
+		} else {
+			result.isLastPage = true;
 		}
-		return false;
+		return result;
 	}
 
 	async historyPage() {
@@ -1962,7 +1984,7 @@ class MyMangaDex {
 		}
 		// Check latests chapters
 		if (this.options.checkHistoryLatest) {
-			// Highligh with current state
+			// Highlight with current state
 			for (const titleId in localTitles) {
 				const title = localTitles[titleId];
 				if (title.highest !== undefined && historyCards[titleId] !== undefined) {
@@ -1973,28 +1995,169 @@ class MyMangaDex {
 					}
 				}
 			}
-			// Load auto-update
+			// Add "Refresh" button -- only if last fetch was >24h
 			const parser = new DOMParser();
 			const historySize = Object.keys(historyCards).length;
+			let pauseTimer = false;
+			const lastHistory = await storageGet('lastHistory');
+			if (lastHistory === undefined || Date.now() - lastHistory >= (24 * 60 * 60 * 1000)) {
+				const initializedHistory = await storageGet('initializedHistory');
+				const alert = document.createElement('div');
+				alert.className = 'alert alert-primary';
+				if (!initializedHistory) {
+					alert.textContent = `
+						You never initialized your History.
+						It is recommend to do it at least once to highlight every cards.`;
+				} else {
+					alert.textContent = `
+						You refresh your history more than 24h ago and you can refresh it again.
+						It is not recommended to do it often, and it does nothing if you didn't add new titles to your list.`;
+				}
+				alert.appendChild(document.createTextNode('\xA0'));
+				const refreshButton = document.createElement('button');
+				refreshButton.className = 'btn btn-primary';
+				refreshButton.textContent = 'Refresh';
+				let busy = false;
+				refreshButton.addEventListener('click', async event => {
+					event.preventDefault();
+					if (!busy) {
+						busy = true;
+						pauseTimer = true;
+						refreshButton.style.display = 'none';
+						document.body.appendChild(refreshButton);
+						const firstRow = document.createElement('span');
+						const secondRow = document.createElement('span');
+						alert.textContent = '';
+						alert.appendChild(firstRow);
+						alert.appendChild(document.createElement('br'));
+						alert.appendChild(secondRow);
+						// Fetch ALL pages until it is done
+						let found = [];
+						let currentPage = await storageGet('lastHistoryPage') || 1;
+						let toUpdate = [];
+						let alreadyLoaded = [];
+						let average = 0;
+						let maxPage = 1;
+						const before = Date.now();
+						while (true) {
+							// Display loading status
+							firstRow.textContent = `Loading Follow page ${currentPage} out of ${maxPage}, found ${found.length} out of ${historySize} Titles.`;
+							// Wait between MangaDex requests
+							if (currentPage > 1) {
+								const estimated = Math.floor(((1500 + average) * (maxPage - currentPage)) / 1000);
+								const disp = [];
+								if (estimated >= 60) disp.push(Math.floor(estimated / 60), 'min', ' ');
+								disp.push(estimated % 60, 's');
+								secondRow.textContent = `Estimated time to complete ${disp.join('')}.`;
+								await new Promise(resolve => setTimeout(resolve, 1500));
+							}
+							const res = await this.fetchFollowPage(parser, currentPage);
+							const { titles, isLastPage, requestTime } = res;
+							if (titles) {
+								// Filter found titles to avoid loading them again for nothing
+								const foundIds = Object.keys(titles);
+								let titleIds = foundIds.filter(id => {
+									return alreadyLoaded.indexOf(id) < 0;
+								});
+								// Make alreadyLoaded unique
+								alreadyLoaded.push(...foundIds);
+								alreadyLoaded.filter((id, pos) => {
+									return alreadyLoaded.indexOf(id) == pos;
+								});
+								// Update local data for new found titles
+								if (titleIds.length > 0) {
+									Object.assign(localTitles, await storageGet(titleIds));
+								}
+								for (const titleId in titles) {
+									// Only update if it hasn't been already, the chapter is in local save and has an history card
+									if (localTitles[titleId] !== undefined && historyCards[titleId] !== undefined) {
+										const highestChapter = Math.max(titles[titleId], localTitles[titleId].highest || 0);
+										if (highestChapter <= localTitles[titleId].last) {
+											historyCards[titleId].classList.remove('history-down');
+											historyCards[titleId].classList.add('history-up');
+										} else if (highestChapter > localTitles[titleId].last) {
+											historyCards[titleId].classList.remove('history-up');
+											historyCards[titleId].classList.add('history-down');
+										}
+										if (found.indexOf(titleId) < 0) {
+											found.push(titleId);
+										}
+										// Update highest chapter for the titles
+										if (!localTitles[titleId].highest || localTitles[titleId].highest < highestChapter) {
+											localTitles[titleId].highest = highestChapter;
+											toUpdate.push(titleId);
+										}
+									}
+								}
+							} else {
+								this.notification(NOTIFY.ERROR, "MangaDex error", "There was an error while making a request to **MangaDex**, retry later.");
+								break;
+							}
+							if (currentPage == 1) {
+								average = requestTime;
+							} else {
+								average = (average + requestTime) / 2;
+							}
+							maxPage = res.maxPage;
+							// Save updated titles every loop if the user reload the page
+							let updateObject = {
+								lastHistoryPage: (isLastPage) ? 1 : currentPage
+							};
+							if (toUpdate.length > 0) {
+								for (const id of toUpdate) {
+									updateObject[id] = localTitles[id];
+								}
+								toUpdate = [];
+							}
+							await storageSet(null, updateObject);
+							if (isLastPage) break;
+							currentPage++;
+						}
+						// Update with initializedHistory and the last time
+						await storageSet(null, {
+							lastHistoryPage: undefined,
+							initializedHistory: true,
+							lastHistory: Date.now()
+						});
+						// Done
+						pauseTimer = false;
+						const doneAlert = document.createElement('div');
+						doneAlert.className = 'alert alert-success';
+						const totalTime = Math.floor((Date.now() - before) / 1000);
+						const disp = [];
+						if (totalTime >= 60) disp.push(Math.floor(totalTime / 60), 'min', ' ');
+						disp.push(totalTime % 60, 's');
+						doneAlert.textContent = `Done ! ${currentPage} pages were loaded in ${disp.join('')}. Click to close.`;
+						doneAlert.addEventListener('click', event => {
+							event.preventDefault();
+							doneAlert.remove();
+						});
+						alert.parentElement.insertBefore(doneAlert, alert);
+						alert.remove();
+						refreshButton.remove();
+					}
+				});
+				alert.appendChild(refreshButton);
+				infoNode.parentElement.insertBefore(alert, infoNode);
+			}
+			// Load auto-update
 			const checkHistoryLatest = async () => {
 				resetInfo();
 				let currentPage = 1;
-				let statedTitles = 0;
+				let found = [];
 				let status = document.createElement('span');
 				infoNode.appendChild(status);
-				let timer = document.createElement('span');
-				timer.textContent = '30:00';
 				// Fetch follow page until all titles have a state
 				let toUpdate = [];
 				let alreadyLoaded = [];
-				while (currentPage <= 2 && statedTitles < historySize) {
+				while (currentPage <= 2 && found.length < historySize) {
 					// Display loading status
-					status.textContent = ` Loading Follow page ${currentPage}, found ${statedTitles} out of ${historySize} Titles.`;
+					status.textContent = ` Loading Follow page ${currentPage}, found ${found.length} out of ${historySize} Titles.`;
 					// Wait between MangaDex requests
 					if (currentPage > 1) {
 						await new Promise(resolve => setTimeout(resolve, 1500));
 					}
-					let titles = await this.fetchFollowPage(parser, currentPage);
+					const { titles, isLastPage } = await this.fetchFollowPage(parser, currentPage);
 					if (titles) {
 						// Filter found titles to avoid loading them again for nothing
 						const foundIds = Object.keys(titles);
@@ -2011,18 +2174,21 @@ class MyMangaDex {
 							Object.assign(localTitles, await storageGet(titleIds));
 						}
 						for (const titleId in titles) {
-							const highestChapter = titles[titleId];
 							// Only update if it hasn't been already, the chapter is in local save and has an history card
 							if (localTitles[titleId] !== undefined && historyCards[titleId] !== undefined) {
-								historyCards[titleId].classList.remove('history-up', 'history-down');
+								const highestChapter = Math.max(titles[titleId], localTitles[titleId].highest || 0);
 								if (highestChapter <= localTitles[titleId].last) {
+									historyCards[titleId].classList.remove('history-down');
 									historyCards[titleId].classList.add('history-up');
 								} else if (highestChapter > localTitles[titleId].last) {
+									historyCards[titleId].classList.remove('history-up');
 									historyCards[titleId].classList.add('history-down');
 								}
-								statedTitles++;
+								if (found.indexOf(titleId) < 0) {
+									found.push(titleId);
+								}
 								// Update highest chapter for the titles
-								if (localTitles[titleId].highest < highestChapter) {
+								if (!localTitles[titleId].highest || localTitles[titleId].highest < highestChapter) {
 									localTitles[titleId].highest = highestChapter;
 									toUpdate.push(titleId);
 								}
@@ -2033,13 +2199,17 @@ class MyMangaDex {
 						break;
 					}
 					currentPage++;
+					if (isLastPage) break;
 				}
 				status.textContent = ` Loaded Titles status, next update in `;
+				let timer = document.createElement('span');
+				timer.textContent = '30:00';
 				status.appendChild(timer);
 				status.appendChild(document.createTextNode('.'));
 				// Refresh Status every 30min
 				let untilRefresh = 1800;
 				const interval = setInterval(() => {
+					if (!pauseTimer) return;
 					untilRefresh--;
 					timer.textContent = `${Math.floor(untilRefresh / 60)}:${('00' + Math.floor(untilRefresh % 60)).slice(-2)}`;
 					if (untilRefresh == 0) {
