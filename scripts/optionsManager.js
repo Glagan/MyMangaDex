@@ -1186,7 +1186,7 @@ class OptionsManager {
 		try {
 			let response = await browser.runtime.sendMessage({
 				action: "fetch",
-				url: `${this.options.onlineURL}user/self/export`,
+				url: `${this.options.onlineURL}user/self/export/v2`,
 				options: {
 					method: "GET",
 					headers: {
@@ -1203,9 +1203,7 @@ class OptionsManager {
 				// Build titles
 				let data = {
 					options: response.body.options,
-					history: {
-						list: response.body.history.list
-					}
+					history: response.body.history || []
 				};
 				// Replace Online Save options
 				if (data.options == null || data.options == '') {
@@ -1217,24 +1215,25 @@ class OptionsManager {
 					data.options.username = this.options.username;
 					data.options.onlineSave = true;
 				}
-				response.body.titles.forEach(element => {
+				for (const element of response.body.titles) {
 					data[element.md_id] = {
 						mal: element.mal_id,
 						last: element.last,
-						chapters: element.chapters
+						chapters: element.chapters,
+						name: element.name,
+						chapter: element.chapter ? Math.floor(element.chapter) : undefined,
+						lastRead: element.lastRead ? Math.floor(element.lastRead) : undefined,
+						highest: element.highest ? parseFloat(element.highest) : undefined,
 					};
-				});
-				response.body.history.titles.forEach(title => {
-					data.history[title.md_id] = {
-						name: title.name,
-						id: title.md_id,
-						progress: {
-							volume: Math.floor(title.progress.volume),
-							chapter: parseFloat(title.progress.chapter)
-						},
-						chapter: Math.floor(title.chapter)
-					};
-				});
+					if (element.progress && element.progress.chapter) {
+						data[element.md_id].progress = {
+							chapter: parseFloat(element.progress.chapter),
+							volume: element.progress.volume ? Math.floor(element.progress.volume) : undefined
+						};
+					} else if (element.chapter !== undefined) {
+						data[element.md_id].progress = { chapter: element.last };
+					}
+				}
 				await storageSet(null, data);
 				// Load options to check for updates
 				this.options = await loadOptions();
@@ -1257,42 +1256,24 @@ class OptionsManager {
 		let body = {
 			options: JSON.parse(JSON.stringify(this.options)),
 			titles: {},
-			history: {
-				list: [],
-				titles: {}
-			}
+			history: []
 		};
 
 		// Build titles list
 		let _local = await storageGet(null);
 		const invalidKeys = ['options', 'history', 'lastHistory', 'initializedHistory'];
-		Object.keys(_local).forEach(key => {
-			if (invalidKeys.indexOf(key) >= 0) return;
+		for (const key in _local) {
+			if (invalidKeys.indexOf(key) >= 0) continue;
 			body.titles[key] = _local[key];
-		});
-		// History
-		if (this.options.updateHistoryPage) {
-			let history = _local.history;
-			if (history) {
-				body.history.list = history.list;
-				Object.keys(history).forEach(id => {
-					if (id != 'list') {
-						body.history.titles[id] = {
-							md_id: id,
-							name: history[id].name,
-							progress: history[id].progress,
-							chapter: history[id].chapter,
-						};
-					}
-				});
-			}
 		}
+		// History
+		body.history = _local.history || [];
 
 		// Send the request
 		try {
 			let response = await browser.runtime.sendMessage({
 				action: "fetch",
-				url: `${this.options.onlineURL}user/self/import`,
+				url: `${this.options.onlineURL}user/self/import/v2`,
 				options: {
 					method: "POST",
 					headers: {

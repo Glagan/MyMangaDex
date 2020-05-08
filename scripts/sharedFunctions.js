@@ -293,13 +293,13 @@ async function updateLocalStorage(manga, options) {
 				"maxChapterSaved": options.maxChapterSaved
 			}
 		};
-		if (options.updateHistoryPage &&
-			manga.name != undefined &&
-			manga.chapterId > 0) {
+		if (options.updateHistoryPage && manga.name != undefined && manga.chapterId > 0) {
 			body.options.updateHistoryPage = true;
 			body.volume = manga.currentChapter.volume;
 			body.title_name = manga.name;
 			body.chapter = manga.chapterId;
+			body.highest = manga.highest;
+			body.lastRead = manga.lastRead;
 		}
 		// Send the request
 		try {
