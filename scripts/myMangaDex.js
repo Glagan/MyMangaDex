@@ -1653,6 +1653,18 @@ class MyMangaDex {
 			this.manga.chapters = data.chapters || [];
 			this.manga.currentChapter.chapter = this.manga.lastMangaDexChapter;
 		}
+
+		// Find Highest chapter
+		if (this.options.checkHistoryLatest) {
+			const highestNode = document.querySelector('[data-chapter]');
+			if (highestNode !== null) {
+				const highest = parseFloat(highestNode.dataset.chapter);
+				if (!isNaN(highest) && (!this.manga.highest || this.manga.highest < highest)) {
+					this.manga.highest = highest;
+				}
+			}
+		}
+
 		// Update everytime to save updated MAL id and lastTitle
 		let storageSet = updateLocalStorage(this.manga, this.options);
 
@@ -1717,11 +1729,16 @@ class MyMangaDex {
 					appendErrorMessage("Login on MyAnimeList to display informations.");
 				}
 			} else {
-				appendErrorMessage(`Status code: ${ret.status}. Open an issue if the code is more or equal to 400 and less than 500. Retry later.`);
+				if (ret.status >= 500) {
+					appendErrorMessage(`Status code: ${ret.status}. MyAnimeList might be down, retry later.`);
+				} else {
+					appendErrorMessage(`Status code: ${ret.status}. Open an issue.`);
+				}
 			}
 		} else {
 			appendErrorMessage("No MyAnimeList found. When one is added, MyMangaDex will find it if you visit this page again.");
 		}
+
 		this.highlightChapters();
 	}
 
