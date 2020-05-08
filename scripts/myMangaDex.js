@@ -1186,8 +1186,8 @@ class MyMangaDex {
 		}
 		// Update manga to storage History informations
 		manga.name = manga.name;
-		manga.progress = manga.currentChapter;
-		manga.chapter = manga.chapterId;
+		manga.progress = manga.currentChapter || manga.progress;
+		manga.chapterId = manga.chapterId;
 		manga.lastRead = Date.now();
 		await storageSet("history", this.history);
 	}
@@ -1652,6 +1652,10 @@ class MyMangaDex {
 			this.manga.lastMangaDexChapter = data.last;
 			this.manga.chapters = data.chapters || [];
 			this.manga.currentChapter.chapter = this.manga.lastMangaDexChapter;
+			this.manga.progress = data.progress;
+			this.manga.lastRead = data.lastRead;
+			this.manga.highest = data.highest;
+			this.manga.chapterId = data.chapterId;
 		}
 
 		// Find Highest chapter
@@ -1941,7 +1945,7 @@ class MyMangaDex {
 		// Load history -- and related Titles
 		let localTitles = {};
 		this.history = await storageGet("history");
-		if (this.history == undefined) {
+		if (this.history === undefined) {
 			this.history = [];
 			await storageSet("history", this.history);
 		} else if (this.history.length > 0) {
@@ -1951,31 +1955,33 @@ class MyMangaDex {
 		let mdTitles = Array.from(document.querySelectorAll(".large_logo.rounded.position-relative.mx-1.my-2")).reverse();
 		for (const node of mdTitles) {
 			let chapterLink = node.querySelector("a[href^='/chapter/']");
+			const mangaDexId = Math.floor(/\/title\/(\d+)\/.+./.exec(node.querySelector("a[href^='/title/']").href)[1]);
 			let title = {
-				mangaDexId: Math.floor(/\/title\/(\d+)\/.+./.exec(node.querySelector("a[href^='/title/']").href)[1]),
+				mangaDexId: mangaDexId,
 				name: node.querySelector(".manga_title").textContent,
 				chapterId: Math.floor(/\/chapter\/(\d+)/.exec(chapterLink.href)[1]),
-				currentChapter: this.getVolumeChapterFromString(chapterLink.textContent)
+				progress: this.getVolumeChapterFromString(chapterLink.textContent)
 			};
 			// Create a new Title if it doesn't exists -- it will be saved in the next condition
-			if (localTitles[title.mangaDexId] == undefined) {
-				localTitles[title.mangaDexId] = {
+			if (localTitles[mangaDexId] === undefined) {
+				localTitles[mangaDexId] = {
 					chapters: [],
 					last: -1,
 					mal: 0,
 				};
 			}
 			// Save only if the title isn't already in the list or if the chapter is different
-			if (this.history.indexOf(title.mangaDexId) < 0 ||
-				localTitles[title.mangaDexId].chapterId != title.chapterId) {
-				Object.assign(localTitles[title.mangaDexId], title);
+			if (this.history.indexOf(mangaDexId) < 0 || localTitles[mangaDexId].chapterId != title.chapterId) {
+				Object.assign(localTitles[mangaDexId], title);
 				await this.saveTitleInHistory(title);
-				await storageSet(title.mangaDexId, localTitles[title.mangaDexId]);
+				delete localTitles[mangaDexId].mangaDexId;
+				await storageSet(mangaDexId, localTitles[mangaDexId]);
 			}
 		}
 		// Display additionnal history
 		let historyCards = {};
-		for (const titleId of this.history) {
+		for (let i = this.history.length - 1; i >= 0; i--) {
+			const titleId = this.history[i];
 			const title = localTitles[titleId];
 			if (title !== undefined) {
 				let exist = container.querySelector(`a[href^='/title/${titleId}']`);
@@ -2049,6 +2055,7 @@ class MyMangaDex {
 						alert.appendChild(document.createElement('br'));
 						alert.appendChild(secondRow);
 						// Fetch ALL pages until it is done
+						let localTitles = {};
 						let found = [];
 						let currentPage = await storageGet('lastHistoryPage') || 1;
 						let toUpdate = [];
@@ -2086,7 +2093,7 @@ class MyMangaDex {
 									Object.assign(localTitles, await storageGet(titleIds));
 								}
 								for (const titleId in titles) {
-									// Only update if it hasn't been already, the chapter is in local save and has an history card
+									// Only update if the title is in local save and has an history card
 									if (localTitles[titleId] !== undefined && historyCards[titleId] !== undefined) {
 										const highestChapter = Math.max(titles[titleId], localTitles[titleId].highest || 0);
 										if (highestChapter <= localTitles[titleId].last) {
@@ -2118,7 +2125,7 @@ class MyMangaDex {
 							maxPage = res.maxPage;
 							// Save updated titles every loop if the user reload the page
 							let updateObject = {
-								lastHistoryPage: (isLastPage) ? 1 : currentPage
+								lastHistoryPage: currentPage
 							};
 							if (toUpdate.length > 0) {
 								for (const id of toUpdate) {
@@ -2160,6 +2167,7 @@ class MyMangaDex {
 			// Load auto-update
 			const checkHistoryLatest = async () => {
 				resetInfo();
+				let localTitles = {};
 				let currentPage = 1;
 				let found = [];
 				let status = document.createElement('span');
