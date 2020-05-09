@@ -45,12 +45,12 @@ async function storageGet(key) {
 		}
 		let res;
 		if (CHROME) {
-			await browser.storage.local.get((key === null) ? null : key, function (result) {
+			await browser.storage.local.get(key, function (result) {
 				res = (key === null || objectKey) ? result : result[key];
 			});
 			return res;
 		} else {
-			res = await browser.storage.local.get((key === null) ? null : key);
+			res = await browser.storage.local.get(key);
 			return (key === null || objectKey) ? res : res[key];
 		}
 	} catch (error) {
@@ -252,9 +252,9 @@ async function updateLocalStorage(manga, options) {
 			manga.lastMangaDexChapter = manga.currentChapter.chapter;
 		}
 	}
-	nManga = {
-		mal: manga.myAnimeListId,
-		last: manga.lastMangaDexChapter,
+	let nManga = {
+		mal: manga.myAnimeListId || manga.mal,
+		last: manga.lastMangaDexChapter || manga.last,
 		chapters: manga.chapters,
 	};
 	if (options.updateHistoryPage) {

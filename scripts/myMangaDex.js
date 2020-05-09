@@ -1021,10 +1021,10 @@ class MyMangaDex {
 			this.notification(NOTIFY.INFO, "Searching MAL ID", notificationText, this.mmdImage);
 		} else {
 			// Get the mal id from the local storage
+			Object.assign(this.manga, data);
 			this.manga.myAnimeListId = data.mal;
 			this.manga.lastMangaDexChapter = data.last;
 			this.manga.chapters = data.chapters || [];
-			this.manga.lastTitle = data.lastTitle;
 			// Check if there is an updated MAL id if lastTitle is older than 3 days (259200000ms)
 			if (this.manga.myAnimeListId == 0 &&
 				(!data.lastTitle || (Date.now() - data.lastTitle) >= 259200000)) {
@@ -1187,7 +1187,6 @@ class MyMangaDex {
 		// Update manga to storage History informations
 		manga.name = manga.name;
 		manga.progress = manga.currentChapter || manga.progress;
-		manga.chapterId = manga.chapterId;
 		manga.lastRead = Date.now();
 		await storageSet("history", this.history);
 	}
@@ -1369,7 +1368,7 @@ class MyMangaDex {
 		for (let i = 0; i < lastChapter; i++) {
 			let group = groups[i];
 			// Get title informations from LocalStorage
-			if (!(group.titleId in titleInformations)) {
+			if (!titleInformations[group.titleId]) {
 				titleInformations[group.titleId] = await storageGet(group.titleId);
 				if (titleInformations[group.titleId]) {
 					titleInformations[group.titleId].next = Infinity;
@@ -1396,12 +1395,12 @@ class MyMangaDex {
 						if (checkUpdates && this.options.updateOnFollows && toUpdate.length < 7 &&
 							!titleInformations[group.titleId].getsUpdated && titleInformations[group.titleId].mal != 0 &&
 							(!titleInformations[group.titleId].lastMAL || (Date.now() - titleInformations[group.titleId].lastMAL) >= 43200000)) {
-							toUpdate.push({
+							toUpdate.push(Object.assign({}, titleInformations[group.titleId], {
 								myAnimeListId: titleInformations[group.titleId].mal,
 								mangaDexId: group.titleId,
 								lastMangaDexChapter: titleInformations[group.titleId].last,
 								chapters: titleInformations[group.titleId].chapters || []
-							});
+							}));
 							titleInformations[group.titleId].next = Infinity;
 							titleInformations[group.titleId].getsUpdated = true;
 							break; // no need to check this title any more
@@ -1412,10 +1411,8 @@ class MyMangaDex {
 		}
 		if (toUpdate.length) {
 			(async toUpdate => {
-				for (var i = 0; i < toUpdate.length; i++) {
+				for (const manga of toUpdate) {
 					if (!this.loggedMyAnimeList) break;
-					let manga = toUpdate[i];
-
 					let ret = await this.fetchMyAnimeList(manga);
 					if (ret.status >= 200 && ret.status < 400 && this.loggedMyAnimeList && manga.is_approved) {
 						manga.currentChapter = manga.currentChapter || {};
@@ -1610,9 +1607,20 @@ class MyMangaDex {
 	}
 
 	async titlePage() {
+		// Name and ID
 		this.manga.name = document.querySelector("h6.card-header").textContent.trim();
+		this.manga.mangaDexId = /.+title\/(\d+)/.exec(this.pageUrl)[1];
+
+		// Load local save
+		let data = await storageGet(this.manga.mangaDexId);
+		if (data !== undefined) {
+			Object.assign(this.manga, data);
+			this.manga.lastMangaDexChapter = data.last;
+			this.manga.chapters = data.chapters || [];
+			this.manga.currentChapter.chapter = data.last;
+		}
 		this.manga.lastTitle = Date.now();
-		this.manga.mangaDexId = /.+title\/(\d+)/.exec(this.pageUrl);
+
 		// We always try to find the link, in case it was updated
 		let myAnimeListUrl = document.querySelector("img[src$='/mal.png']");
 		if (myAnimeListUrl !== null) {
@@ -1624,6 +1632,7 @@ class MyMangaDex {
 			this.manga.myAnimeListId = 0;
 		}
 
+		// MangaDex status
 		if (this.manga.mangaDexId === null) {
 			let dropdown = document.getElementById("1");
 			if (dropdown !== null) {
@@ -1642,20 +1651,6 @@ class MyMangaDex {
 			if (mangaDexScore) {
 				this.mangaDexScore = Math.floor(mangaDexScore.id);
 			}
-		}
-
-		// Fetch the manga information from the local storage
-		let data = await storageGet(this.manga.mangaDexId);
-
-		// If there is no entry try to find it
-		if (data !== undefined) {
-			this.manga.lastMangaDexChapter = data.last;
-			this.manga.chapters = data.chapters || [];
-			this.manga.currentChapter.chapter = this.manga.lastMangaDexChapter;
-			this.manga.progress = data.progress;
-			this.manga.lastRead = data.lastRead;
-			this.manga.highest = data.highest;
-			this.manga.chapterId = data.chapterId;
 		}
 
 		// Find Highest chapter
@@ -1782,14 +1777,15 @@ class MyMangaDex {
 	}
 
 	async singleChapterPageLegacy() {
-		// We can use the info on the page if we don't change chapter while reading
+		// Informations
 		let chapter = document.querySelector("meta[property='og:title']").content;
-		this.manga.currentChapter = this.getVolumeChapterFromString(chapter);
 		chapter = document.querySelector("meta[property='og:image']").content;
 		this.manga.mangaDexId = Math.floor(/manga\/(\d+)\.thumb.+/.exec(chapter)[1]);
-		this.manga.chapterId = Math.floor(/\/(\d+)\/?/.exec(document.querySelector("meta[property='og:url']").content)[1]);
-		// Informations
 		await this.getTitleInfos();
+		// We can use the info on the page if we don't change chapter while reading
+		this.manga.currentChapter = this.getVolumeChapterFromString(chapter);
+		this.manga.chapterId = Math.floor(/\/(\d+)\/?/.exec(document.querySelector("meta[property='og:url']").content)[1]);
+
 		await this.fetchMyAnimeList();
 		if (this.mangaDexStatus === undefined && (this.options.updateMDList || this.options.updateOnlyInList)) {
 			await this.fetchTitleInfos();
@@ -1804,11 +1800,11 @@ class MyMangaDex {
 
 	async singleChapterEvent(data, firstRun) {
 		if (firstRun) {
-			this.manga.mangaDexId = data.manga_id;
-			this.manga.chapterId = data.id;
-
 			// Informations
+			this.manga.mangaDexId = data.manga_id;
 			await this.getTitleInfos();
+
+			this.manga.chapterId = data.id;
 			await this.fetchMyAnimeList();
 
 			if (this.manga.exist && this.manga.is_approved) {
@@ -1957,11 +1953,15 @@ class MyMangaDex {
 			let chapterLink = node.querySelector("a[href^='/chapter/']");
 			const mangaDexId = Math.floor(/\/title\/(\d+)\/.+./.exec(node.querySelector("a[href^='/title/']").href)[1]);
 			let title = {
-				mangaDexId: mangaDexId,
 				name: node.querySelector(".manga_title").textContent,
 				chapterId: Math.floor(/\/chapter\/(\d+)/.exec(chapterLink.href)[1]),
 				progress: this.getVolumeChapterFromString(chapterLink.textContent)
 			};
+			// Check if the title is in the history
+			if (this.history.indexOf(mangaDexId) < 0) {
+				// If it wasn't, it's not loaded
+				localTitles[mangaDexId] = await storageGet(mangaDexId);
+			}
 			// Create a new Title if it doesn't exists -- it will be saved in the next condition
 			if (localTitles[mangaDexId] === undefined) {
 				localTitles[mangaDexId] = {
@@ -1972,9 +1972,8 @@ class MyMangaDex {
 			}
 			// Save only if the title isn't already in the list or if the chapter is different
 			if (this.history.indexOf(mangaDexId) < 0 || localTitles[mangaDexId].chapterId != title.chapterId) {
+				await this.saveTitleInHistory({ mangaDexId: mangaDexId });
 				Object.assign(localTitles[mangaDexId], title);
-				await this.saveTitleInHistory(title);
-				delete localTitles[mangaDexId].mangaDexId;
 				await storageSet(mangaDexId, localTitles[mangaDexId]);
 			}
 		}
@@ -2083,13 +2082,9 @@ class MyMangaDex {
 								let titleIds = foundIds.filter(id => {
 									return alreadyLoaded.indexOf(id) < 0;
 								});
-								// Make alreadyLoaded unique
-								alreadyLoaded.push(...foundIds);
-								alreadyLoaded.filter((id, pos) => {
-									return alreadyLoaded.indexOf(id) == pos;
-								});
 								// Update local data for new found titles
 								if (titleIds.length > 0) {
+									alreadyLoaded.push(...titleIds);
 									Object.assign(localTitles, await storageGet(titleIds));
 								}
 								for (const titleId in titles) {
@@ -2189,13 +2184,9 @@ class MyMangaDex {
 						let titleIds = foundIds.filter(id => {
 							return alreadyLoaded.indexOf(id) < 0;
 						});
-						// Make alreadyLoaded unique
-						alreadyLoaded.push(...foundIds);
-						alreadyLoaded.filter((id, pos) => {
-							return alreadyLoaded.indexOf(id) == pos;
-						});
 						// Update local data for new found titles
 						if (titleIds.length > 0) {
+							alreadyLoaded.push(...titleIds);
 							Object.assign(localTitles, await storageGet(titleIds));
 						}
 						for (const titleId in titles) {
@@ -2234,7 +2225,7 @@ class MyMangaDex {
 				// Refresh Status every 30min
 				let untilRefresh = 1800;
 				const interval = setInterval(() => {
-					if (!pauseTimer) return;
+					if (pauseTimer) return;
 					untilRefresh--;
 					timer.textContent = `${Math.floor(untilRefresh / 60)}:${('00' + Math.floor(untilRefresh % 60)).slice(-2)}`;
 					if (untilRefresh == 0) {
