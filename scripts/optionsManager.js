@@ -398,7 +398,7 @@ class OptionsManager {
 		// Set the default options
 		try {
 			await storageSet("options", defaultOptions);
-			await storageSet("history", { list: [] });
+			await storageSet("history", []);
 			this.options = JSON.parse(JSON.stringify(defaultOptions)); // Deep copy default
 			this.flashBackground(true);
 			this.restoreOptions();
@@ -1472,7 +1472,7 @@ class OptionsManager {
 		try {
 			let response = await browser.runtime.sendMessage({
 				action: "fetch",
-				url: `${this.options.onlineURL}user/self/export`,
+				url: `${this.options.onlineURL}user/self/export/v2`,
 				options: {
 					method: "GET",
 					headers: {
@@ -1485,9 +1485,7 @@ class OptionsManager {
 			if (response.status == 200) {
 				let body = {
 					options: response.body.options,
-					history: {
-						list: response.body.history.list
-					}
+					history: response.body.history
 				};
 				if (body.options == null || body.options == '') {
 					body.options = JSON.parse(JSON.stringify(this.options));
@@ -1502,15 +1500,12 @@ class OptionsManager {
 					body[element.md_id] = {
 						mal: element.mal_id,
 						last: element.last,
-						chapters: element.chapters
-					};
-				});
-				response.body.history.titles.forEach(title => {
-					body.history[title.md_id] = {
-						name: title.name,
-						id: title.md_id,
-						progress: title.progress,
-						chapter: Math.floor(title.chapter)
+						chapters: element.chapters,
+						name: element.name,
+						progress: element.progress,
+						chapterId: element.chapterId,
+						highest: parseFloat(element.highest),
+						lastRead: element.lastRead,
 					};
 				});
 				this.downloadOnlineButton.href = `data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(body))}`;

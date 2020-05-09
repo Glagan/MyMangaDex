@@ -1609,7 +1609,15 @@ class MyMangaDex {
 	async titlePage() {
 		// Name and ID
 		this.manga.name = document.querySelector("h6.card-header").textContent.trim();
-		this.manga.mangaDexId = /.+title\/(\d+)/.exec(this.pageUrl)[1];
+		this.manga.mangaDexId = /.+title\/(\d+)/.exec(this.pageUrl);
+		if (this.manga.mangaDexId === null) {
+			let dropdown = document.getElementById("1");
+			if (dropdown !== null) {
+				this.manga.mangaDexId = Math.floor(dropdown.dataset.mangaId);
+			}
+		} else {
+			this.manga.mangaDexId = Math.floor(this.manga.mangaDexId[1]);
+		}
 
 		// Load local save
 		let data = await storageGet(this.manga.mangaDexId);
@@ -1633,14 +1641,6 @@ class MyMangaDex {
 		}
 
 		// MangaDex status
-		if (this.manga.mangaDexId === null) {
-			let dropdown = document.getElementById("1");
-			if (dropdown !== null) {
-				this.manga.mangaDexId = Math.floor(dropdown.dataset.mangaId);
-			}
-		} else {
-			this.manga.mangaDexId = Math.floor(this.manga.mangaDexId[1]);
-		}
 		this.mangaDexLoggedIn = (document.querySelector('button[disabled][title="You need to log in to use this function."]') == null);
 		this.mangaDexStatus = false;
 		this.mangaDexScore = 0;
@@ -1878,12 +1878,13 @@ class MyMangaDex {
 
 	/**
 	 * Return an object of highest chapters found in the follow page with title IDs as keys
+	 * method: 1 for Reading list, 0 for all lists
 	 */
-	async fetchFollowPage(parser, page) {
+	async fetchFollowPage(parser, page, method) {
 		const before = Date.now();
 		const response = await browser.runtime.sendMessage({
 			action: "fetch",
-			url: `https://mangadex.org/follows/chapters/1/${page}/`,
+			url: `https://mangadex.org/follows/chapters/${method}/${page}/`,
 			options: {
 				method: "GET",
 				cache: "no-cache",
@@ -1918,9 +1919,9 @@ class MyMangaDex {
 			if (result.isLastpage) {
 				result.maxPage = page;
 			} else {
-				const maxPageNode = body.querySelector('nav > ul.pagination > .page-item:last-child > a[href^="/follows/chapters/1/"]');
+				const maxPageNode = body.querySelector(`nav > ul.pagination > .page-item:last-child > a[href^="/follows/chapters/${method}/"]`);
 				if (maxPageNode) {
-					const res = /\/follows\/chapters\/1\/(\d+)\/?/.exec(maxPageNode.href);
+					const res = /\/follows\/chapters\/\d\/(\d+)\/?/.exec(maxPageNode.href);
 					result.maxPage = (res !== null) ? Math.floor(res[1]) : page;
 				}
 			}
@@ -2074,7 +2075,7 @@ class MyMangaDex {
 								secondRow.textContent = `Estimated time to complete ${disp.join('')}.`;
 								await new Promise(resolve => setTimeout(resolve, 1500));
 							}
-							const res = await this.fetchFollowPage(parser, currentPage);
+							const res = await this.fetchFollowPage(parser, currentPage, 0);
 							const { titles, isLastPage, requestTime } = res;
 							if (titles) {
 								// Filter found titles to avoid loading them again for nothing
@@ -2177,7 +2178,7 @@ class MyMangaDex {
 					if (currentPage > 1) {
 						await new Promise(resolve => setTimeout(resolve, 1500));
 					}
-					const { titles, isLastPage } = await this.fetchFollowPage(parser, currentPage);
+					const { titles, isLastPage } = await this.fetchFollowPage(parser, currentPage, 1);
 					if (titles) {
 						// Filter found titles to avoid loading them again for nothing
 						const foundIds = Object.keys(titles);
