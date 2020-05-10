@@ -416,7 +416,7 @@ class OptionsManager {
 
 	logAndScroll(logLevel, text) {
 		let row = document.createElement("li");
-		row.className = "list-group-item list-group-item-" + logLevel;
+		row.className = `list-group-item list-group-item-${logLevel}`;
 		row.textContent = text;
 		this.logOutput.appendChild(row);
 		this.logOutput.scrollTop = this.logOutput.scrollHeight;
@@ -1092,7 +1092,7 @@ class OptionsManager {
 		try {
 			let response = await browser.runtime.sendMessage({
 				action: "fetch",
-				url: onlineURL + "user",
+				url: `${onlineURL}user`,
 				options: {
 					method: "GET",
 					headers: {
@@ -1136,7 +1136,7 @@ class OptionsManager {
 		try {
 			let response = await browser.runtime.sendMessage({
 				action: "fetch",
-				url: onlineURL + "user",
+				url: `${onlineURL}user`,
 				options: {
 					method: "POST",
 					headers: {

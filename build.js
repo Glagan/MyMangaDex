@@ -154,7 +154,7 @@ if (args[0] == 'firefox' || args[0] == 'f') {
 } else if (args[0] == 'chrome' || args[0] == 'c') {
 	browser = 'chrome';
 }
-let makeFolder = browser + 'Build';
+let makeFolder = `${browser}Build`;
 
 // Options
 let noMinify = false;
@@ -210,7 +210,7 @@ function deepFileCopy(files, destFolder, baseFolder = '') {
 
 			files[file].forEach(element => {
 				console.log(`Copying '${currentBase}${element}' into '${currentDest}${element}'`);
-				fs.copyFileSync(currentBase + element, currentDest + element);
+				fs.copyFileSync(`${currentBase}${element}`, `${currentDest}${element}`);
 			});
 		} else if (typeof files[file] === 'object') {
 			deepFileCopy(files[file], currentDest, currentBase);
@@ -318,10 +318,10 @@ if (['firefox', 'chrome'].includes(browser)) {
 			killweb = () => web.kill();
 
 			web.stdout.on('data', (data) => {
-				console.log('' + data + '\n');
+				console.log(`${data}\n`);
 			});
 			web.stderr.on('data', (data) => {
-				console.error('' + data + '\n');
+				console.error(`${data}\n`);
 			});
 			web.on('exit', () => process.exit());
 
@@ -339,7 +339,7 @@ if (['firefox', 'chrome'].includes(browser)) {
 					stdio: ['ignore', out, err]
 				});
 				web.unref();
-				return '' + web.pid;
+				return `${web.pid}`;
 			}
 
 			// create web process if needed
@@ -362,7 +362,7 @@ if (['firefox', 'chrome'].includes(browser)) {
 			const connect = watch([".devTmp/out.log", ".devTmp/err.log"], (evt, name) => {
 				const content = fs.readFileSync(name);
 				if (!content || content == "") return;
-				console.log(content + '\n');
+				console.log(`${content}\n`);
 				fs.writeFileSync(name, ''); // clear file
 			});
 			process.on('SIGINT', () => {
@@ -388,7 +388,7 @@ if (['firefox', 'chrome'].includes(browser)) {
 				});
 			} else {
 				console.log(`Copying ${name}`);
-				fs.copyFileSync(name, makeFolder + '/' + name);
+				fs.copyFileSync(name, `${makeFolder}/${name}`);
 			}
 		});
 

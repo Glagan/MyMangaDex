@@ -23,7 +23,7 @@ function isEmpty(obj) {
  * @param {function} func The function to be injected and executed
  */
 function injectScript(func) {
-	var actualCode = '(' + func + ')();'
+	var actualCode = `(${func})();`;
 	var script = document.createElement('script');
 	script.textContent = actualCode;
 	(document.head || document.documentElement).appendChild(script);
@@ -39,9 +39,9 @@ async function storageGet(key) {
 	try {
 		const objectKey = typeof key === 'object';
 		if (key !== null && !objectKey) {
-			key = key + "";
+			key = `${key}`;
 		} else if (objectKey && Array.isArray(key)) {
-			key = key.map(k => k + "");
+			key = key.map(k => `${k}`);
 		}
 		let res;
 		if (CHROME) {
@@ -187,17 +187,9 @@ async function loadOptions() {
 					await storageSet(null, save);
 					// Done :)
 					SimpleNotification.info({
-						title: "History enhancements",
+						title: "MyMangaDex Update",
 						image: mmdImage,
-						text: "The History feature has been updated in **2.4** !\nIt required some modifications in the Save, if you notice any error please open an issue.",
-						buttons: {
-							value: "Open Options",
-							type: "message",
-							onClick: (n) => {
-								n.close();
-								browser.runtime.sendMessage({ action: "openOptions" });
-							}
-						}
+						text: "There is a lot of small changes in this update.\nI did a lot of tests, but if you notice any error please {{open an issue|https://github.com/Glagan/MyMangaDex}}."
 					}, { sticky: true, position: "bottom-left" });
 				}
 			}
