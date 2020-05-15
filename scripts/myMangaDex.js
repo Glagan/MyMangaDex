@@ -1831,7 +1831,7 @@ class MyMangaDex {
 
 	singleChapterPage() {
 		this.manga.name = /scans\s*,\s+(.+)\s+mangadex/i.exec(document.querySelector("meta[name='keywords']").content)[1];
-		const legacyReader = !document.getElementById("content").classList.contains("reader");
+		const legacyReader = !document.querySelector('.reader-controls-container');
 		if (legacyReader) {
 			this.singleChapterPageLegacy();
 			return;
