@@ -248,6 +248,7 @@ class MyMangaDex {
 					}
 				}
 			});
+			this.manga.in_list = true;
 		} else if (doMyAnimeList && !this.manga.is_approved) {
 			this.notification(NOTIFY.INFO, "Not updated", "The manga is still pending approval on MyAnimelist and can't be updated.", this.myAnimeListImage, true);
 		}
@@ -1739,6 +1740,50 @@ class MyMangaDex {
 		}
 
 		this.highlightChapters();
+
+		// Add MangaDex Score to MyAnimeList score -- only if valid and in list
+		if (this.mangaDexLoggedIn && this.loggedMyAnimeList && this.manga.is_approved) {
+			const ratings = document.querySelectorAll('a.manga_rating_button');
+			if (ratings && ratings.length == 10) {
+				const dropdown = ratings[0].parentElement;
+				let currentRating = null;
+				for (const oldRating of ratings) {
+					// Replace old node to remove all events
+					let rating = oldRating.cloneNode(true);
+					dropdown.replaceChild(rating, oldRating);
+					rating.addEventListener('click', async event => {
+						event.preventDefault();
+						if (!this.manga.in_list) return;
+						if (currentRating == rating) return;
+						// Send requests
+						await browser.runtime.sendMessage({
+							action: 'fetch',
+							url: `${domain}ajax/actions.ajax.php?function=manga_rating&id=${rating.dataset.mangaId}&rating=${rating.id}&_=${Date.now()}`,
+							options: {
+								method: 'GET',
+								cache: 'no-cache',
+								credentials: 'include',
+								headers: {
+									'X-Requested-With': 'XMLHttpRequest'
+								}
+							},
+						});
+						this.manga.score = +rating.id;
+						this.mangaDexScore = +rating.id;
+						await this.updateManga(false, this.manga.status, true);
+						this.notification(NOTIFY.SUCCESS, "Rating updated", "Your rating has been updated on both **MyAnimeList** and **MangaDex**.")
+						// Update style
+						if (currentRating) {
+							currentRating.classList.remove('disabled');
+						}
+						currentRating = rating;
+						rating.classList.add('disabled');
+						dropdown.previousElementSibling.childNodes[1].textContent = ` ${rating.id} `;
+					});
+				}
+				currentRating = dropdown.querySelector('.disabled');
+			}
+		}
 	}
 
 	// TODO: Save volume if there is one
