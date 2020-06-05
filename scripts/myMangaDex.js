@@ -566,20 +566,20 @@ class MyMangaDex {
 	highlightChapters() {
 		if (!this.options.highlightChapters) return;
 		// Chapters list displayed
-		let chaptersList;
+		let chapterList;
 		try {
-			chaptersList = Array.from(document.querySelector(".chapter-container").children).reverse();
+			chapterList = Array.from(document.querySelector(".chapter-container").children).reverse();
 		} catch (e) {
 			// probably because we're in reader, no chapters to highlight
 			return;
 		}
 
 		// Get the name of each "chapters" in the list - ignore first line
-		let firstChapter = undefined;
+		let firstChapter;
 		let foundNext = false;
-		let markFullChapter = undefined;
-		for (let i = 0; i < chaptersList.length - 1; i++) {
-			let element = chaptersList[i];
+		let markFullChapter;
+		for (let i = 0; i < chapterList.length - 1; i++) {
+			let element = chapterList[i];
 			let chapterVolume = this.getVolumeChapterFromNode(element.firstElementChild.firstElementChild);
 			chapterVolume.chapterFloored = Math.floor(chapterVolume.chapter);
 
@@ -1380,30 +1380,31 @@ class MyMangaDex {
 			// if there is data, find the next chapter
 			// no need to check the title if an update is fetched anyways
 			// but if it's the next pass, check it
-			if (titleInformations[group.titleId] && checkTitle(group.titleId)) {
+			let informations = titleInformations[group.titleId];
+			if (informations && checkTitle(group.titleId)) {
 				let chapterCount = group.chapters.length;
 
 				for (let j = 0; j < chapterCount; j++) {
 					let chapter = group.chapters[j];
 
 					// if higher chapter
-					if (chapter.value > titleInformations[group.titleId].last) {
+					if (chapter.value > informations.last) {
 						// might be next
-						if (Math.floor(chapter.value) <= titleInformations[group.titleId].last + 1) {
-							titleInformations[group.titleId].next = Math.min(titleInformations[group.titleId].next, chapter.value);
+						if (Math.floor(chapter.value) <= informations.last + 1) {
+							informations.next = Math.min(informations.next, chapter.value);
 						}
 						// if check for updates, has mal title and last checked more than 12 hours ago (12*60*60*1000ms)
 						if (checkUpdates && this.options.updateOnFollows && toUpdate.length < 7 &&
-							!titleInformations[group.titleId].getsUpdated && titleInformations[group.titleId].mal != 0 &&
-							(!titleInformations[group.titleId].lastMAL || (Date.now() - titleInformations[group.titleId].lastMAL) >= 43200000)) {
-							toUpdate.push(Object.assign({}, titleInformations[group.titleId], {
-								myAnimeListId: titleInformations[group.titleId].mal,
+							!informations.getsUpdated && informations.mal != 0 &&
+							(!informations.lastMAL || (Date.now() - informations.lastMAL) >= 43200000)) {
+							toUpdate.push(Object.assign({}, informations, {
+								myAnimeListId: informations.mal,
 								mangaDexId: group.titleId,
-								lastMangaDexChapter: titleInformations[group.titleId].last,
-								chapters: titleInformations[group.titleId].chapters || []
+								lastMangaDexChapter: informations.last,
+								chapters: informations.chapters || []
 							}));
-							titleInformations[group.titleId].next = Infinity;
-							titleInformations[group.titleId].getsUpdated = true;
+							informations.next = Infinity;
+							informations.getsUpdated = true;
 							break; // no need to check this title any more
 						}
 					}
@@ -1435,17 +1436,18 @@ class MyMangaDex {
 		if (this.options.hideLowerChapters || this.options.hideHigherChapters || this.options.hideLastRead) {
 			for (let i = 0; i < lastChapter; i++) {
 				let group = groups[i];
+				let informations = titleInformations[group.titleId];
 
 				// If there is data
-				if (titleInformations[group.titleId] && checkTitle(group.titleId)) {
+				if (informations && checkTitle(group.titleId)) {
 					let chapterCount = group.chapters.length;
 					let highestChapter = Math.max.apply(Math, group.chapters.map(e => { return e.value; }));
 					for (let j = 0; j < chapterCount; j++) {
 						let chapter = group.chapters[j];
 						chapter.hidden = ((this.options.hideHigherChapters &&
-							titleInformations[group.titleId].next < chapter.value) ||
-							(this.options.hideLowerChapters && titleInformations[group.titleId].last > chapter.value) ||
-							(this.options.hideLastRead && titleInformations[group.titleId].last == chapter.value && titleInformations[group.titleId].next != Infinity));
+							informations.next < chapter.value) ||
+							(this.options.hideLowerChapters && informations.last > chapter.value) ||
+							(this.options.hideLastRead && informations.last == chapter.value && informations.next != Infinity));
 						chapter.node.classList.toggle("is-hidden-chapter", chapter.hidden);
 					}
 					if (group.chapters[0].hidden) {
@@ -1525,27 +1527,28 @@ class MyMangaDex {
 			let colors = this.options.lastOpenColors, lastColor = colors.length, currentColor = 0;
 			for (let i = 0; i < lastChapter; i++) {
 				let group = groups[i];
+				let informations = titleInformations[group.titleId];
 				// If there is data
-				if (titleInformations[group.titleId]) {
+				if (informations) {
 					let chapterCount = group.chapters.length;
 					let outerColor = colors[currentColor];
 					for (let j = 0; j < chapterCount; j++) {
 						let chapter = group.chapters[j];
 						chapter.node.classList.add("has-fast-in-transition");
 						// toggle is loading
-						if (titleInformations[group.titleId].getsUpdated) {
+						if (informations.getsUpdated) {
 							chapter.node.classList.toggle("is-loading", checkUpdates);
 						}
 						if (checkTitle(group.titleId)) {
-							if (titleInformations[group.titleId].next == chapter.value) {
+							if (informations.next == chapter.value) {
 								paintRow(chapter.node, this.options.nextChapterColor);
 								group.selected = j;
 								outerColor = this.options.nextChapterColor;
-							} else if (titleInformations[group.titleId].last < chapter.value) {
+							} else if (informations.last < chapter.value) {
 								paintRow(chapter.node, this.options.higherChaptersColor);
-							} else if (titleInformations[group.titleId].last > chapter.value) {
+							} else if (informations.last > chapter.value) {
 								paintRow(chapter.node, this.options.lowerChaptersColor);
-							} else if (titleInformations[group.titleId].last == chapter.value) {
+							} else if (informations.last == chapter.value) {
 								paintRow(chapter.node, colors[currentColor]);
 								group.selected = j;
 							} else {
