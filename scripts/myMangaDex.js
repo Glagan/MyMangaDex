@@ -577,7 +577,6 @@ class MyMangaDex {
 		// Get the name of each "chapters" in the list - ignore first line
 		let firstChapter;
 		let foundNext = false;
-		let markFullChapter;
 		for (let i = 0; i < chapterList.length - 1; i++) {
 			let element = chapterList[i];
 			let chapterVolume = this.getVolumeChapterFromNode(element.firstElementChild.firstElementChild);
@@ -586,28 +585,17 @@ class MyMangaDex {
 			if (firstChapter === undefined) {
 				firstChapter = chapterVolume.chapter;
 			}
-			// if is current chapter and subchapter matches, proceed as normal
-			if (markFullChapter === undefined && chapterVolume.chapter == this.manga.lastMangaDexChapter) {
-				markFullChapter = false;
-			}
-			// if is current chapter but subchapter doesn't match. must be first subchapter but lastMangaDexChapter does not correspond
-			// assume this means a sync from MAL and mark all subchapters read
-			if (markFullChapter === undefined && chapterVolume.chapterFloored != chapterVolume.chapter && this.manga.lastMangaDexChapter == chapterVolume.chapterFloored) {
-				markFullChapter = true;
-			}
-			// TODO: Also check volume if it saved
 			let maybeNext = (chapterVolume.chapterFloored <= Math.floor(this.manga.lastMangaDexChapter) + 1);
 			if (((this.manga.lastMyAnimeListChapter == -1 || this.manga.lastMangaDexChapter == -1) && chapterVolume.chapter == firstChapter) ||
-				((this.manga.lastMangaDexChapter == -1 || markFullChapter) && this.manga.lastMyAnimeListChapter + 1 == chapterVolume.chapterFloored) ||
-				(this.manga.lastMangaDexChapter != -1 && parseFloat(chapterVolume.chapter) > this.manga.lastMangaDexChapter && maybeNext &&
-					(foundNext === false || foundNext === chapterVolume.chapter) && !markFullChapter)) {
+				(this.manga.lastMangaDexChapter == -1 && this.manga.lastMyAnimeListChapter + 1 == chapterVolume.chapterFloored) ||
+				(this.manga.lastMangaDexChapter != -1 && chapterVolume.chapter > this.manga.lastMangaDexChapter && maybeNext &&
+					(foundNext === false || foundNext === chapterVolume.chapter))) {
 				element.style.backgroundColor = this.options.nextChapterColor;
-				foundNext = parseFloat(chapterVolume.chapter);
+				foundNext = chapterVolume.chapter;
 			} else if (this.manga.lastMyAnimeListChapter == chapterVolume.chapterFloored &&
 				(this.manga.lastMangaDexChapter == -1 || chapterVolume.chapter == this.manga.lastMangaDexChapter)) {
 				element.style.backgroundColor = this.options.lastReadColor;
-			} else if (this.manga.lastMangaDexChapter == chapterVolume.chapter ||
-				(markFullChapter && this.manga.lastMangaDexChapter == chapterVolume.chapterFloored)) {
+			} else if (this.manga.lastMangaDexChapter == chapterVolume.chapter) {
 				element.style.backgroundColor = this.options.lastOpenColors[0];
 				// If save all opened is on we highlight them
 			} else if (this.options.saveAllOpened) {
@@ -1082,7 +1070,7 @@ class MyMangaDex {
 		if (manga === undefined) {
 			manga = this.manga;
 		}
-		if (manga.chapters.indexOf(chapter) === -1) {
+		if (manga.chapters.indexOf(chapter) === -1 && chapter >= 0) {
 			if (manga.chapters.length == 0) {
 				manga.chapters.push(chapter);
 			} else {
