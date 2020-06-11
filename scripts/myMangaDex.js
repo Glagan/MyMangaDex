@@ -1360,7 +1360,7 @@ class MyMangaDex {
 			if (!titleInformations[group.titleId]) {
 				titleInformations[group.titleId] = await storageGet(group.titleId);
 				if (titleInformations[group.titleId]) {
-					titleInformations[group.titleId].next = Infinity;
+					titleInformations[group.titleId].next = Math.floor(titleInformations[group.titleId].last) + 1;
 					titleInformations[group.titleId].getsUpdated = !checkUpdates;
 				}
 			}
@@ -1432,11 +1432,11 @@ class MyMangaDex {
 					let highestChapter = Math.max.apply(Math, group.chapters.map(e => { return e.value; }));
 					for (let j = 0; j < chapterCount; j++) {
 						let chapter = group.chapters[j];
-						chapter.hidden = ((this.options.hideHigherChapters &&
-							informations.next < chapter.value) ||
+						if (chapter.hidden = ((this.options.hideHigherChapters && informations.next < chapter.value) ||
 							(this.options.hideLowerChapters && informations.last > chapter.value) ||
-							(this.options.hideLastRead && informations.last == chapter.value && informations.next != Infinity));
-						chapter.node.classList.toggle("is-hidden-chapter", chapter.hidden);
+							(this.options.hideLastRead && informations.last == chapter.value && informations.next != Infinity))) {
+							chapter.node.classList.add("is-hidden-chapter");
+						}
 					}
 					if (group.chapters[0].hidden) {
 						// Display the title on the first not hidden chapter
