@@ -257,14 +257,12 @@ class MyMangaDex {
 			if (this.manga.status == 6) {
 				this.notification(NOTIFY.SUCCESS, "Plan to Read", `**${this.manga.name}** has been put in your endless Plan to read list !`, this.getCurrentThumbnail());
 			} else {
-				if ("started" in this.manga) {
+				if ("start_today" in this.manga) {
+					delete this.manga.start_today;
+					this.notification(NOTIFY.SUCCESS, "Started manga", `You started reading **${this.manga.name}** and it's start date was set to today.`, this.getCurrentThumbnail());
+				} else if ("started" in this.manga) {
 					delete this.manga.started;
-					if ("start_today" in this.manga) {
-						delete this.manga.start_today;
-						this.notification(NOTIFY.SUCCESS, "Started manga", `You started reading **${this.manga.name}** and it's start date was set to today.`, this.getCurrentThumbnail());
-					} else {
-						this.notification(NOTIFY.SUCCESS, "Manga updated", `You started reading **${this.manga.name}** at chapter ${this.manga.lastMyAnimeListChapter}`, this.getCurrentThumbnail());
-					}
+					this.notification(NOTIFY.SUCCESS, "Manga updated", `You started reading **${this.manga.name}** at chapter ${this.manga.lastMyAnimeListChapter}`, this.getCurrentThumbnail());
 				} else if (this.manga.lastMyAnimeListChapter >= 0 &&
 					(this.manga.status != 2 || (this.manga.status == 2 && this.manga.is_rereading) || oldStatus == 2)) {
 					this.notification(NOTIFY.SUCCESS, "Manga updated", `**${this.manga.name}** has been updated to chapter ${this.manga.currentChapter.chapter}${(this.manga.total_chapter > 0) ? ` out of ${this.manga.total_chapter}` : ''}`, this.getCurrentThumbnail());

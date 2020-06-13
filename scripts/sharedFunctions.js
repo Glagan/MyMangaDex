@@ -411,11 +411,13 @@ function processMyAnimeListResponse(manga, text) {
 function buildMyAnimeListBody(usePepper, manga, csrf, status = 1) {
 	let requestURL = `https://myanimelist.net/ownlist/manga/${manga.myAnimeListId}/edit?hideLayout`;
 	if (usePepper) {
+		// READING: 1, COMPLETED: 2, ON_HOLD: 3, PLAN_TO_READ: 6, DROPPED: 4, RE_READING: 1+is_rereading
+		const wasPlanToRead = manga.status == 6;
 		// Status is always set to reading, or we complet it if it's the last chapter, and so we fill the finish_date
 		manga.status = (manga.status == 2 || (manga.total_chapter > 0 && manga.currentChapter.chapter >= manga.total_chapter)) ? 2 : status;
 
 		// Set the start only if it's not already set and if we don't add it to PTR and if it was in ptr or not in the list
-		if (!manga.in_list && manga.status != 6 && manga.start_date.year == "") {
+		if ((!manga.in_list || wasPlanToRead) && manga.status != 6 && manga.start_date.year == "") {
 			let MyDate = new Date();
 			manga.start_date = {
 				year: MyDate.getFullYear(),
