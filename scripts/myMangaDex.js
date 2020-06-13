@@ -281,9 +281,8 @@ class MyMangaDex {
 		}
 
 		if (this.options.updateMDList &&
-			((
-				(doMyAnimeList && this.manga.status != oldStatus) ||
-				(!doMyAnimeList && this.mangaDexStatus == false)) ||
+			(((doMyAnimeList && this.manga.status != oldStatus) ||
+				(!doMyAnimeList && (typeof this.mangaDexStatus === 'string' && this.mangaDexStatus != 'Reading') || this.mangaDexStatus == false)) ||
 				this.manga.completed !== undefined ||
 				(this.options.updateOnlyInList && (
 					!this.mangaDexStatus ||
@@ -341,7 +340,7 @@ class MyMangaDex {
 					}
 				}
 			});
-			this.notification(NOTIFY.SUCCESS, undefined, "Status on MangaDex updated");
+			this.notification(NOTIFY.SUCCESS, undefined, "Status on **MangaDex** updated");
 		} catch (error) {
 			this.mangaDexLoggedIn = false;
 			this.notification(NOTIFY.ERROR, undefined, "Error updating MDList");
