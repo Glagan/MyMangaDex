@@ -1675,8 +1675,8 @@ class MyMangaDex {
 			informationsRow.appendChild(this.informationsNode);
 		}
 
-		let appendErrorMessage = (message) => {
-			let messageNode = document.createElement("span");
+		const appendErrorMessage = (message) => {
+			const messageNode = document.createElement("span");
 			messageNode.textContent = message;
 			informationsRow.classList.add("mmd-background-info");
 			this.informationsNode.appendChild(messageNode);
@@ -1874,11 +1874,20 @@ class MyMangaDex {
 		// only injected scripts can access global variables, but we also need chrome (only in content scripts)
 		// -> custom events to communicate
 		function relayChapterEvent() {
-			window.reader.model.on("chapterchange", (data) => {
+			let addEvent = () => window.reader.model.on("chapterchange", (data) => {
 				// note: this function needs to have an actual body to avoid a return
 				// EventEmitter.js removes an event if return matches (default: true)
 				document.dispatchEvent(new CustomEvent("mmdChapterChange", { detail: data._data }));
 			});
+			// If the MangaDex reader still hasn't been loaded, check every 50ms
+			if (window.reader === undefined) {
+				let c = setInterval(() => {
+					if (window.reader !== undefined) {
+						clearInterval(c);
+						addEvent();
+					}
+				}, 50);
+			} else addEvent();
 		}
 		injectScript(relayChapterEvent);
 
