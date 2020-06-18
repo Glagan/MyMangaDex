@@ -48,6 +48,11 @@ class OptionsManager {
 		this.loggedMyAnimeList = true;
 		this.HTMLParser = new DOMParser();
 
+		// Update displayed version
+		let version = document.getElementById('version');
+		if (version) {
+			version.textContent = browser.runtime.getManifest().version;
+		}
 		// Start
 		this.setEvents();
 		this.start();
@@ -117,14 +122,17 @@ class OptionsManager {
 				let data = await storageGet(null);
 				delete data.options.token;
 				delete data.options.username;
-				let downloadLink = document.createElement("a");
+				const downloadLink = document.createElement("a");
+				const blob = new Blob([JSON.stringify(data)], { type: 'application/json;charset=utf-8' });
+				const href = URL.createObjectURL(blob);
 				downloadLink.style.display = "none";
 				document.body.appendChild(downloadLink);
 				downloadLink.download = "mymangadex_export.json";
 				downloadLink.target = "_blank";
-				downloadLink.href = `data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(data))}`;
+				downloadLink.href = href;
 				downloadLink.click();
 				downloadLink.remove();
+				URL.revokeObjectURL(href);
 				delete this.downloadSaveButton.dataset.busy;
 			}
 		});
@@ -1264,6 +1272,10 @@ class OptionsManager {
 		const invalidKeys = ['options', 'history', 'lastHistory', 'initializedHistory', 'lastHistoryPage'];
 		for (const key in _local) {
 			if (invalidKeys.indexOf(key) >= 0 || isNaN(+key)) continue;
+			// Remove invalid chapters
+			if (_local.chapters && Array.isArray(_local.chapters)) {
+				_local.chapters = _local.chapters.filter(value => !isNaN(+value));
+			}
 			body.titles[key] = _local[key];
 		}
 		// History
