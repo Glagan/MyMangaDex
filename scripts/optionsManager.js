@@ -1261,9 +1261,9 @@ class OptionsManager {
 
 		// Build titles list
 		let _local = await storageGet(null);
-		const invalidKeys = ['options', 'history', 'lastHistory', 'initializedHistory'];
+		const invalidKeys = ['options', 'history', 'lastHistory', 'initializedHistory', 'lastHistoryPage'];
 		for (const key in _local) {
-			if (invalidKeys.indexOf(key) >= 0) continue;
+			if (invalidKeys.indexOf(key) >= 0 || isNaN(+key)) continue;
 			body.titles[key] = _local[key];
 		}
 		// History
