@@ -34,7 +34,7 @@ if (args[0] == 'stop') {
 		try {
 			rimraf.sync('.devTmp');
 			break;
-		} catch (e) { }
+		} catch (e) {}
 	}
 	process.exit();
 }
@@ -47,85 +47,66 @@ let manifest = {
 
 	description: process.env.npm_package_description,
 
-	permissions: [
-		'https://*.myanimelist.net/*',
-		'https://*.mangadex.org/*',
-		'*://*.nikurasu.org/api/*',
-		'storage'
-	],
+	permissions: ['https://*.myanimelist.net/*', 'https://*.mangadex.org/*', '*://*.nikurasu.org/api/*', 'storage'],
 
 	icons: {
 		48: 'icons/48.png',
 		96: 'icons/96.png',
-		128: 'icons/128.png'
+		128: 'icons/128.png',
 	},
 
 	browser_action: {
 		default_icon: {
 			48: 'icons/48.png',
 			96: 'icons/96.png',
-			128: 'icons/128.png'
+			128: 'icons/128.png',
 		},
 		default_title: 'MyMangaDex',
 		//default_popup: 'options.html'
 	},
 
 	background: {
-		scripts: ['scripts/background.js']
+		scripts: ['scripts/background.js'],
 	},
 
 	options_ui: {
 		page: 'options.html',
-		open_in_tab: true
+		open_in_tab: true,
 	},
 
-	content_scripts: [{
-		matches: [
-			'https://*.mangadex.org/follows',
-			'https://*.mangadex.org/follows/',
-			'https://*.mangadex.org/follows/manga/0/0/*',
-			'https://*.mangadex.org/follows/chapters/*',
-			'https://*.mangadex.org/manga*',
-			'https://*.mangadex.org/titles*',
-			'https://*.mangadex.org/title*',
-			'https://*.mangadex.org/chapter/*',
-			'https://*.mangadex.org/search*',
-			'https://*.mangadex.org/?page=search*',
-			'https://*.mangadex.org/?page=titles*',
-			'https://*.mangadex.org/featured',
-			'https://*.mangadex.org/group*',
-			'https://*.mangadex.org/genre*',
-			'https://*.mangadex.org/user*',
-			'https://*.mangadex.org/list*',
-			'https://*.mangadex.org/history'
-		],
-		js: [
-			'scripts/MyMangaDex.js'
-		],
-		css: [
-			'third_party/simpleNotification.min.css',
-			'css/mymangadex.css'
-		]
-	}]
+	content_scripts: [
+		{
+			matches: [
+				'https://*.mangadex.org/follows',
+				'https://*.mangadex.org/follows/',
+				'https://*.mangadex.org/follows/manga/0/0/*',
+				'https://*.mangadex.org/follows/chapters/*',
+				'https://*.mangadex.org/manga*',
+				'https://*.mangadex.org/titles*',
+				'https://*.mangadex.org/title*',
+				'https://*.mangadex.org/chapter/*',
+				'https://*.mangadex.org/search*',
+				'https://*.mangadex.org/?page=search*',
+				'https://*.mangadex.org/?page=titles*',
+				'https://*.mangadex.org/featured',
+				'https://*.mangadex.org/group*',
+				'https://*.mangadex.org/genre*',
+				'https://*.mangadex.org/user*',
+				'https://*.mangadex.org/list*',
+				'https://*.mangadex.org/history',
+			],
+			js: ['scripts/MyMangaDex.js'],
+			css: ['third_party/simpleNotification.min.css', 'css/mymangadex.css'],
+		},
+	],
 };
 
 // Files to copy
 let files = {
-	'.': [
-		'options.html'
-	],
-	'third_party': [
-		'simpleNotification.min.css'
-	],
-	'icons': [
-		'128.png',
-		'96.png',
-		'48.png'
-	],
-	'css': [
-		'mymangadex.css',
-		'options.css'
-	]
+	'.': ['options.html'],
+	third_party: ['simpleNotification.min.css'],
+	icons: ['128.png', '96.png', '48.png'],
+	css: ['mymangadex.css', 'options.css'],
 };
 
 // Scripts to make
@@ -140,11 +121,9 @@ let scripts = {
 		'third_party/simpleNotification.min.js',
 		'scripts/defaultOptions.js',
 		'scripts/sharedFunctions.js',
-		'scripts/optionsManager.js'
+		'scripts/optionsManager.js',
 	],
-	'background.js': [
-		'scripts/background.js'
-	]
+	'background.js': ['scripts/background.js'],
 };
 
 // What browser to bundle for
@@ -181,8 +160,8 @@ if (browser == 'firefox') {
 	manifest.applications = {
 		gecko: {
 			id: 'mymangadex@glagan',
-			strict_min_version: '61.0'
-		}
+			strict_min_version: '61.0',
+		},
 	};
 } else if (browser == 'chrome') {
 	// Add chrome async
@@ -208,7 +187,7 @@ function deepFileCopy(files, destFolder, baseFolder = '') {
 				fs.mkdirSync(currentDest);
 			}
 
-			files[file].forEach(element => {
+			files[file].forEach((element) => {
 				console.log(`Copying '${currentBase}${element}' into '${currentDest}${element}'`);
 				fs.copyFileSync(`${currentBase}${element}`, `${currentDest}${element}`);
 			});
@@ -236,7 +215,7 @@ function build() {
 
 	// Make scripts
 	console.log('Making minified scripts');
-	Object.keys(scripts).forEach(name => buildScript(name));
+	Object.keys(scripts).forEach((name) => buildScript(name));
 
 	// Copy files
 	console.log('Copying files');
@@ -266,7 +245,7 @@ function build() {
 function buildScript(name) {
 	console.log('Making', name);
 	let scriptConcatContent = [];
-	scripts[name].forEach(filename => {
+	scripts[name].forEach((filename) => {
 		scriptConcatContent.push(fs.readFileSync(filename, 'utf-8'));
 	});
 	let minified = 0;
@@ -274,7 +253,7 @@ function buildScript(name) {
 		minified = { code: scriptConcatContent.join(`\n`) };
 	} else {
 		minified = Terser.minify(scriptConcatContent, {
-			ie8: false
+			ie8: false,
 		});
 	}
 	if (debug) {
@@ -294,13 +273,13 @@ if (['firefox', 'chrome'].includes(browser)) {
 		build();
 		const watch = require('node-watch');
 
-		let killweb = () => { };
+		let killweb = () => {};
 		const webargs = () => {
 			let target = browser;
 			if (browser == 'chrome') {
 				target = 'chromium';
 			} else if (browser == 'firefox') {
-				target = (args.indexOf('-mobile') >= 0 ? 'firefox-android' : 'firefox-desktop');
+				target = args.indexOf('-mobile') >= 0 ? 'firefox-android' : 'firefox-desktop';
 			}
 			let webargs = ['run', '--target', target, '--browser-console'];
 			let pos;
@@ -324,7 +303,6 @@ if (['firefox', 'chrome'].includes(browser)) {
 				console.error(`${data}\n`);
 			});
 			web.on('exit', () => process.exit());
-
 		} else {
 			if (!fs.existsSync('.devTmp')) {
 				fs.mkdirSync('.devTmp');
@@ -336,11 +314,11 @@ if (['firefox', 'chrome'].includes(browser)) {
 				const web = spawn('web-ext', webargs(), {
 					cwd: makeFolder,
 					detached: true,
-					stdio: ['ignore', out, err]
+					stdio: ['ignore', out, err],
 				});
 				web.unref();
 				return `${web.pid}`;
-			}
+			};
 
 			// create web process if needed
 			if (!fs.existsSync('.devTmp/pid.txt')) {
@@ -359,19 +337,18 @@ if (['firefox', 'chrome'].includes(browser)) {
 				pidfile.end();
 			}
 
-			const connect = watch([".devTmp/out.log", ".devTmp/err.log"], (evt, name) => {
+			const connect = watch(['.devTmp/out.log', '.devTmp/err.log'], (evt, name) => {
 				const content = fs.readFileSync(name);
-				if (!content || content == "") return;
+				if (!content || content == '') return;
 				console.log(`${content}\n`);
 				fs.writeFileSync(name, ''); // clear file
 			});
 			process.on('SIGINT', () => {
 				connect.close();
 			});
-
 		}
 
-		const watcher = watch(["options.html", "scripts/", "css/"], { recursive: true }, (evt, name) => {
+		const watcher = watch(['options.html', 'scripts/', 'css/'], { recursive: true }, (evt, name) => {
 			if (evt == 'remove') {
 				console.error('Removing files not supported, adjust build file and rerun');
 				watcher.close();
@@ -381,7 +358,7 @@ if (['firefox', 'chrome'].includes(browser)) {
 
 			// rebuild necessary scripts or copy file
 			if (/^scripts\//.exec(name)) {
-				Object.keys(scripts).forEach(script => {
+				Object.keys(scripts).forEach((script) => {
 					if (scripts[script].includes(name)) {
 						buildScript(script);
 					}

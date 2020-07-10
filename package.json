@@ -1,6 +1,6 @@
 {
 	"name": "mymangadex",
-	"version": "2.4.5",
+	"version": "2.4.6",
 	"description": "Automatically update your MyAnimeList manga list when reading on MangaDex.",
 	"main": "build.js",
 	"dependencies": {
@@ -12,6 +12,7 @@
 		"node-watch": "^0.6.4"
 	},
 	"scripts": {
+		"build": "node build firefox && node build chrome",
 		"firefox": "node build firefox",
 		"chrome": "node build chrome",
 		"firefox:dev": "node build firefox -dev",

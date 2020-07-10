@@ -1,48 +1,48 @@
-const LOG = { INFO: "info", DANGER: "danger", WARNING: "warning", SUCCESS: "success" };
+const LOG = { INFO: 'info', DANGER: 'danger', WARNING: 'warning', SUCCESS: 'success' };
 class OptionsManager {
 	constructor() {
 		// Nodes
-		this.addColorButton = document.getElementById("addColor");
-		this.saveButton = document.getElementById("save");
-		this.lastOpenColorsList = document.getElementById("lastOpenColors");
-		this.defaultLastOpenColors = document.getElementById("defaultLastOpenColors");
-		this.downloadSaveButton = document.getElementById("download-save");
-		this.refreshSaveButton = document.getElementById("refresh-save");
-		this.copySave = document.getElementById("copy-save");
-		this.saveContent = document.getElementById("save-content");
-		this.importMMDForm = document.getElementById("save-import");
-		this.importMALForm = document.getElementById("mal-import");
-		this.importMALbutton = this.importMALForm.querySelector("button");
-		this.exportMALForm = document.getElementById("mal-export");
-		this.exportMALbutton = this.exportMALForm.querySelector("button");
-		this.deleteSaveButton = document.getElementById("delete-save");
+		this.addColorButton = document.getElementById('addColor');
+		this.saveButton = document.getElementById('save');
+		this.lastOpenColorsList = document.getElementById('lastOpenColors');
+		this.defaultLastOpenColors = document.getElementById('defaultLastOpenColors');
+		this.downloadSaveButton = document.getElementById('download-save');
+		this.refreshSaveButton = document.getElementById('refresh-save');
+		this.copySave = document.getElementById('copy-save');
+		this.saveContent = document.getElementById('save-content');
+		this.importMMDForm = document.getElementById('save-import');
+		this.importMALForm = document.getElementById('mal-import');
+		this.importMALbutton = this.importMALForm.querySelector('button');
+		this.exportMALForm = document.getElementById('mal-export');
+		this.exportMALbutton = this.exportMALForm.querySelector('button');
+		this.deleteSaveButton = document.getElementById('delete-save');
 		this.lastOpenColorsNodes = {};
-		this.importOutput = document.getElementById("malImportStatus");
-		this.exportOutput = document.getElementById("malExportStatus");
-		this.importInformations = document.getElementById("importInformations");
-		this.saveUploadButton = document.getElementById("saveUploadButton");
-		this.importSubmitButton = document.getElementById("importSubmitButton");
-		this.onlineOptions = document.getElementById("onlineOptions");
-		this.loggedInPanel = document.getElementById("loggedInPanel");
-		this.onlineAdvancedPanel = document.getElementById("onlineAdvancedPanel");
-		this.loggedOutPanel = document.getElementById("loggedOutPanel");
-		this.onlineForm = document.getElementById("onlineForm");
-		this.onlineError = document.getElementById("onlineError");
-		this.onlineSuccess = document.getElementById("onlineSuccess");
-		this.downloadOnlineButton = document.getElementById("downloadOnline");
+		this.importOutput = document.getElementById('malImportStatus');
+		this.exportOutput = document.getElementById('malExportStatus');
+		this.importInformations = document.getElementById('importInformations');
+		this.saveUploadButton = document.getElementById('saveUploadButton');
+		this.importSubmitButton = document.getElementById('importSubmitButton');
+		this.onlineOptions = document.getElementById('onlineOptions');
+		this.loggedInPanel = document.getElementById('loggedInPanel');
+		this.onlineAdvancedPanel = document.getElementById('onlineAdvancedPanel');
+		this.loggedOutPanel = document.getElementById('loggedOutPanel');
+		this.onlineForm = document.getElementById('onlineForm');
+		this.onlineError = document.getElementById('onlineError');
+		this.onlineSuccess = document.getElementById('onlineSuccess');
+		this.downloadOnlineButton = document.getElementById('downloadOnline');
 
 		// Only Chrome users can update the online save
 		if (CHROME) {
-			document.getElementById("onlineURLPanel").style.display = "block";
+			document.getElementById('onlineURLPanel').style.display = 'block';
 		} else {
-			document.getElementById("onlineServiceInfo").style.display = "block";
+			document.getElementById('onlineServiceInfo').style.display = 'block';
 		}
 
 		//
 		this.options = {};
 		this.myAnimeListMangaList = {};
 		this.mangaDexMangaList = [];
-		this.currentLog = "import";
+		this.currentLog = 'import';
 		this.malBusy = false;
 		this.malAbort = false;
 		this.loggedMyAnimeList = true;
@@ -66,69 +66,70 @@ class OptionsManager {
 
 	setEvents() {
 		// Add events to colorBox
-		document.querySelectorAll("[data-color]").forEach(element => {
+		document.querySelectorAll('[data-color]').forEach((element) => {
 			let field = element.dataset.option;
 			// All events that update the value of the input
-			["input", "change", "cut", "paste", "keyup"].forEach(function (eventType) {
-				element.addEventListener(eventType, event => {
+			['input', 'change', 'cut', 'paste', 'keyup'].forEach(function (eventType) {
+				element.addEventListener(eventType, (event) => {
 					document.querySelector(`[data-color='${field}']`).style.backgroundColor = event.target.value;
 				});
 			});
 		});
 
 		// Checkbox events
-		document.querySelectorAll("[data-type='checkbox']").forEach(element => {
-			let buttons = element.getElementsByTagName("button");
-			buttons[0].addEventListener("click", () => {
+		document.querySelectorAll("[data-type='checkbox']").forEach((element) => {
+			let buttons = element.getElementsByTagName('button');
+			buttons[0].addEventListener('click', () => {
 				this.updateCheckbox(element, true);
 			});
-			buttons[1].addEventListener("click", () => {
+			buttons[1].addEventListener('click', () => {
 				this.updateCheckbox(element, false);
 			});
 		});
 
 		// Last open colors list
-		this.addColorButton.addEventListener("click", () => {
+		this.addColorButton.addEventListener('click', () => {
 			this.addColor();
 		});
 
 		// Save event
-		this.saveButton.addEventListener("click", () => {
+		this.saveButton.addEventListener('click', () => {
 			this.saveOptions();
 		});
 
 		// Default buttons
-		document.querySelectorAll("[data-default]").forEach(element => {
-			element.addEventListener("click", () => {
+		document.querySelectorAll('[data-default]').forEach((element) => {
+			element.addEventListener('click', () => {
 				let inputField = document.querySelector(`[data-option='${element.dataset.default}']`);
-				if ("type" in inputField.dataset && inputField.dataset.type == "checkbox") {
+				if ('type' in inputField.dataset && inputField.dataset.type == 'checkbox') {
 					this.updateCheckbox(inputField, defaultOptions[element.dataset.default]);
 				} else {
 					inputField.value = defaultOptions[element.dataset.default];
 					if (inputField.dataset.color !== undefined) {
-						document.querySelector(`[data-color='${element.dataset.default}']`).style.backgroundColor = defaultOptions[element.dataset.default];
+						document.querySelector(`[data-color='${element.dataset.default}']`).style.backgroundColor =
+							defaultOptions[element.dataset.default];
 					}
 				}
 			});
 		});
-		this.defaultLastOpenColors.addEventListener("click", () => {
+		this.defaultLastOpenColors.addEventListener('click', () => {
 			this.restoreDefaultsLastOpenColors();
 		});
 
 		// Export
-		this.downloadSaveButton.addEventListener("click", async event => {
+		this.downloadSaveButton.addEventListener('click', async (event) => {
 			if (this.downloadSaveButton.dataset.busy === undefined) {
 				this.downloadSaveButton.dataset.busy = true;
 				let data = await storageGet(null);
 				delete data.options.token;
 				delete data.options.username;
-				const downloadLink = document.createElement("a");
+				const downloadLink = document.createElement('a');
 				const blob = new Blob([JSON.stringify(data)], { type: 'application/json;charset=utf-8' });
 				const href = URL.createObjectURL(blob);
-				downloadLink.style.display = "none";
+				downloadLink.style.display = 'none';
 				document.body.appendChild(downloadLink);
-				downloadLink.download = "mymangadex_export.json";
-				downloadLink.target = "_blank";
+				downloadLink.download = 'mymangadex_export.json';
+				downloadLink.target = '_blank';
 				downloadLink.href = href;
 				downloadLink.click();
 				downloadLink.remove();
@@ -136,45 +137,45 @@ class OptionsManager {
 				delete this.downloadSaveButton.dataset.busy;
 			}
 		});
-		this.refreshSaveButton.addEventListener("click", async () => {
+		this.refreshSaveButton.addEventListener('click', async () => {
 			// Load save
-			this.copySave.classList.add("d-none");
+			this.copySave.classList.add('d-none');
 			let data = await storageGet(null);
 			delete data.options.token;
 			delete data.options.username;
 			this.saveContent.value = JSON.stringify(data);
-			this.copySave.classList.remove("d-none");
+			this.copySave.classList.remove('d-none');
 		});
-		this.copySave.addEventListener("click", async () => {
-			this.copySave.classList.add("d-none");
+		this.copySave.addEventListener('click', async () => {
+			this.copySave.classList.add('d-none');
 			this.saveContent.select();
-			document.execCommand("copy");
-			this.saveContent.value = "";
+			document.execCommand('copy');
+			this.saveContent.value = '';
 		});
-		this.saveContent.addEventListener("click", event => {
+		this.saveContent.addEventListener('click', (event) => {
 			event.target.select();
 		});
 
 		// Import
-		this.importMMDForm.addEventListener("submit", event => {
+		this.importMMDForm.addEventListener('submit', (event) => {
 			event.preventDefault();
 			this.importMMD();
 		});
-		this.importMALForm.addEventListener("submit", event => {
+		this.importMALForm.addEventListener('submit', (event) => {
 			event.preventDefault();
 			this.importMAL();
 		});
-		this.exportMALForm.addEventListener("submit", event => {
+		this.exportMALForm.addEventListener('submit', (event) => {
 			event.preventDefault();
 			this.exportMAL();
 		});
 
 		// Delete
-		this.deleteSaveButton.addEventListener("click", () => {
+		this.deleteSaveButton.addEventListener('click', () => {
 			if (this.deleteSaveButton.dataset.again === undefined) {
-				this.deleteSaveButton.style.fontSize = "2rem";
+				this.deleteSaveButton.style.fontSize = '2rem';
 				this.deleteSaveButton.dataset.again = true;
-				this.deleteSaveButton.textContent = "Click again to confirm";
+				this.deleteSaveButton.textContent = 'Click again to confirm';
 				return;
 			}
 
@@ -182,22 +183,22 @@ class OptionsManager {
 		});
 
 		// Online
-		this.onlineError.addEventListener("click", () => {
-			this.onlineError.style.display = "none";
+		this.onlineError.addEventListener('click', () => {
+			this.onlineError.style.display = 'none';
 		});
-		this.onlineSuccess.addEventListener("click", () => {
-			this.onlineSuccess.style.display = "none";
+		this.onlineSuccess.addEventListener('click', () => {
+			this.onlineSuccess.style.display = 'none';
 		});
 		// Buttons that can be clicked only once
-		document.querySelectorAll("[data-button-protect]").forEach(async button => {
-			button.addEventListener("click", this.protectButton.bind(this, button));
+		document.querySelectorAll('[data-button-protect]').forEach(async (button) => {
+			button.addEventListener('click', this.protectButton.bind(this, button));
 		});
 		// Hide panels if online save is disabled
 		let onlineSaveCheckbox = document.querySelector("[data-option='onlineSave']");
-		onlineSaveCheckbox.firstElementChild.firstElementChild.addEventListener("click", () => {
+		onlineSaveCheckbox.firstElementChild.firstElementChild.addEventListener('click', () => {
 			this.toggleOnlinePanels(true);
 		});
-		onlineSaveCheckbox.lastElementChild.lastElementChild.addEventListener("click", () => {
+		onlineSaveCheckbox.lastElementChild.lastElementChild.addEventListener('click', () => {
 			this.toggleOnlinePanels(false);
 		});
 	}
@@ -213,7 +214,7 @@ class OptionsManager {
 	// FUNCTIONS
 
 	async sleep(time) {
-		return await new Promise(resolve => {
+		return await new Promise((resolve) => {
 			setTimeout(() => {
 				resolve();
 			}, time);
@@ -226,18 +227,19 @@ class OptionsManager {
 		this.deleteLastOpenColors();
 
 		// Restore lastOpenColors colors
-		colors.forEach(color => {
+		colors.forEach((color) => {
 			this.addColor(color);
 		});
 
 		// Add "normal" options
-		document.querySelectorAll("[data-option]").forEach(element => {
-			if (element.dataset.type !== undefined && element.dataset.type == "checkbox") {
+		document.querySelectorAll('[data-option]').forEach((element) => {
+			if (element.dataset.type !== undefined && element.dataset.type == 'checkbox') {
 				this.updateCheckbox(element, this.options[element.dataset.option]);
 			} else {
 				element.value = this.options[element.dataset.option];
 				if (element.dataset.color !== undefined) {
-					document.querySelector(`[data-color='${element.dataset.option}']`).style.backgroundColor = element.value;
+					document.querySelector(`[data-color='${element.dataset.option}']`).style.backgroundColor =
+						element.value;
 				}
 			}
 		});
@@ -250,52 +252,52 @@ class OptionsManager {
 		this.toggleOnlinePanels(this.options.onlineSave);
 	}
 
-	addColor(name = "") {
+	addColor(name = '') {
 		let index = uniqueGUID();
 		while (this.lastOpenColorsNodes[index] !== undefined) {
 			index = uniqueGUID();
 		}
 
 		// Container
-		let container = document.createElement("div");
-		container.className = "col px-0 pb-2 my-auto input-group";
+		let container = document.createElement('div');
+		container.className = 'col px-0 pb-2 my-auto input-group';
 
 		// Remove button
-		let remove = document.createElement("div");
-		remove.className = "input-group-prepend";
-		let removeIcon = document.createElement("i");
-		removeIcon.className = "fas fa-trash";
-		let removeText = document.createElement("a");
-		removeText.className = "btn btn-danger input-prepend";
+		let remove = document.createElement('div');
+		remove.className = 'input-group-prepend';
+		let removeIcon = document.createElement('i');
+		removeIcon.className = 'fas fa-trash';
+		let removeText = document.createElement('a');
+		removeText.className = 'btn btn-danger input-prepend';
 		removeText.appendChild(removeIcon);
-		removeText.appendChild(document.createTextNode(" Remove"));
-		removeText.addEventListener("click", () => {
+		removeText.appendChild(document.createTextNode(' Remove'));
+		removeText.addEventListener('click', () => {
 			this.removeColor(index);
 		});
 		remove.appendChild(removeText);
 		container.appendChild(remove);
 
 		// Color box
-		let colorBoxContainer = document.createElement("div");
-		colorBoxContainer.className = "input-group-append";
-		let colorBox = document.createElement("span");
-		colorBox.className = "input-group-text";
+		let colorBoxContainer = document.createElement('div');
+		colorBoxContainer.className = 'input-group-append';
+		let colorBox = document.createElement('span');
+		colorBox.className = 'input-group-text';
 		colorBox.style.backgroundColor = name;
 		colorBoxContainer.appendChild(colorBox);
 
 		// Input
-		let colorInput = document.createElement("input");
-		["input", "change", "cut", "paste", "keyup"].forEach(function (eventType) {
-			colorInput.addEventListener(eventType, event => {
+		let colorInput = document.createElement('input');
+		['input', 'change', 'cut', 'paste', 'keyup'].forEach(function (eventType) {
+			colorInput.addEventListener(eventType, (event) => {
 				colorBox.style.backgroundColor = event.target.value;
 			});
 		});
-		colorInput.type = "text";
-		colorInput.className = "form-control";
+		colorInput.type = 'text';
+		colorInput.className = 'form-control';
 		colorInput.value = name;
 		this.lastOpenColorsNodes[index] = {
 			parent: container,
-			input: colorInput
+			input: colorInput,
 		};
 		container.appendChild(colorInput);
 		container.appendChild(colorBoxContainer);
@@ -313,7 +315,7 @@ class OptionsManager {
 
 	deleteLastOpenColors() {
 		while (this.lastOpenColorsList.firstChild) {
-			if (this.lastOpenColorsList.firstChild.id == "addColorRow") {
+			if (this.lastOpenColorsList.firstChild.id == 'addColorRow') {
 				break;
 			}
 			this.lastOpenColorsList.removeChild(this.lastOpenColorsList.firstChild);
@@ -323,7 +325,7 @@ class OptionsManager {
 
 	restoreDefaultsLastOpenColors() {
 		this.deleteLastOpenColors();
-		defaultOptions.lastOpenColors.forEach(color => {
+		defaultOptions.lastOpenColors.forEach((color) => {
 			this.addColor(color);
 		});
 	}
@@ -333,22 +335,22 @@ class OptionsManager {
 		let enabledButton = node.firstElementChild.firstElementChild;
 		let disabledButton = node.lastElementChild.lastElementChild;
 		if (value) {
-			enabledButton.classList.add("btn-success");
-			enabledButton.classList.remove("btn-secondary");
-			disabledButton.classList.add("btn-secondary");
-			disabledButton.classList.remove("btn-danger");
+			enabledButton.classList.add('btn-success');
+			enabledButton.classList.remove('btn-secondary');
+			disabledButton.classList.add('btn-secondary');
+			disabledButton.classList.remove('btn-danger');
 		} else {
-			enabledButton.classList.add("btn-secondary");
-			enabledButton.classList.remove("btn-success");
-			disabledButton.classList.add("btn-danger");
-			disabledButton.classList.remove("btn-secondary");
+			enabledButton.classList.add('btn-secondary');
+			enabledButton.classList.remove('btn-success');
+			disabledButton.classList.add('btn-danger');
+			disabledButton.classList.remove('btn-secondary');
 		}
 	}
 
 	flashBackground(value) {
-		document.body.classList.add(value ? "bg-success" : "bg-fail");
+		document.body.classList.add(value ? 'bg-success' : 'bg-fail');
 		setTimeout(() => {
-			document.body.classList.remove(value ? "bg-success" : "bg-fail");
+			document.body.classList.remove(value ? 'bg-success' : 'bg-fail');
 		}, 500);
 	}
 
@@ -357,20 +359,20 @@ class OptionsManager {
 		try {
 			// Update last open colors
 			this.options.lastOpenColors = [];
-			Object.keys(this.lastOpenColorsNodes).forEach(colorIndex => {
+			Object.keys(this.lastOpenColorsNodes).forEach((colorIndex) => {
 				this.options.lastOpenColors.push(this.lastOpenColorsNodes[colorIndex].input.value);
 			});
 			// Update other fields
-			document.querySelectorAll("[data-option]").forEach(element => {
-				if ("type" in element.dataset && element.dataset.type == "checkbox") {
-					this.options[element.dataset.option] = (element.dataset.value == "true");
+			document.querySelectorAll('[data-option]').forEach((element) => {
+				if ('type' in element.dataset && element.dataset.type == 'checkbox') {
+					this.options[element.dataset.option] = element.dataset.value == 'true';
 				} else {
-					if (element.dataset.type == "number") {
+					if (element.dataset.type == 'number') {
 						let value = Math.floor(element.value);
-						if (element.min != "" && Math.floor(element.min) > value) {
+						if (element.min != '' && Math.floor(element.min) > value) {
 							value = Math.floor(element.min);
 							element.value = value;
-						} else if (element.max != "" && Math.floor(element.max) < value) {
+						} else if (element.max != '' && Math.floor(element.max) < value) {
 							value = Math.floor(element.max);
 							element.value = value;
 						}
@@ -381,10 +383,9 @@ class OptionsManager {
 				}
 			});
 			// Save
-			await storageSet("options", this.options);
+			await storageSet('options', this.options);
 			// Online
-			if (this.options.onlineSave &&
-				this.options.isLoggedIn) {
+			if (this.options.onlineSave && this.options.isLoggedIn) {
 				this.saveOnlineOptions();
 			}
 			this.flashBackground(true);
@@ -396,17 +397,17 @@ class OptionsManager {
 
 	async deleteSave() {
 		// Done
-		this.deleteSaveButton.style.fontSize = "1rem";
+		this.deleteSaveButton.style.fontSize = '1rem';
 		delete this.deleteSaveButton.dataset.again;
-		this.deleteSaveButton.textContent = "Delete";
+		this.deleteSaveButton.textContent = 'Delete';
 
 		// Clear
 		await browser.storage.local.clear();
 
 		// Set the default options
 		try {
-			await storageSet("options", defaultOptions);
-			await storageSet("history", []);
+			await storageSet('options', defaultOptions);
+			await storageSet('history', []);
 			this.options = JSON.parse(JSON.stringify(defaultOptions)); // Deep copy default
 			this.flashBackground(true);
 			this.restoreOptions();
@@ -417,13 +418,13 @@ class OptionsManager {
 	}
 
 	async setDomain() {
-		this.domain = "https://mangadex.org/";
+		this.domain = 'https://mangadex.org/';
 	}
 
 	// END FUNCTIONS / START IMPORT EXPORT
 
 	logAndScroll(logLevel, text) {
-		let row = document.createElement("li");
+		let row = document.createElement('li');
 		row.className = `list-group-item list-group-item-${logLevel}`;
 		row.textContent = text;
 		this.logOutput.appendChild(row);
@@ -456,7 +457,7 @@ class OptionsManager {
 	async finishImportMMD(importedData) {
 		this.importSubmitButton.disabled = true;
 		if (isEmpty(importedData) || importedData.options === undefined) {
-			this.importInformations.textContent = "Invalid save.";
+			this.importInformations.textContent = 'Invalid save.';
 			this.importSubmitButton.disabled = false;
 			this.flashBackground(false);
 			return;
@@ -473,29 +474,29 @@ class OptionsManager {
 		await this.restoreOptions();
 		this.flashBackground(true);
 		this.importSubmitButton.disabled = false;
-		this.importMMDForm.save.value = "";
+		this.importMMDForm.save.value = '';
 	}
 
 	abortImport() {
-		this.importMALbutton.textContent = "Import";
+		this.importMALbutton.textContent = 'Import';
 		this.malBusy = false;
 		this.malAbort = false;
-		this.logAndScroll(LOG.INFO, "You aborted the task.");
+		this.logAndScroll(LOG.INFO, 'You aborted the task.');
 	}
 
 	async importMAL() {
 		if (this.malBusy) {
 			this.malAbort = true;
-			this.importMALbutton.textContent = "Aborting...";
+			this.importMALbutton.textContent = 'Aborting...';
 			return;
 		}
 
-		this.importMALbutton.textContent = "In progress, click to abort.";
+		this.importMALbutton.textContent = 'In progress, click to abort.';
 		let username = this.importMALForm.username.value;
 		this.importMALForm.disabled = true;
 		await this.setDomain();
 
-		if (username != "") {
+		if (username != '') {
 			// Arrays with the data
 			this.myAnimeListMangaList = {};
 			this.mangaDexMangaList = [];
@@ -503,36 +504,36 @@ class OptionsManager {
 			// Show the status box
 			this.malBusy = true;
 			this.logOutput = this.importOutput;
-			this.logOutput.style.display = "block";
+			this.logOutput.style.display = 'block';
 			clearDomNode(this.logOutput);
 			this.logAndScroll(LOG.INFO, "Starting... don't close the options page.");
 
 			// Start a dummy request to MyAnimeList to see if we can fetch the data
 			await this.listMyAnimeList(username, 0, true);
 			if (this.malAbort) {
-				return (this.abortImport());
+				return this.abortImport();
 			}
 			if (Object.keys(this.myAnimeListMangaList).length == 0) {
 				this.flashBackground(false);
-				this.logAndScroll(LOG.INFO, "Empty MyAnimeList manga list, try another username maybe ?");
+				this.logAndScroll(LOG.INFO, 'Empty MyAnimeList manga list, try another username maybe ?');
 			} else {
 				// Start fetching the data
 				await this.listMangaDex();
 				if (this.malAbort) {
-					return (this.abortImport());
+					return this.abortImport();
 				}
 				if (this.mangaDexMangaList.length > 0) {
 					await this.listMyAnimeList(username, Object.keys(this.myAnimeListMangaList).length);
 					if (this.malAbort) {
-						return (this.abortImport());
+						return this.abortImport();
 					}
 					await this.updateLocalFromMDMAL();
 					if (this.malAbort) {
-						return (this.abortImport());
+						return this.abortImport();
 					}
 					this.flashBackground(true);
 				} else {
-					this.logAndScroll(LOG.INFO, "No followed manga on MangaDex.");
+					this.logAndScroll(LOG.INFO, 'No followed manga on MangaDex.');
 					this.flashBackground(false);
 				}
 			}
@@ -541,14 +542,14 @@ class OptionsManager {
 			this.malBusy = false;
 		} else {
 			this.flashBackground(false);
-			console.error("Empty MyAnimeList username");
+			console.error('Empty MyAnimeList username');
 		}
 	}
 
 	async listMyAnimeList(username, offset = 0, dummy = false) {
 		// Abort if data already retrieved and only 1 page
 		if (offset > 0 && offset < 300) {
-			this.logAndScroll(LOG.SUCCESS, "Done fetching MyAnimeList manga.");
+			this.logAndScroll(LOG.SUCCESS, 'Done fetching MyAnimeList manga.');
 			return;
 		}
 		this.logAndScroll(LOG.INFO, `Fetching MyAnimeList manga from ${offset} to ${offset + 300}`);
@@ -556,16 +557,16 @@ class OptionsManager {
 		for (let i = 0; i < 3; ++i) {
 			try {
 				let response = await browser.runtime.sendMessage({
-					action: "fetch",
+					action: 'fetch',
 					url: `https://myanimelist.net/mangalist/${username}/load.json?offset=${offset}&status=7`,
 					options: {
-						method: "GET",
-						redirect: "follow",
-						credentials: "include"
+						method: 'GET',
+						redirect: 'follow',
+						credentials: 'include',
 					},
-					isJson: true
+					isJson: true,
 				});
-				if (response.body.hasOwnProperty("errors")) {
+				if (response.body.hasOwnProperty('errors')) {
 					this.logAndScroll(LOG.DANGER, response.body.errors[0].message);
 				} else {
 					// Insert each manga fetched in the list
@@ -578,11 +579,11 @@ class OptionsManager {
 						if (response.body.length == 300) {
 							await this.sleep(1000); // Wait 1000ms between requests
 							if (this.malAbort) {
-								return (false);
+								return false;
 							}
 							await this.listMyAnimeList(username, offset + 300);
 						} else {
-							this.logAndScroll(LOG.SUCCESS, "Done fetching MyAnimeList manga.");
+							this.logAndScroll(LOG.SUCCESS, 'Done fetching MyAnimeList manga.');
 						}
 					}
 				}
@@ -593,37 +594,40 @@ class OptionsManager {
 					console.error(error);
 					await this.sleep(1000);
 					if (this.malAbort) {
-						return (false);
+						return false;
 					}
 				} else {
-					return (false);
+					return false;
 				}
 			}
 		}
-		return (true);
+		return true;
 	}
 
 	async listMangaDex(page = 1, max_page = 1, type = 0) {
-		this.logAndScroll(LOG.INFO, `Fetching MangaDex follow page manga ${page}${max_page > 1 ? ` of ${max_page}` : ""}`);
+		this.logAndScroll(
+			LOG.INFO,
+			`Fetching MangaDex follow page manga ${page}${max_page > 1 ? ` of ${max_page}` : ''}`
+		);
 		try {
 			let response = await browser.runtime.sendMessage({
-				action: "fetch",
+				action: 'fetch',
 				url: `${this.domain}follows/manga/${type}/0/${page}/`,
 				options: {
-					method: "GET",
-					redirect: "follow",
-					credentials: "include"
-				}
+					method: 'GET',
+					redirect: 'follow',
+					credentials: 'include',
+				},
 			});
-			let domContent = this.HTMLParser.parseFromString(response.body, "text/html");
-			let links = domContent.querySelectorAll("a.manga_title");
+			let domContent = this.HTMLParser.parseFromString(response.body, 'text/html');
+			let links = domContent.querySelectorAll('a.manga_title');
 			for (let i = 0; i < links.length; i++) {
 				this.mangaDexMangaList.push(parseInt(/\/title\/(\d+)\//.exec(links[i].href)[1]));
 			}
 
 			// Check the number of pages
 			if (page == 1) {
-				let node = domContent.querySelector(".mt-3.text-center");
+				let node = domContent.querySelector('.mt-3.text-center');
 				if (node !== null) {
 					let regex = /Showing\s\d+\sto(\s\d+)\sof\s(\d+)\stitles/.exec(node.textContent);
 					if (regex !== null) {
@@ -637,11 +641,11 @@ class OptionsManager {
 				// Wait 1000ms
 				await this.sleep(1000);
 				if (this.malAbort) {
-					return (false);
+					return false;
 				}
 				await this.listMangaDex(page + 1, max_page, type);
 			} else {
-				this.logAndScroll(LOG.SUCCESS, "Done fetching MangaDex followed manga.");
+				this.logAndScroll(LOG.SUCCESS, 'Done fetching MangaDex followed manga.');
 			}
 			return true;
 		} catch (error) {
@@ -657,18 +661,18 @@ class OptionsManager {
 		// Wait 1000ms
 		await this.sleep(1000);
 		if (this.malAbort) {
-			return (false);
+			return false;
 		}
 		try {
 			let response = await browser.runtime.sendMessage({
-				action: "fetch",
+				action: 'fetch',
 				url: `${this.domain}title/${this.mangaDexMangaList[index]}`,
 				options: {
-					method: "GET",
-					cache: "no-cache"
-				}
+					method: 'GET',
+					cache: 'no-cache',
+				},
 			});
-			let content = this.HTMLParser.parseFromString(response.body, "text/html");
+			let content = this.HTMLParser.parseFromString(response.body, 'text/html');
 			//
 			let manga = {
 				mangaDexId: this.mangaDexMangaList[index],
@@ -676,12 +680,12 @@ class OptionsManager {
 				lastMangaDexChapter: -1,
 				currentChapter: {
 					volume: 0,
-					chapter: 0
+					chapter: 0,
 				},
-				chapters: []
+				chapters: [],
 			};
 			// Scan the manga page for the mal icon and mal url
-			let mangaName = content.querySelector("h6.card-header").textContent.trim();
+			let mangaName = content.querySelector('h6.card-header').textContent.trim();
 			let myAnimeListURL = content.querySelector("img[src$='/mal.png']");
 			if (myAnimeListURL !== null) {
 				myAnimeListURL = myAnimeListURL.nextElementSibling;
@@ -696,9 +700,9 @@ class OptionsManager {
 				await updateLocalStorage(manga, this.options);
 				index++;
 				if (index < this.mangaDexMangaList.length) {
-					return (this.updateLocalFromMDMAL(index));
+					return this.updateLocalFromMDMAL(index);
 				} else {
-					this.logAndScroll(LOG.SUCCESS, "Done.");
+					this.logAndScroll(LOG.SUCCESS, 'Done.');
 				}
 			} else {
 				// Search for data from the mal_list object
@@ -719,12 +723,12 @@ class OptionsManager {
 				await updateLocalStorage(manga, this.options);
 				index++;
 				if (index < this.mangaDexMangaList.length) {
-					return (this.updateLocalFromMDMAL(index));
+					return this.updateLocalFromMDMAL(index);
 				} else {
-					this.logAndScroll(LOG.SUCCESS, "Done.");
+					this.logAndScroll(LOG.SUCCESS, 'Done.');
 				}
 			}
-			return (true);
+			return true;
 		} catch (error) {
 			this.flashBackground(false);
 			this.logAndScroll(LOG.DANGER, `Updating ${index + 1} Failed`);
@@ -735,36 +739,39 @@ class OptionsManager {
 			if (index < this.mangaDexMangaList.length) {
 				await this.updateLocalFromMDMAL(index);
 			} else {
-				this.logAndScroll(LOG.SUCCESS, "Done.");
+				this.logAndScroll(LOG.SUCCESS, 'Done.');
 			}
-			return (false);
+			return false;
 		}
 	}
 
 	abortExport() {
-		this.exportMALbutton.textContent = "Export";
+		this.exportMALbutton.textContent = 'Export';
 		this.malBusy = false;
 		this.malAbort = false;
-		this.logAndScroll(LOG.INFO, "You aborted the task.");
+		this.logAndScroll(LOG.INFO, 'You aborted the task.');
 	}
 
 	async exportMAL() {
 		if (this.malBusy) {
 			this.malAbort = true;
-			this.exportMALbutton.textContent = "Aborting...";
+			this.exportMALbutton.textContent = 'Aborting...';
 			return;
 		}
 
 		// Disable import
 		this.malBusy = true;
-		this.exportMALbutton.textContent = "In progress, click to abort.";
+		this.exportMALbutton.textContent = 'In progress, click to abort.';
 
 		// Start
 		this.logOutput = this.exportOutput;
-		this.logOutput.style.display = "block";
+		this.logOutput.style.display = 'block';
 		clearDomNode(this.logOutput);
-		this.logAndScroll(LOG.INFO, `Starting... don't close the options page. Some requests can be long on failure,
-			don't close the page until there is a "Done for real" notifications.`);
+		this.logAndScroll(
+			LOG.INFO,
+			`Starting... don't close the options page. Some requests can be long on failure,
+			don't close the page until there is a "Done for real" notifications.`
+		);
 		await this.setDomain();
 
 		// Do the same process for every status
@@ -772,7 +779,7 @@ class OptionsManager {
 			// Wait 1000ms
 			await this.sleep(1000);
 			if (this.malAbort) {
-				return (this.abortExport());
+				return this.abortExport();
 			}
 
 			this.logAndScroll(LOG.INFO, `Updating manga with the status ${s}`);
@@ -780,20 +787,19 @@ class OptionsManager {
 			this.mangaDexMangaList = [];
 			await this.listMangaDex(1, 1, s);
 			if (this.malAbort) {
-				return (this.abortExport());
+				return this.abortExport();
 			}
 
 			// Abort if empty
 			let max = this.mangaDexMangaList.length;
-			if (max == 0)
-				continue;
+			if (max == 0) continue;
 
 			// Update everything
 			for (let i = 0; i < max; i++) {
 				// Wait 1000ms
 				await this.sleep(1000);
 				if (this.malAbort) {
-					return (this.abortExport());
+					return this.abortExport();
 				}
 
 				this.logAndScroll(LOG.INFO, `Updating #${this.mangaDexMangaList[i]}`);
@@ -805,20 +811,20 @@ class OptionsManager {
 					needLocalUpdate = true;
 					this.logAndScroll(LOG.INFO, `Trying to find a MyAnimeList id for #${this.mangaDexMangaList[i]}`);
 					let response = await browser.runtime.sendMessage({
-						action: "fetch",
+						action: 'fetch',
 						url: `${this.domain}title/${this.mangaDexMangaList[i]}`,
 						options: {
-							method: "GET",
-							cache: "no-cache"
-						}
+							method: 'GET',
+							cache: 'no-cache',
+						},
 					});
-					let content = this.HTMLParser.parseFromString(response.body, "text/html");
+					let content = this.HTMLParser.parseFromString(response.body, 'text/html');
 					// New local title
 					current = {
 						mal: 0,
 						last: -1,
 						chapters: [],
-						lastTitle: Date.now()
+						lastTitle: Date.now(),
 					};
 					// Scan the manga page for the mal icon and mal url
 					let myAnimeListURL = content.querySelector("img[src$='/mal.png']");
@@ -829,18 +835,21 @@ class OptionsManager {
 				}
 
 				if (current.mal == 0) {
-					this.logAndScroll(LOG.WARNING, "No MyAnimeList id, skip.");
+					this.logAndScroll(LOG.WARNING, 'No MyAnimeList id, skip.');
 					if (needLocalUpdate) {
-						await updateLocalStorage({
-							mangaDexId: this.mangaDexMangaList[i],
-							myAnimeListId: current.mal,
-							lastMangaDexChapter: current.last,
-							currentChapter: {
-								chapter: current.last
+						await updateLocalStorage(
+							{
+								mangaDexId: this.mangaDexMangaList[i],
+								myAnimeListId: current.mal,
+								lastMangaDexChapter: current.last,
+								currentChapter: {
+									chapter: current.last,
+								},
+								chapters: current.chapters,
+								lastTitle: current.lastTitle,
 							},
-							chapters: current.chapters,
-							lastTitle: current.lastTitle
-						}, this.options);
+							this.options
+						);
 					}
 					continue;
 				}
@@ -850,14 +859,14 @@ class OptionsManager {
 				manga.myAnimeListId = current.mal;
 				manga.lastMangaDexChapter = current.last;
 				manga.currentChapter = { chapter: current.last, volume: 0 };
-				if (!await this.fetchMyAnimeList(manga, current.mal)) {
+				if (!(await this.fetchMyAnimeList(manga, current.mal))) {
 					if (this.malAbort) {
-						return (this.abortExport());
+						return this.abortExport();
 					}
 					return;
 				}
 				if (this.malAbort) {
-					return (this.abortExport());
+					return this.abortExport();
 				}
 				// Abort if not logged in - we didn't receive any data
 				if (this.loggedMyAnimeList) {
@@ -866,18 +875,31 @@ class OptionsManager {
 						if (manga.in_list) {
 							if (current.last > manga.lastMyAnimeListChapter) {
 								await this.updateMyAnimeList(manga, s);
-								this.logAndScroll(LOG.INFO, `> MyAnimeList #${current.mal} updated with chapter ${current.last}`);
+								this.logAndScroll(
+									LOG.INFO,
+									`> MyAnimeList #${current.mal} updated with chapter ${current.last}`
+								);
 							} else {
-								this.logAndScroll(LOG.INFO, `> MyAnimeList #${current.mal} NOT updated since it is up to date.`);
+								this.logAndScroll(
+									LOG.INFO,
+									`> MyAnimeList #${current.mal} NOT updated since it is up to date.`
+								);
 								manga.lastMangaDexChapter = manga.lastMyAnimeListChapter;
 								needLocalUpdate = true;
 							}
-						} else { // Else update MAL
+						} else {
+							// Else update MAL
 							await this.updateMyAnimeList(manga, s);
-							this.logAndScroll(LOG.INFO, `> MyAnimeList #${current.mal} added with chapter ${current.last}`);
+							this.logAndScroll(
+								LOG.INFO,
+								`> MyAnimeList #${current.mal} added with chapter ${current.last}`
+							);
 						}
 					} else {
-						this.logAndScroll(LOG.INFO, "The manga is still pending approval on MyAnimelist and can't be updated, skip.");
+						this.logAndScroll(
+							LOG.INFO,
+							"The manga is still pending approval on MyAnimelist and can't be updated, skip."
+						);
 					}
 				}
 				// Save to Local Storage if needed
@@ -894,10 +916,10 @@ class OptionsManager {
 					await updateLocalStorage(manga, this.options);
 				}
 				if (this.malAbort) {
-					return (this.abortExport());
+					return this.abortExport();
 				}
 				if (!this.loggedMyAnimeList) {
-					this.logAndScroll(LOG.DANGER, "Not logged on MyAnimeList, aborting.");
+					this.logAndScroll(LOG.DANGER, 'Not logged on MyAnimeList, aborting.');
 					return;
 				}
 			}
@@ -906,40 +928,43 @@ class OptionsManager {
 
 		// Done
 		this.flashBackground(true);
-		this.logAndScroll(LOG.SUCCESS, "Done, for real !");
+		this.logAndScroll(LOG.SUCCESS, 'Done, for real !');
 		this.malBusy = false;
 	}
 
 	async fetchMyAnimeList(manga) {
 		for (let i = 0; i < 3; ++i) {
 			if (this.malAbort) {
-				return (false);
+				return false;
 			}
 			let data = await browser.runtime.sendMessage({
-				action: "fetch",
+				action: 'fetch',
 				url: `https://myanimelist.net/ownlist/manga/${manga.myAnimeListId}/edit?hideLayout`,
 				options: {
-					method: "GET",
-					redirect: "follow",
-					cache: "no-cache",
-					credentials: "include"
-				}
+					method: 'GET',
+					redirect: 'follow',
+					cache: 'no-cache',
+					credentials: 'include',
+				},
 			});
 
-			if (data.url.indexOf("login.php") > -1) {
+			if (data.url.indexOf('login.php') > -1) {
 				this.loggedMyAnimeList = false;
 				break;
 			} else {
-				if (!data || (data.status < 200 || data.status >= 400)) {
+				if (!data || data.status < 200 || data.status >= 400) {
 					if (i < 2) {
-						this.logAndScroll(LOG.WARNING, "Error updating the manga. Retrying...");
+						this.logAndScroll(LOG.WARNING, 'Error updating the manga. Retrying...');
 					} else {
-						this.logAndScroll(LOG.DANGER, "There was an error while receiving info from MyAnimeList, aborting.");
-						return (false);
+						this.logAndScroll(
+							LOG.DANGER,
+							'There was an error while receiving info from MyAnimeList, aborting.'
+						);
+						return false;
 					}
 					await this.sleep(1000);
 					if (this.malAbort) {
-						return (false);
+						return false;
 					}
 				} else {
 					// CSRF Token
@@ -949,7 +974,7 @@ class OptionsManager {
 				}
 			}
 		}
-		return (true);
+		return true;
 	}
 
 	async updateMyAnimeList(manga, status) {
@@ -969,37 +994,37 @@ class OptionsManager {
 		for (let i = 0; i < 3; ++i) {
 			try {
 				if (this.malAbort) {
-					return (false);
+					return false;
 				}
 				await browser.runtime.sendMessage({
-					action: "fetch",
+					action: 'fetch',
 					url: requestURL,
 					options: {
-						method: "POST",
+						method: 'POST',
 						body: body,
-						redirect: "follow",
-						credentials: "include",
+						redirect: 'follow',
+						credentials: 'include',
 						headers: {
-							"Content-Type": "application/x-www-form-urlencoded",
-							"accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
-						}
-					}
+							'Content-Type': 'application/x-www-form-urlencoded',
+							accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+						},
+					},
 				});
 				break;
 			} catch (error) {
 				if (i < 2) {
-					this.logAndScroll(LOG.WARNING, "Error updating the manga. Retrying...");
+					this.logAndScroll(LOG.WARNING, 'Error updating the manga. Retrying...');
 					await this.sleep(1000);
 					if (this.malAbort) {
-						return (false);
+						return false;
 					}
 				} else {
 					this.logAndScroll(LOG.DANGER, `Error updating the manga. error: ${error}`);
-					return (false);
+					return false;
 				}
 			}
 		}
-		return (true);
+		return true;
 	}
 
 	// END IMPORT EXPORT
@@ -1008,55 +1033,55 @@ class OptionsManager {
 
 	toggleOnlinePanels(enabled = true) {
 		if (enabled) {
-			this.onlineOptions.style.display = "block";
+			this.onlineOptions.style.display = 'block';
 
 			if (this.options.isLoggedIn) {
-				this.loggedInPanel.style.display = "block";
-				this.loggedOutPanel.style.display = "none";
-				this.onlineAdvancedPanel.style.display = "block";
+				this.loggedInPanel.style.display = 'block';
+				this.loggedOutPanel.style.display = 'none';
+				this.onlineAdvancedPanel.style.display = 'block';
 			} else {
-				this.loggedInPanel.style.display = "none";
-				this.loggedOutPanel.style.display = "block";
-				this.onlineAdvancedPanel.style.display = "none";
+				this.loggedInPanel.style.display = 'none';
+				this.loggedOutPanel.style.display = 'block';
+				this.onlineAdvancedPanel.style.display = 'none';
 			}
 		} else {
-			this.onlineOptions.style.display = "none";
+			this.onlineOptions.style.display = 'none';
 		}
 	}
 
 	hideOnlineMessage(which = undefined) {
-		if (which == "error" || which == undefined) {
-			this.onlineError.style.display = "none";
+		if (which == 'error' || which == undefined) {
+			this.onlineError.style.display = 'none';
 		}
-		if (which == "success" || which == undefined) {
-			this.onlineSuccess.style.display = "none";
+		if (which == 'success' || which == undefined) {
+			this.onlineSuccess.style.display = 'none';
 		}
 	}
 
 	handleOnlineError(response) {
 		// Convert to object if it's a simple string
-		if (typeof response === "string") {
+		if (typeof response === 'string') {
 			response = { status: response };
 		}
 
 		// Display error alert
-		this.onlineError.style.display = "block";
-		this.onlineError.textContent = "";
+		this.onlineError.style.display = 'block';
+		this.onlineError.textContent = '';
 		this.flashBackground(false);
 
 		// If there is no status the errors is a list
 		if (response.status == undefined) {
-			Object.keys(response).forEach(key => {
-				let errorName = document.createElement("b");
+			Object.keys(response).forEach((key) => {
+				let errorName = document.createElement('b');
 				errorName.textContent = `${key}: `;
 				this.onlineError.appendChild(errorName);
-				this.onlineError.appendChild(document.createTextNode(response[key].join(", "))); // List of errors
-				this.onlineError.appendChild(document.createElement("br"));
+				this.onlineError.appendChild(document.createTextNode(response[key].join(', '))); // List of errors
+				this.onlineError.appendChild(document.createElement('br'));
 			});
 		} else {
 			// If there is a status just display it
-			let errorName = document.createElement("b");
-			errorName.textContent = "Error: ";
+			let errorName = document.createElement('b');
+			errorName.textContent = 'Error: ';
 			this.onlineError.appendChild(errorName);
 			this.onlineError.appendChild(document.createTextNode(response.status));
 		}
@@ -1064,25 +1089,25 @@ class OptionsManager {
 
 	handleOnlineSuccess(response) {
 		// Convert to object if it's a simple string
-		if (typeof response === "string") {
+		if (typeof response === 'string') {
 			response = { status: response };
 		}
 
 		// Display success alert
-		this.onlineSuccess.style.display = "block";
-		this.onlineSuccess.textContent = "";
+		this.onlineSuccess.style.display = 'block';
+		this.onlineSuccess.textContent = '';
 
-		let successName = document.createElement("b");
-		successName.textContent = "Success: ";
+		let successName = document.createElement('b');
+		successName.textContent = 'Success: ';
 		this.onlineSuccess.appendChild(successName);
 		this.onlineSuccess.appendChild(document.createTextNode(response.status));
 	}
 
 	getPassword() {
 		let password = this.onlineForm.password.value;
-		this.onlineForm.password.value = "";
-		if (password == "" || password.length < 10) {
-			this.handleOnlineError("Empty or invalid password.");
+		this.onlineForm.password.value = '';
+		if (password == '' || password.length < 10) {
+			this.handleOnlineError('Empty or invalid password.');
 			return false;
 		}
 		return password;
@@ -1099,17 +1124,17 @@ class OptionsManager {
 		// Send a request to the "login" route /user
 		try {
 			let response = await browser.runtime.sendMessage({
-				action: "fetch",
+				action: 'fetch',
 				url: `${onlineURL}user`,
 				options: {
-					method: "GET",
+					method: 'GET',
 					headers: {
-						"Accept": "application/json",
-						"X-Auth-Name": username,
-						"X-Auth-Pass": password
-					}
+						Accept: 'application/json',
+						'X-Auth-Name': username,
+						'X-Auth-Pass': password,
+					},
 				},
-				isJson: true
+				isJson: true,
 			});
 
 			// Check headers and get token if correct
@@ -1119,8 +1144,8 @@ class OptionsManager {
 				this.options.isLoggedIn = true;
 				this.options.token = response.body.token;
 				this.handleOnlineSuccess(response.body);
-				await storageSet("options", this.options);
-				this.flashBackground("bg-success");
+				await storageSet('options', this.options);
+				this.flashBackground('bg-success');
 				this.toggleOnlinePanels();
 			} else {
 				this.handleOnlineError(response.body);
@@ -1135,7 +1160,7 @@ class OptionsManager {
 
 		let onlineURL = this.onlineForm.onlineURL.value;
 		let body = {
-			username: this.onlineForm.username.value
+			username: this.onlineForm.username.value,
 		};
 		body.password = this.getPassword();
 		if (!body.password) return;
@@ -1143,17 +1168,17 @@ class OptionsManager {
 		// Send a request to the /user route
 		try {
 			let response = await browser.runtime.sendMessage({
-				action: "fetch",
+				action: 'fetch',
 				url: `${onlineURL}user`,
 				options: {
-					method: "POST",
+					method: 'POST',
 					headers: {
-						"Accept": "application/json",
-						"Content-Type": "application/json; charset=utf-8"
+						Accept: 'application/json',
+						'Content-Type': 'application/json; charset=utf-8',
 					},
-					body: JSON.stringify(body)
+					body: JSON.stringify(body),
 				},
-				isJson: true
+				isJson: true,
 			});
 
 			if (response.status == 201) {
@@ -1176,14 +1201,14 @@ class OptionsManager {
 		this.hideOnlineMessage();
 
 		// Set the options
-		this.options.username = "";
+		this.options.username = '';
 		this.options.isLoggedIn = false;
-		this.options.token = "";
+		this.options.token = '';
 		// Delete the form too
-		this.onlineForm.username.value = "";
-		this.onlineForm.password.value = "";
+		this.onlineForm.username.value = '';
+		this.onlineForm.password.value = '';
 		// Save
-		this.handleOnlineSuccess("Logged out.");
+		this.handleOnlineSuccess('Logged out.');
 		this.saveOptions();
 		this.toggleOnlinePanels();
 	}
@@ -1193,16 +1218,16 @@ class OptionsManager {
 
 		try {
 			let response = await browser.runtime.sendMessage({
-				action: "fetch",
+				action: 'fetch',
 				url: `${this.options.onlineURL}user/self/export/v2`,
 				options: {
-					method: "GET",
+					method: 'GET',
 					headers: {
-						"Accept": "application/json",
-						"X-Auth-Token": this.options.token
-					}
+						Accept: 'application/json',
+						'X-Auth-Token': this.options.token,
+					},
 				},
-				isJson: true
+				isJson: true,
 			});
 
 			if (response.status == 200) {
@@ -1211,7 +1236,7 @@ class OptionsManager {
 				// Build titles
 				let data = {
 					options: response.body.options,
-					history: response.body.history || []
+					history: response.body.history || [],
 				};
 				// Replace Online Save options
 				if (data.options == null || data.options == '') {
@@ -1237,7 +1262,7 @@ class OptionsManager {
 					if (element.progress && element.progress.chapter) {
 						data[element.md_id].progress = {
 							chapter: parseFloat(element.progress.chapter),
-							volume: element.progress.volume ? Math.floor(element.progress.volume) : undefined
+							volume: element.progress.volume ? Math.floor(element.progress.volume) : undefined,
 						};
 					} else if (element.chapter !== undefined) {
 						data[element.md_id].progress = { chapter: element.last };
@@ -1249,7 +1274,7 @@ class OptionsManager {
 				// Update UI
 				await this.restoreOptions();
 				this.flashBackground(true);
-				this.handleOnlineSuccess("Titles imported.");
+				this.handleOnlineSuccess('Titles imported.');
 			} else {
 				this.handleOnlineError(response.body);
 			}
@@ -1265,7 +1290,7 @@ class OptionsManager {
 		let body = {
 			options: JSON.parse(JSON.stringify(this.options)),
 			titles: {},
-			history: []
+			history: [],
 		};
 
 		// Build titles list
@@ -1275,7 +1300,7 @@ class OptionsManager {
 			if (invalidKeys.indexOf(key) >= 0 || isNaN(+key)) continue;
 			// Remove invalid chapters
 			if (_local.chapters && Array.isArray(_local.chapters)) {
-				_local.chapters = _local.chapters.filter(value => !isNaN(+value));
+				_local.chapters = _local.chapters.filter((value) => !isNaN(+value));
 			}
 			body.titles[key] = _local[key];
 		}
@@ -1285,18 +1310,18 @@ class OptionsManager {
 		// Send the request
 		try {
 			let response = await browser.runtime.sendMessage({
-				action: "fetch",
+				action: 'fetch',
 				url: `${this.options.onlineURL}user/self/import/v2`,
 				options: {
-					method: "POST",
+					method: 'POST',
 					headers: {
-						"Accept": "application/json",
-						"Content-Type": "application/json; charset=utf-8",
-						"X-Auth-Token": this.options.token
+						Accept: 'application/json',
+						'Content-Type': 'application/json; charset=utf-8',
+						'X-Auth-Token': this.options.token,
 					},
-					body: JSON.stringify(body)
+					body: JSON.stringify(body),
 				},
-				isJson: true
+				isJson: true,
 			});
 
 			if (response.status == 200) {
@@ -1312,16 +1337,16 @@ class OptionsManager {
 	async deleteOnline() {
 		this.hideOnlineMessage();
 
-		let deleteOnlineButton = document.getElementById("deleteOnline");
+		let deleteOnlineButton = document.getElementById('deleteOnline');
 		if (deleteOnlineButton.dataset.again === undefined) {
-			deleteOnlineButton.style.fontSize = "2rem";
+			deleteOnlineButton.style.fontSize = '2rem';
 			deleteOnlineButton.dataset.again = true;
-			deleteOnlineButton.textContent = "Click again to confirm";
+			deleteOnlineButton.textContent = 'Click again to confirm';
 			return;
 		} else {
-			deleteOnlineButton.style.fontSize = "1rem";
+			deleteOnlineButton.style.fontSize = '1rem';
 			delete deleteOnlineButton.dataset.again;
-			deleteOnlineButton.textContent = "Delete Online";
+			deleteOnlineButton.textContent = 'Delete Online';
 		}
 
 		let password = this.getPassword();
@@ -1330,27 +1355,27 @@ class OptionsManager {
 		// Send a simple DELETE request
 		try {
 			let response = await browser.runtime.sendMessage({
-				action: "fetch",
+				action: 'fetch',
 				url: `${this.options.onlineURL}user/self`,
 				options: {
-					method: "DELETE",
+					method: 'DELETE',
 					headers: {
-						"Accept": "application/json",
-						"X-Auth-Name": this.options.username,
-						"X-Auth-Pass": password
-					}
+						Accept: 'application/json',
+						'X-Auth-Name': this.options.username,
+						'X-Auth-Pass': password,
+					},
 				},
-				isJson: true
+				isJson: true,
 			});
 
 			if (response.status == 200) {
 				// Delete in the options
-				this.options.username = "";
+				this.options.username = '';
 				this.options.isLoggedIn = false;
-				this.options.token = "";
+				this.options.token = '';
 				// Delete the form too
-				this.onlineForm.username.value = "";
-				this.onlineForm.password.value = "";
+				this.onlineForm.username.value = '';
+				this.onlineForm.password.value = '';
 				// Save
 				this.handleOnlineSuccess(response.body);
 				this.saveOptions();
@@ -1372,7 +1397,7 @@ class OptionsManager {
 		let oldPassword = this.onlineForm.password.dataset.currentPassword;
 		if (oldPassword === undefined) {
 			this.onlineForm.password.dataset.currentPassword = password;
-			this.handleOnlineSuccess("Enter your new password and click Update Credentials again.");
+			this.handleOnlineSuccess('Enter your new password and click Update Credentials again.');
 			return;
 		} else {
 			delete this.onlineForm.password.dataset.currentPassword;
@@ -1380,24 +1405,24 @@ class OptionsManager {
 
 		// Only the password can be updated
 		let body = {
-			password: password
+			password: password,
 		};
 
 		try {
 			let response = await browser.runtime.sendMessage({
-				action: "fetch",
+				action: 'fetch',
 				url: `${this.options.onlineURL}user/self`,
 				options: {
-					method: "POST",
+					method: 'POST',
 					headers: {
-						"Accept": "application/json",
-						"Content-Type": "application/json; charset=utf-8",
-						"X-Auth-Name": this.options.username,
-						"X-Auth-Pass": oldPassword
+						Accept: 'application/json',
+						'Content-Type': 'application/json; charset=utf-8',
+						'X-Auth-Name': this.options.username,
+						'X-Auth-Pass': oldPassword,
 					},
-					body: JSON.stringify(body)
+					body: JSON.stringify(body),
 				},
-				isJson: true
+				isJson: true,
 			});
 
 			if (response.status == 200) {
@@ -1420,24 +1445,24 @@ class OptionsManager {
 
 		try {
 			let response = await browser.runtime.sendMessage({
-				action: "fetch",
+				action: 'fetch',
 				url: `${this.options.onlineURL}user/self/token/refresh`,
 				options: {
-					method: "GET",
+					method: 'GET',
 					headers: {
-						"Accept": "application/json",
-						"X-Auth-Name": this.options.username,
-						"X-Auth-Pass": password
-					}
+						Accept: 'application/json',
+						'X-Auth-Name': this.options.username,
+						'X-Auth-Pass': password,
+					},
 				},
-				isJson: true
+				isJson: true,
 			});
 
 			if (response.status == 200) {
 				// Update in the options
 				this.options.token = response.body.token;
 				// Save
-				this.handleOnlineSuccess("Token updated.");
+				this.handleOnlineSuccess('Token updated.');
 				this.saveOptions();
 			} else {
 				this.handleOnlineError(response.body);
@@ -1455,23 +1480,23 @@ class OptionsManager {
 
 		try {
 			let response = await browser.runtime.sendMessage({
-				action: "fetch",
+				action: 'fetch',
 				url: `${this.options.onlineURL}user/self/token`,
 				options: {
-					method: "GET",
+					method: 'GET',
 					headers: {
-						"Accept": "application/json",
-						"X-Auth-Name": this.options.username,
-						"X-Auth-Pass": password
-					}
+						Accept: 'application/json',
+						'X-Auth-Name': this.options.username,
+						'X-Auth-Pass': password,
+					},
 				},
-				isJson: true
+				isJson: true,
 			});
 
 			// Check headers and get token if correct
 			if (response.status == 200) {
 				this.options.token = response.body.token;
-				this.handleOnlineSuccess("Token received.");
+				this.handleOnlineSuccess('Token received.');
 				this.saveOptions();
 			} else {
 				this.handleOnlineError(response.body);
@@ -1484,21 +1509,21 @@ class OptionsManager {
 	async downloadOnline() {
 		try {
 			let response = await browser.runtime.sendMessage({
-				action: "fetch",
+				action: 'fetch',
 				url: `${this.options.onlineURL}user/self/export/v2`,
 				options: {
-					method: "GET",
+					method: 'GET',
 					headers: {
-						"Accept": "application/json",
-						"X-Auth-Token": this.options.token
-					}
+						Accept: 'application/json',
+						'X-Auth-Token': this.options.token,
+					},
 				},
-				isJson: true
+				isJson: true,
 			});
 			if (response.status == 200) {
 				let body = {
 					options: response.body.options,
-					history: response.body.history
+					history: response.body.history,
 				};
 				if (body.options == null || body.options == '') {
 					body.options = JSON.parse(JSON.stringify(this.options));
@@ -1509,7 +1534,7 @@ class OptionsManager {
 					body.options.username = this.options.username;
 					body.options.onlineSave = true;
 				}
-				response.body.titles.forEach(element => {
+				response.body.titles.forEach((element) => {
 					body[element.md_id] = {
 						mal: element.mal_id,
 						last: element.last,
@@ -1521,9 +1546,11 @@ class OptionsManager {
 						lastRead: element.lastRead,
 					};
 				});
-				this.downloadOnlineButton.href = `data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(body))}`;
+				this.downloadOnlineButton.href = `data:application/json;charset=utf-8,${encodeURIComponent(
+					JSON.stringify(body)
+				)}`;
 				this.downloadOnlineButton.click();
-				this.downloadOnlineButton.href = "";
+				this.downloadOnlineButton.href = '';
 			} else {
 				this.handleOnlineError(response.body);
 			}
@@ -1536,20 +1563,20 @@ class OptionsManager {
 	async saveOnlineOptions() {
 		try {
 			await browser.runtime.sendMessage({
-				action: "fetch",
+				action: 'fetch',
 				url: `${this.options.onlineURL}user/self/options`,
 				options: {
-					method: "POST",
+					method: 'POST',
 					headers: {
-						"Accept": "application/json",
-						"Content-Type": "application/json; charset=utf-8",
-						"X-Auth-Token": this.options.token
+						Accept: 'application/json',
+						'Content-Type': 'application/json; charset=utf-8',
+						'X-Auth-Token': this.options.token,
 					},
 					body: JSON.stringify({
-						options: this.options
-					})
+						options: this.options,
+					}),
 				},
-				isJson: true
+				isJson: true,
 			});
 		} catch (error) {
 			console.error(error);
@@ -1559,6 +1586,6 @@ class OptionsManager {
 
 	// END ONLINE
 }
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
 	new OptionsManager();
 });
