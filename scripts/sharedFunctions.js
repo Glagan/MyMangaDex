@@ -214,6 +214,18 @@ async function loadOptions() {
 				}
 			}
 		}
+		// Remove undefined values from save
+		if (data.version == 2.4 && data.subVersion == 5) {
+			let save = await storageGet(null);
+			for (const key in save) {
+				if (!isNaN(parseInt(key))) {
+					for (const titleKey in save[key]) {
+						if (typeof save[key][titleKey] === 'undefined') delete save[key][titleKey];
+					}
+				}
+			}
+			await storageSet(null, save);
+		}
 		// Fix the save on version updates
 		if (
 			data.version != defaultOptions.version ||
@@ -223,9 +235,8 @@ async function loadOptions() {
 			data.subVersion = defaultOptions.subVersion;
 			fixed = true;
 		}
-		if (fixed) {
-			await storageSet('options', data);
-		}
+		// Save
+		if (fixed) await storageSet('options', data);
 		return data;
 	}
 }
