@@ -215,7 +215,7 @@ async function loadOptions() {
 			}
 		}
 		// Remove undefined values from save
-		if (data.version == 2.4 && data.subVersion == 5) {
+		if (data.version == 2.4 && data.subVersion == 4) {
 			let save = await storageGet(null);
 			for (const key in save) {
 				if (!isNaN(parseInt(key))) {
