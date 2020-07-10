@@ -1228,11 +1228,12 @@ class OptionsManager {
 						mal: element.mal_id,
 						last: element.last,
 						chapters: element.chapters,
-						name: element.name,
-						chapter: element.chapter ? Math.floor(element.chapter) : undefined,
-						lastRead: element.lastRead ? Math.floor(element.lastRead) : undefined,
-						highest: element.highest ? parseFloat(element.highest) : undefined,
 					};
+					// History keys
+					if (element.name) data.name = element.name;
+					if (element.chapter) data.chapterId = Math.floor(element.chapter);
+					if (element.lastRead) data.lastRead = Math.floor(element.lastRead);
+					if (element.highest) data.highest = Math.floor(element.highest);
 					if (element.progress && element.progress.chapter) {
 						data[element.md_id].progress = {
 							chapter: parseFloat(element.progress.chapter),
