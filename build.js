@@ -47,7 +47,7 @@ let manifest = {
 
 	description: process.env.npm_package_description,
 
-	permissions: ['https://*.myanimelist.net/*', 'https://*.mangadex.org/*', '*://*.nikurasu.org/api/*', 'storage'],
+	permissions: ['https://*.myanimelist.net/*', 'https://*.mangadex.org/*', 'storage'],
 
 	icons: {
 		48: 'icons/48.png',

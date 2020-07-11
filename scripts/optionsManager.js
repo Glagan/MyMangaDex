@@ -1535,6 +1535,7 @@ class OptionsManager {
 					body.options.onlineSave = true;
 				}
 				response.body.titles.forEach((element) => {
+					const highest = parseFloat(element.highest);
 					body[element.md_id] = {
 						mal: element.mal_id,
 						last: element.last,
@@ -1542,15 +1543,21 @@ class OptionsManager {
 						name: element.name,
 						progress: element.progress,
 						chapterId: element.chapterId,
-						highest: parseFloat(element.highest),
+						highest: !isNaN(highest) ? highest : undefined,
 						lastRead: element.lastRead,
 					};
 				});
-				this.downloadOnlineButton.href = `data:application/json;charset=utf-8,${encodeURIComponent(
-					JSON.stringify(body)
-				)}`;
-				this.downloadOnlineButton.click();
-				this.downloadOnlineButton.href = '';
+				const downloadLink = document.createElement('a');
+				const blob = new Blob([JSON.stringify(body)], { type: 'application/json;charset=utf-8' });
+				const href = URL.createObjectURL(blob);
+				downloadLink.style.display = 'none';
+				document.body.appendChild(downloadLink);
+				downloadLink.download = 'mymangadex_online_export.json';
+				downloadLink.target = '_blank';
+				downloadLink.href = href;
+				downloadLink.click();
+				downloadLink.remove();
+				URL.revokeObjectURL(href);
 			} else {
 				this.handleOnlineError(response.body);
 			}
