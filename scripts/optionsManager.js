@@ -777,7 +777,7 @@ class OptionsManager {
 		// Do the same process for every status
 		for (let s = 1; s <= 6; s++) {
 			// Wait 1000ms
-			await this.sleep(1000);
+			await this.sleep(1500);
 			if (this.malAbort) {
 				return this.abortExport();
 			}
@@ -797,7 +797,7 @@ class OptionsManager {
 			// Update everything
 			for (let i = 0; i < max; i++) {
 				// Wait 1000ms
-				await this.sleep(1000);
+				await this.sleep(1500);
 				if (this.malAbort) {
 					return this.abortExport();
 				}
@@ -934,9 +934,7 @@ class OptionsManager {
 
 	async fetchMyAnimeList(manga) {
 		for (let i = 0; i < 3; ++i) {
-			if (this.malAbort) {
-				return false;
-			}
+			if (this.malAbort) return false;
 			let data = await browser.runtime.sendMessage({
 				action: 'fetch',
 				url: `https://myanimelist.net/ownlist/manga/${manga.myAnimeListId}/edit?hideLayout`,
@@ -954,7 +952,7 @@ class OptionsManager {
 			} else {
 				if (!data || data.status < 200 || data.status >= 400) {
 					if (i < 2) {
-						this.logAndScroll(LOG.WARNING, 'Error updating the manga. Retrying...');
+						this.logAndScroll(LOG.WARNING, `Error updating the manga. Retrying in ${(i + 1) * 1.5}s...`);
 					} else {
 						this.logAndScroll(
 							LOG.DANGER,
@@ -962,10 +960,8 @@ class OptionsManager {
 						);
 						return false;
 					}
-					await this.sleep(1000);
-					if (this.malAbort) {
-						return false;
-					}
+					await this.sleep(1500 * (i + 1));
+					if (this.malAbort) return false;
 				} else {
 					// CSRF Token
 					this.csrf = /'csrf_token'\scontent='(.{40})'/.exec(data.body)[1];
@@ -1014,7 +1010,7 @@ class OptionsManager {
 			} catch (error) {
 				if (i < 2) {
 					this.logAndScroll(LOG.WARNING, 'Error updating the manga. Retrying...');
-					await this.sleep(1000);
+					await this.sleep(1500);
 					if (this.malAbort) {
 						return false;
 					}
