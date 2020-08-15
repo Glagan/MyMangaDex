@@ -47,13 +47,11 @@ let manifest = {
 
 	description: process.env.npm_package_description,
 
+	// prettier-ignore
 	permissions: [
 		'https://myanimelist.net/*',
 		'https://*.mangadex.org/*',
 		'storage',
-		'webRequest',
-		'webRequestBlocking',
-		'cookies',
 	],
 
 	icons: {
@@ -170,6 +168,7 @@ if (browser == 'firefox') {
 			strict_min_version: '61.0',
 		},
 	};
+	manifest.permissions.push('webRequest', 'webRequestBlocking', 'cookies');
 } else if (browser == 'chrome') {
 	// Add chrome async
 	scripts['MyMangaDex.js'].splice(2, 0, 'third_party/chrome-extension-async.js');

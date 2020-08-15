@@ -51,20 +51,13 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 			);
 			// Get cookieStoreId for containers in Firefox
 			if (message.options.credentials == 'same-origin' || message.options.credentials == 'include') {
-				const cookieStoreId = (() => {
-					// No other way (???) to get cookieStoreId from Chrome other than being incognito or not
-					if (CHROME) return sender.tab.incognito ? '1' : '0';
-					// Firefox has the cookieStoreId if cookies permission is set
-					return sender.tab.cookieStoreId;
-				})();
 				// Get cookies related to the cookieStore and send an X-Cookie header along the request
 				if (CHROME) {
 					// Chrome doesn't seem to change anything even with a different cookeStoreId
 					sendRequest(message, sendResponse);
-					// browser.cookies.getAll({ url: message.url, storeId: cookieStoreId }, (cookies) =>
-					// 	sendRequestWithCookies(message, cookies, sendResponse)
-					// );
 				} else {
+					// Firefox has the cookieStoreId if cookies permission is set
+					const cookieStoreId = sender.tab.cookieStoreId;
 					browser.cookies
 						.getAll({ url: message.url, storeId: cookieStoreId })
 						.then((cookies) => sendRequestWithCookies(message, cookies, sendResponse));
@@ -85,29 +78,31 @@ browser.browserAction.onClicked.addListener(() => {
 	browser.runtime.openOptionsPage();
 });
 
-async function setMyAnimeListCookies(details) {
-	// Only update requests sent by MyMangaDex
-	if (CHROME || details.originUrl.indexOf('moz-extension://') < 0) {
-		return { requestHeaders: details.requestHeaders };
-	}
-	// Replace Cookie headers by X-Cookie value
-	const headers = [];
-	for (const header of details.requestHeaders) {
-		const headerName = header.name.toLowerCase();
-		if (headerName === 'x-cookie') {
-			headers.push({
-				name: 'Cookie',
-				value: header.value,
-			});
-		} else if (headerName !== 'cookie') {
-			headers.push(header);
+if (!CHROME) {
+	async function setMyAnimeListCookies(details) {
+		// Only update requests sent by MyMangaDex
+		if (CHROME || details.originUrl.indexOf('moz-extension://') < 0) {
+			return { requestHeaders: details.requestHeaders };
 		}
+		// Replace Cookie headers by X-Cookie value
+		const headers = [];
+		for (const header of details.requestHeaders) {
+			const headerName = header.name.toLowerCase();
+			if (headerName === 'x-cookie') {
+				headers.push({
+					name: 'Cookie',
+					value: header.value,
+				});
+			} else if (headerName !== 'cookie') {
+				headers.push(header);
+			}
+		}
+		return { requestHeaders: headers };
 	}
-	return { requestHeaders: headers };
-}
 
-browser.webRequest.onBeforeSendHeaders.addListener(
-	setMyAnimeListCookies,
-	{ urls: ['https://myanimelist.net/*'] },
-	[ 'blocking', 'requestHeaders' ]
-);
+	// prettier-ignore
+	browser.webRequest.onBeforeSendHeaders.addListener(setMyAnimeListCookies,
+		{ urls: ['https://myanimelist.net/*'] },
+		[ 'blocking', 'requestHeaders' ]
+	);
+}

@@ -2301,7 +2301,7 @@ class MyMangaDex {
 			const lastPageNode = body.querySelector('nav > ul.pagination > li.disabled:last-child');
 			result.isLastPage = lastPageNode != null;
 			// Page count
-			if (result.isLastpage) {
+			if (result.isLastPage) {
 				result.maxPage = page;
 			} else {
 				const maxPageNode = body.querySelector(
