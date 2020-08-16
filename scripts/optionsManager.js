@@ -1,3 +1,4 @@
+const MAL_WAIT = 1750;
 const LOG = { INFO: 'info', DANGER: 'danger', WARNING: 'warning', SUCCESS: 'success' };
 class OptionsManager {
 	constructor() {
@@ -577,7 +578,7 @@ class OptionsManager {
 					if (!dummy) {
 						// If there is 300 items, we might have reached the list limit so we try again
 						if (response.body.length == 300) {
-							await this.sleep(1000); // Wait 1000ms between requests
+							await this.sleep(MAL_WAIT); // Wait 1000ms between requests
 							if (this.malAbort) {
 								return false;
 							}
@@ -772,12 +773,38 @@ class OptionsManager {
 			`Starting... don't close the options page. Some requests can be long on failure,
 			don't close the page until there is a "Done for real" notifications.`
 		);
+		this.logAndScroll(LOG.INFO, `Avoid using MyAnimeList while the export is in progress.`);
 		await this.setDomain();
+
+		// Get Username and csrf
+		const response = await browser.runtime.sendMessage({
+			action: 'fetch',
+			url: `https://myanimelist.net/about.php`,
+			options: {
+				method: 'GET',
+				cache: 'no-cache',
+			},
+		});
+		if (!response || response.status >= 400) {
+			this.logAndScroll(LOG.DANGER, 'There was an error while receiving info from MyAnimeList, aborting.');
+		}
+		const body = this.HTMLParser.parseFromString(response.body, 'text/html');
+		const link = body.querySelector('.header-profile-link');
+		if (!link) {
+			this.logAndScroll(LOG.DANGER, 'Not logged on MyAnimeList, aborting.');
+			return;
+		}
+		this.loggedMyAnimeList = true;
+		this.csrf = /'csrf_token'\scontent='(.{40})'/.exec(response.body)[1];
+		const username = link.textContent.trim();
+
+		// Fetch initial MyAnimeList status
+		this.myAnimeListMangaList = {};
+		await this.listMyAnimeList(username);
 
 		// Do the same process for every status
 		for (let s = 1; s <= 6; s++) {
-			// Wait 1000ms
-			await this.sleep(1500);
+			await this.sleep(MAL_WAIT);
 			if (this.malAbort) {
 				return this.abortExport();
 			}
@@ -796,8 +823,7 @@ class OptionsManager {
 
 			// Update everything
 			for (let i = 0; i < max; i++) {
-				// Wait 1000ms
-				await this.sleep(1500);
+				await this.sleep(MAL_WAIT);
 				if (this.malAbort) {
 					return this.abortExport();
 				}
@@ -831,10 +857,14 @@ class OptionsManager {
 					if (myAnimeListURL !== null) {
 						myAnimeListURL = myAnimeListURL.nextElementSibling;
 						current.mal = parseInt(/https:\/\/myanimelist\.net\/manga\/(\d+)/.exec(myAnimeListURL.href)[1]);
+						if (isNaN(current.mal)) current.mal = 0;
 					}
 				}
+				if (this.malAbort) {
+					return this.abortExport();
+				}
 
-				if (current.mal == 0) {
+				if (!current.mal) {
 					this.logAndScroll(LOG.WARNING, 'No MyAnimeList id, skip.');
 					if (needLocalUpdate) {
 						await updateLocalStorage(
@@ -859,7 +889,8 @@ class OptionsManager {
 				manga.myAnimeListId = current.mal;
 				manga.lastMangaDexChapter = current.last;
 				manga.currentChapter = { chapter: current.last, volume: 0 };
-				if (!(await this.fetchMyAnimeList(manga, current.mal))) {
+				// If it's in the list get the values
+				if (!(await this.fetchMyAnimeList(manga, this.myAnimeListMangaList[current.mal] !== undefined))) {
 					if (this.malAbort) {
 						return this.abortExport();
 					}
@@ -868,6 +899,7 @@ class OptionsManager {
 				if (this.malAbort) {
 					return this.abortExport();
 				}
+				await this.sleep(MAL_WAIT);
 				// Abort if not logged in - we didn't receive any data
 				if (this.loggedMyAnimeList) {
 					if (manga.is_approved) {
@@ -932,12 +964,14 @@ class OptionsManager {
 		this.malBusy = false;
 	}
 
-	async fetchMyAnimeList(manga) {
+	async fetchMyAnimeList(manga, inList) {
 		for (let i = 0; i < 3; ++i) {
 			if (this.malAbort) return false;
-			let data = await browser.runtime.sendMessage({
+			const response = await browser.runtime.sendMessage({
 				action: 'fetch',
-				url: `https://myanimelist.net/ownlist/manga/${manga.myAnimeListId}/edit?hideLayout`,
+				url: inList
+					? `https://myanimelist.net/ownlist/manga/${manga.myAnimeListId}/edit?hideLayout`
+					: `https://myanimelist.net/ownlist/manga/add?selected_manga_id=${manga.myAnimeListId}&hideLayout`,
 				options: {
 					method: 'GET',
 					redirect: 'follow',
@@ -946,13 +980,21 @@ class OptionsManager {
 				},
 			});
 
-			if (data.url.indexOf('login.php') > -1) {
+			// Abort if there is a captcha
+			if (response.status === 403) {
+				return false;
+			}
+
+			if (response.url.indexOf('login.php') > -1) {
 				this.loggedMyAnimeList = false;
 				break;
 			} else {
-				if (!data || data.status < 200 || data.status >= 400) {
+				if (!response || response.status < 200 || response.status >= 400) {
 					if (i < 2) {
-						this.logAndScroll(LOG.WARNING, `Error updating the manga. Retrying in ${(i + 1) * 1.5}s...`);
+						this.logAndScroll(
+							LOG.WARNING,
+							`Error updating the manga. Retrying in ${(i + 1) * (MAL_WAIT / 1000)}s...`
+						);
 					} else {
 						this.logAndScroll(
 							LOG.DANGER,
@@ -960,12 +1002,12 @@ class OptionsManager {
 						);
 						return false;
 					}
-					await this.sleep(1500 * (i + 1));
+					await this.sleep(MAL_WAIT * (i + 1));
 					if (this.malAbort) return false;
 				} else {
 					// CSRF Token
-					this.csrf = /'csrf_token'\scontent='(.{40})'/.exec(data.body)[1];
-					processMyAnimeListResponse(manga, data.body);
+					this.csrf = /'csrf_token'\scontent='(.{40})'/.exec(response.body)[1];
+					processMyAnimeListResponse(manga, response.body);
 					break;
 				}
 			}
@@ -1010,7 +1052,7 @@ class OptionsManager {
 			} catch (error) {
 				if (i < 2) {
 					this.logAndScroll(LOG.WARNING, 'Error updating the manga. Retrying...');
-					await this.sleep(1500);
+					await this.sleep(MAL_WAIT);
 					if (this.malAbort) {
 						return false;
 					}
