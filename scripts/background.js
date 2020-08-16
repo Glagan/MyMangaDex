@@ -31,7 +31,7 @@ function sendRequest(message, sendResponse) {
 
 function sendRequestWithCookies(message, cookies, sendResponse) {
 	message.options.headers['X-Cookie'] = cookies.map((c) => `${c.name}=${c.value}`).join('; ');
-	sendRequest(message, sendResponse);
+	return sendRequest(message, sendResponse);
 }
 
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
