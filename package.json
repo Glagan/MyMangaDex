@@ -1,6 +1,6 @@
 {
 	"name": "mymangadex",
-	"version": "2.4.9",
+	"version": "2.4.10",
 	"description": "Automatically update your MyAnimeList manga list when reading on MangaDex.",
 	"main": "build.js",
 	"dependencies": {

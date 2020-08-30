@@ -2284,8 +2284,14 @@ class MyMangaDex {
 			requestTime: Date.now() - before,
 		};
 		if (response.status >= 200 && response.status < 400) {
-			// Get titles
 			const body = parser.parseFromString(response.body, 'text/html');
+			// Check if we're out of bounds
+			if (body.querySelector('#chapters .alert.alert-warning') != null) {
+				result.titles = true;
+				result.isLastPage = true;
+				return result;
+			}
+			// Get titles
 			const rows = body.querySelectorAll('[data-manga-id]');
 			result.titles = {};
 			rows.forEach((element) => {
@@ -2304,6 +2310,7 @@ class MyMangaDex {
 			if (result.isLastPage) {
 				result.maxPage = page;
 			} else {
+				// Find the max page
 				const maxPageNode = body.querySelector(
 					`nav > ul.pagination > .page-item:last-child > a[href^="/follows/chapters/${method}/"]`
 				);
@@ -2466,7 +2473,7 @@ class MyMangaDex {
 							}
 							const res = await this.fetchFollowPage(parser, currentPage, 0);
 							const { titles, isLastPage, requestTime } = res;
-							if (titles) {
+							if (typeof titles === 'object') {
 								// Filter found titles to avoid loading them again for nothing
 								const foundIds = Object.keys(titles);
 								let titleIds = foundIds.filter((id) => {
@@ -2504,7 +2511,7 @@ class MyMangaDex {
 										}
 									}
 								}
-							} else {
+							} else if (title === false) {
 								this.notification(
 									NOTIFY.ERROR,
 									'MangaDex error',
@@ -2580,7 +2587,7 @@ class MyMangaDex {
 						await new Promise((resolve) => setTimeout(resolve, 1500));
 					}
 					const { titles, isLastPage } = await this.fetchFollowPage(parser, currentPage, 1);
-					if (titles) {
+					if (typeof titles === 'object') {
 						// Filter found titles to avoid loading them again for nothing
 						const foundIds = Object.keys(titles);
 						let titleIds = foundIds.filter((id) => {
@@ -2612,7 +2619,7 @@ class MyMangaDex {
 								}
 							}
 						}
-					} else {
+					} else if (titles === false) {
 						this.notification(
 							NOTIFY.ERROR,
 							'MangaDex error',
