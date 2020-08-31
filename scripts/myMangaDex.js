@@ -665,11 +665,16 @@ class MyMangaDex {
 			return;
 		}
 
+		// Collect language for each rows
+		const languageMap = {};
+		const rowLanguages = [];
+
 		// Get the name of each "chapters" in the list - ignore first line
 		let firstChapter;
 		let foundNext = false;
 		for (let i = 0; i < chapterList.length - 1; i++) {
-			let element = chapterList[i];
+			const element = chapterList[i];
+			element.classList.add('has-fast-in-transition');
 			let chapterVolume = this.getVolumeChapterFromNode(element.firstElementChild.firstElementChild);
 			chapterVolume.chapterFloored = Math.floor(chapterVolume.chapter);
 
@@ -708,6 +713,86 @@ class MyMangaDex {
 				}
 			} else {
 				element.style.backgroundColor = ''; // clear previous highlights
+			}
+
+			// Assign row to it's language list
+			if (this.options.separateLanguages) {
+				const flag = element.querySelector('.flag');
+				if (flag) {
+					try {
+						const code = /flag-(\w+)/.exec(flag.className)[1];
+						rowLanguages.push({ code: code, node: element });
+						languageMap[code] = flag.title;
+						flag.title = `${flag.title} - ${code}`;
+					} catch (error) {}
+				}
+			}
+		}
+
+		// Display or Hide other languages
+		if (this.options.separateLanguages) {
+			const navTabs = document.querySelector('ul.edit.nav.nav-tabs');
+			if (navTabs) {
+				// Find defaultLanguage
+				const availableLanguages = Object.keys(languageMap);
+				const hasWantedLanguage = availableLanguages.includes(this.options.defaultLanguage);
+				const defaultLanguage = hasWantedLanguage ? this.options.defaultLanguage : 'all';
+
+				// Update style to fix tab height
+				for (const tab of navTabs.children) {
+					tab.style.display = 'flex';
+				}
+				let currentTab = null;
+				const hideAllExcept = (flag, tab) => {
+					for (const row of rowLanguages) {
+						if (flag == 'all' || row.code == flag) {
+							row.node.classList.remove('is-hidden-chapter');
+						} else {
+							row.node.classList.add('is-hidden-chapter');
+						}
+					}
+					if (currentTab) currentTab.classList.remove('active');
+					currentTab = tab;
+					currentTab.classList.add('active');
+				};
+				const createLanguageTab = (flag, name, title) => {
+					const tab = document.createElement('li');
+					tab.className = 'nav-item';
+					const tabLink = document.createElement('a');
+					tabLink.className = `nav-link tab-${flag}`;
+					if (flag == this.options.defaultLanguage) {
+						tabLink.classList.add('active');
+					}
+					tabLink.href = '#';
+					tabLink.title = title;
+					tabLink.addEventListener('click', (event) => {
+						event.preventDefault();
+						hideAllExcept(flag, tabLink);
+					});
+					const flagIcon = document.createElement('span');
+					flagIcon.className = `rounded flag flag-${flag}`;
+					const tabLanguage = document.createElement('span');
+					tabLanguage.className = 'd-none d-md-inline';
+					tabLanguage.textContent = name;
+					tabLink.appendChild(flagIcon);
+					tabLink.appendChild(document.createTextNode('\xA0'));
+					tabLink.appendChild(tabLanguage);
+					tab.appendChild(tabLink);
+					navTabs.appendChild(tab);
+					return tabLink;
+				};
+
+				// Add languages buttons
+				const allTab = createLanguageTab('all', 'All Languages', 'Display chapters in all Languages');
+				if (defaultLanguage == 'all') hideAllExcept(defaultLanguage, allTab);
+				for (const language of availableLanguages) {
+					const tab = createLanguageTab(
+						language,
+						languageMap[language],
+						`Show only chapters in ${languageMap[language]}`
+					);
+					if (language == defaultLanguage) hideAllExcept(defaultLanguage, tab);
+				}
 			}
 		}
 	}

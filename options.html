@@ -391,6 +391,38 @@
 						</div>
 					</div>
 				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">
+						Separate Languages in Title Page <a data-default="separateLanguages"class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a></label>
+					<p class="d-none d-xl-block">
+						Add tabs to display all languages, or only chapters for each Languages available.<br />
+						You need to enable all languages you want on <b>MangaDex</b> or it will do nothing.
+					</p>
+					<div data-option="separateLanguages" data-type="checkbox" class="col px-0 my-auto input-group">
+						<div class="input-group-prepend">
+							<button type="button" class="btn btn-success input-prepend col px-2">Enabled</button>
+						</div>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-secondary input-append col px-2">Disabled</button>
+						</div>
+					</div>
+				</div>
+				<div class="form-group text-container p-2">
+					<label class="font-weight-bold">
+						Default Language in Title Page <a data-default="defaultLanguage" class="btn btn-sm btn-secondary"><i class="fas fa-trash"></i><span class="d-none d-xl-inline"> Restore default</span></a>
+					</label>
+					<p class="d-none d-xl-block">
+						Require <b>Separate Languages in Title Page</b> enabled.<br />
+						Set the default language displayed in the chapter list of a <b>Title Page</b>.<br />
+						Default to <b>all</b> to display all languages you have activated on <b>MangaDex</b>.
+						<div class="alert alert-info">
+							You need to enter a <b>Country Code</b> here, to find a code for a language you can hover any flag in the <b>Title Page</b> and you will see <b>Language - code</b>.
+						</div>
+					</p>
+					<div class="px-0">
+						<input data-option="defaultLanguage" data-type="text" type="text" class="form-control" />
+					</div>
+				</div>
 			</div>
 		</div>
 		<!-- History -->

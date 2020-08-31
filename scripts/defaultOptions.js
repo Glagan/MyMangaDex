@@ -43,6 +43,8 @@ let defaultOptions = {
 	coverMaxHeight: 80,
 	highlightChapters: true,
 	showNotifications: true,
+	separateLanguages: true,
+	defaultLanguage: 'all',
 	showErrors: true,
 	onlineSave: false,
 	onlineURL: 'https://mmd.nikurasu.org/api/',
