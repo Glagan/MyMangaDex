@@ -1818,10 +1818,20 @@ class MyMangaDex {
 
 			// Flatten and get an usable Language Map
 			for (const group of groups) {
+				let lastCode;
 				for (const chapter of group.chapters) {
 					languageMap[chapter.code] = chapter.language;
 					rowLanguages.push({ code: chapter.code, node: chapter.node });
 					chapter.node.classList.add('has-fast-in-transition', 'is-hidden-lang-chapter', 'is-lang-visible');
+					if (lastCode && lastCode != chapter.code) {
+						const link = document.createElement('a');
+						link.textContent = group.name;
+						link.className = 'text-truncate';
+						link.href = `/title/${group.titleId}`;
+						link.title = group.name;
+						chapter.node.firstElementChild.appendChild(link);
+					}
+					lastCode = chapter.code;
 				}
 			}
 
@@ -1891,7 +1901,7 @@ class MyMangaDex {
 							j++;
 						}
 						if (j < chapterCount) {
-							let link = document.createElement('a');
+							const link = document.createElement('a');
 							link.textContent = group.name;
 							link.className = 'text-truncate';
 							link.href = `/title/${group.titleId}`;
