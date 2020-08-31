@@ -724,6 +724,7 @@ class MyMangaDex {
 						rowLanguages.push({ code: code, node: element });
 						languageMap[code] = flag.title;
 						flag.title = `${flag.title} - ${code}`;
+						element.classList.add('is-hidden-lang-chapter', 'is-lang-visible');
 					} catch (error) {}
 				}
 			}
@@ -742,56 +743,25 @@ class MyMangaDex {
 				for (const tab of navTabs.children) {
 					tab.style.display = 'flex';
 				}
-				let currentTab = null;
-				const hideAllExcept = (flag, tab) => {
-					for (const row of rowLanguages) {
-						if (flag == 'all' || row.code == flag) {
-							row.node.classList.remove('is-hidden-chapter');
-						} else {
-							row.node.classList.add('is-hidden-chapter');
-						}
-					}
-					if (currentTab) currentTab.classList.remove('active');
-					currentTab = tab;
-					currentTab.classList.add('active');
-				};
-				const createLanguageTab = (flag, name, title) => {
-					const tab = document.createElement('li');
-					tab.className = 'nav-item';
-					const tabLink = document.createElement('a');
-					tabLink.className = `nav-link tab-${flag}`;
-					if (flag == this.options.defaultLanguage) {
-						tabLink.classList.add('active');
-					}
-					tabLink.href = '#';
-					tabLink.title = title;
-					tabLink.addEventListener('click', (event) => {
-						event.preventDefault();
-						hideAllExcept(flag, tabLink);
-					});
-					const flagIcon = document.createElement('span');
-					flagIcon.className = `rounded flag flag-${flag}`;
-					const tabLanguage = document.createElement('span');
-					tabLanguage.className = 'd-none d-md-inline';
-					tabLanguage.textContent = name;
-					tabLink.appendChild(flagIcon);
-					tabLink.appendChild(document.createTextNode('\xA0'));
-					tabLink.appendChild(tabLanguage);
-					tab.appendChild(tabLink);
-					navTabs.appendChild(tab);
-					return tabLink;
-				};
 
 				// Add languages buttons
-				const allTab = createLanguageTab('all', 'All Languages', 'Display chapters in all Languages');
-				if (defaultLanguage == 'all') hideAllExcept(defaultLanguage, allTab);
+				const allTab = this.createLanguageTab(
+					navTabs,
+					rowLanguages,
+					'all',
+					'All Languages',
+					'Display chapters in all Languages'
+				);
+				if (defaultLanguage == 'all') this.hideAllLanguagesExcept(rowLanguages, defaultLanguage, allTab);
 				for (const language of availableLanguages) {
-					const tab = createLanguageTab(
+					const tab = this.createLanguageTab(
+						navTabs,
+						rowLanguages,
 						language,
 						languageMap[language],
 						`Show only chapters in ${languageMap[language]}`
 					);
-					if (language == defaultLanguage) hideAllExcept(defaultLanguage, tab);
+					if (language == defaultLanguage) this.hideAllLanguagesExcept(rowLanguages, defaultLanguage, tab);
 				}
 			}
 		}
@@ -1454,16 +1424,17 @@ class MyMangaDex {
 	}
 
 	getChapterListGroups() {
-		let chapterContainer = document.querySelector('.chapter-container');
+		const chapterContainer = document.querySelector('.chapter-container');
 		if (!chapterContainer) return [];
-		let nodes = chapterContainer.children;
-		let groups = [];
+		const nodes = chapterContainer.children;
+		const groups = [];
 		if (nodes.length > 1) {
 			let currentGroup = { chapters: [] };
+			let flag;
 			for (let i = 1; i < nodes.length; i++) {
-				let chapterRow = nodes[i].querySelector('[data-chapter]');
-				let titleId = Math.floor(chapterRow.dataset.mangaId);
-				let isFirstRow = nodes[i].firstElementChild.childElementCount > 0;
+				const chapterRow = nodes[i].querySelector('[data-chapter]');
+				const titleId = Math.floor(chapterRow.dataset.mangaId);
+				const isFirstRow = nodes[i].firstElementChild.childElementCount > 0;
 				// Is this is a new entry push the current group and create a new one
 				if (isFirstRow) {
 					if (currentGroup.chapters.length > 0) {
@@ -1478,6 +1449,14 @@ class MyMangaDex {
 				let chapter = this.getVolumeChapterFromNode(chapterRow);
 				chapter.value = chapter.chapter;
 				chapter.node = nodes[i];
+				if (this.options.separateLanguages && (flag = chapterRow.querySelector('.flag'))) {
+					try {
+						const code = /flag-(\w+)/.exec(flag.className)[1];
+						chapter.language = flag.title;
+						chapter.code = code;
+						flag.title = `${flag.title} - ${code}`;
+					} catch (error) {}
+				}
 				currentGroup.chapters.push(chapter);
 			}
 			// Push last group
@@ -1693,6 +1672,46 @@ class MyMangaDex {
 		return true;
 	}
 
+	hideAllLanguagesExcept(rows, flag, tab) {
+		for (const row of rows) {
+			if (flag == 'all' || row.code == flag) {
+				row.node.classList.add('is-lang-visible');
+			} else {
+				row.node.classList.remove('is-lang-visible');
+			}
+		}
+		if (this.currentLanguageTab) this.currentLanguageTab.classList.remove('active');
+		this.currentLanguageTab = tab;
+		this.currentLanguageTab.classList.add('active');
+	}
+
+	createLanguageTab(parent, rows, flag, name, title) {
+		const tab = document.createElement('li');
+		tab.className = 'nav-item';
+		const tabLink = document.createElement('a');
+		tabLink.className = `nav-link tab-${flag}`;
+		if (flag == this.options.defaultLanguage) {
+			tabLink.classList.add('active');
+		}
+		tabLink.href = '#';
+		tabLink.title = title;
+		tabLink.addEventListener('click', (event) => {
+			event.preventDefault();
+			this.hideAllLanguagesExcept(rows, flag, tabLink);
+		});
+		const flagIcon = document.createElement('span');
+		flagIcon.className = `rounded flag flag-${flag}`;
+		const tabLanguage = document.createElement('span');
+		tabLanguage.className = 'd-none d-md-inline';
+		tabLanguage.textContent = name;
+		tabLink.appendChild(flagIcon);
+		tabLink.appendChild(document.createTextNode('\xA0'));
+		tabLink.appendChild(tabLanguage);
+		tab.appendChild(tabLink);
+		parent.appendChild(tab);
+		return tabLink;
+	}
+
 	// END HELP / START PAGE
 
 	async chapterListPage(checkUpdates = true) {
@@ -1701,12 +1720,14 @@ class MyMangaDex {
 			!this.options.hideLowerChapters &&
 			!this.options.hideHigherChapters &&
 			!this.options.hideLastRead &&
-			!this.options.showTooltips
+			!this.options.showTooltips &&
+			!this.options.separateLanguages
 		) {
 			return;
 		} // Abort early if useless - no highlight, no hiding and no thumbnails
-		let groups = this.getChapterListGroups();
-		let lastChapter = groups.length;
+
+		const groups = this.getChapterListGroups();
+		const lastChapter = groups.length;
 		let titleInformations = this.titleInformations || {};
 		this.titleInformations = titleInformations; // save object reference
 
@@ -1714,7 +1735,7 @@ class MyMangaDex {
 			(checkUpdates && !titleInformations[id].getsUpdated) ||
 			(!checkUpdates && titleInformations[id].getsUpdated);
 
-		// collect information
+		// Collect informations
 		let toUpdate = [];
 		for (let i = 0; i < lastChapter; i++) {
 			let group = groups[i];
@@ -1790,6 +1811,55 @@ class MyMangaDex {
 			})(toUpdate); // run in background (async)
 		}
 
+		// Add Languages buttons if enabled
+		if (this.options.separateLanguages) {
+			const languageMap = {};
+			const rowLanguages = [];
+
+			// Flatten and get an usable Language Map
+			for (const group of groups) {
+				for (const chapter of group.chapters) {
+					languageMap[chapter.code] = chapter.language;
+					rowLanguages.push({ code: chapter.code, node: chapter.node });
+					chapter.node.classList.add('has-fast-in-transition', 'is-hidden-lang-chapter', 'is-lang-visible');
+				}
+			}
+
+			// Add buttons and activate wanted Language
+			const navTabs = document.querySelector('#content ul.nav.nav-tabs');
+			if (navTabs) {
+				// Find defaultLanguage
+				const availableLanguages = Object.keys(languageMap);
+				const hasWantedLanguage = availableLanguages.includes(this.options.defaultLanguage);
+				const defaultLanguage = hasWantedLanguage ? this.options.defaultLanguage : 'all';
+
+				// Update style to fix tab height
+				for (const tab of navTabs.children) {
+					tab.style.display = 'flex';
+				}
+
+				// Add languages buttons
+				const allTab = this.createLanguageTab(
+					navTabs,
+					rowLanguages,
+					'all',
+					'All Languages',
+					'Display chapters in all Languages'
+				);
+				if (defaultLanguage == 'all') this.hideAllLanguagesExcept(rowLanguages, defaultLanguage, allTab);
+				for (const language of availableLanguages) {
+					const tab = this.createLanguageTab(
+						navTabs,
+						rowLanguages,
+						language,
+						languageMap[language],
+						`Show only chapters in ${languageMap[language]}`
+					);
+					if (language == defaultLanguage) this.hideAllLanguagesExcept(rowLanguages, defaultLanguage, tab);
+				}
+			}
+		}
+
 		/**
 		 * Hide Lower and Higher
 		 */
@@ -1801,12 +1871,6 @@ class MyMangaDex {
 				// If there is data
 				if (informations && checkTitle(group.titleId)) {
 					let chapterCount = group.chapters.length;
-					let highestChapter = Math.max.apply(
-						Math,
-						group.chapters.map((e) => {
-							return e.value;
-						})
-					);
 					for (let j = 0; j < chapterCount; j++) {
 						let chapter = group.chapters[j];
 						if (
@@ -1853,7 +1917,8 @@ class MyMangaDex {
 			if (hiddenCount > 0) {
 				button = document.createElement('li');
 				button.className = 'nav-item mmdNav mmdNav-hidden';
-				let link = document.createElement('a');
+				button.style.display = 'flex';
+				const link = document.createElement('a');
 				this.appendTextWithIcon(link, 'eye', `${!show ? 'Show' : 'Hide'} Hidden (${hiddenCount})`);
 				if (show) link.dataset.show = true;
 				link.className = 'nav-link';
@@ -1946,8 +2011,8 @@ class MyMangaDex {
 
 		/**
 		 * Tooltips
+		 * Only add tooltips on first iteration
 		 */
-		// only add tooltips on first iteration
 		if (this.options.showTooltips) {
 			if (!this.tooltipContainer && !(this.tooltipContainer = document.querySelector('#mmd-tooltip'))) {
 				this.tooltipContainer = document.createElement('div');
@@ -1955,23 +2020,21 @@ class MyMangaDex {
 				document.body.appendChild(this.tooltipContainer);
 			}
 			for (let i = 0; i < lastChapter; i++) {
-				let group = groups[i];
-				if (!titleInformations[group.titleId] || checkTitle(group.titleId)) {
-					let chapterCount = group.chapters.length;
-					titleInformations[group.titleId] = titleInformations[group.titleId] || {};
-					// clear the chapters on first title tooltip
-					titleInformations[group.titleId].options = titleInformations[group.titleId].options || {
-						clear: true,
-					};
-					// Add events
-					for (let j = 0; j < chapterCount; j++) {
-						this.tooltip(
-							group.chapters[j].node,
-							group.titleId,
-							titleInformations[group.titleId].chapters || [],
-							titleInformations[group.titleId].options
-						);
-					}
+				const group = groups[i];
+				const chapterCount = group.chapters.length;
+				titleInformations[group.titleId] = titleInformations[group.titleId] || {};
+				// clear the chapters on first title tooltip
+				titleInformations[group.titleId].options = titleInformations[group.titleId].options || {
+					clear: true,
+				};
+				// Add events
+				for (let j = 0; j < chapterCount; j++) {
+					this.tooltip(
+						group.chapters[j].node,
+						group.titleId,
+						titleInformations[group.titleId].chapters || [],
+						titleInformations[group.titleId].options
+					);
 				}
 			}
 		}
