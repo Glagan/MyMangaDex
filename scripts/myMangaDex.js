@@ -1816,7 +1816,6 @@ class MyMangaDex {
 			const languageMap = {};
 			const rowLanguages = [];
 
-			// Flatten and get an usable Language Map
 			for (const group of groups) {
 				let lastCode;
 				for (const chapter of group.chapters) {
@@ -2669,7 +2668,7 @@ class MyMangaDex {
 										}
 									}
 								}
-							} else if (title === false) {
+							} else if (titles === false) {
 								this.notification(
 									NOTIFY.ERROR,
 									'MangaDex error',
