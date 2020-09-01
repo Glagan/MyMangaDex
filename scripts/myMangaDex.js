@@ -1818,29 +1818,34 @@ class MyMangaDex {
 		if (this.options.separateLanguages) {
 			const languageMap = {};
 			const rowLanguages = [];
-
-			for (const group of groups) {
-				let lastCode;
-				for (const chapter of group.chapters) {
-					languageMap[chapter.code] = chapter.language;
-					rowLanguages.push({ code: chapter.code, node: chapter.node });
-					chapter.node.classList.add('has-fast-in-transition', 'is-hidden-lang-chapter', 'is-lang-visible');
-					if (lastCode && lastCode != chapter.code) {
-						const link = document.createElement('a');
-						link.textContent = group.name;
-						link.className = 'text-truncate';
-						link.href = `/title/${group.titleId}`;
-						link.title = group.name;
-						chapter.node.firstElementChild.appendChild(link);
-					}
-					lastCode = chapter.code;
-				}
-			}
-
-			// Add buttons and activate wanted Language
 			const navTabs = document.querySelector('#content ul.nav.nav-tabs');
+
+			// Avoid creating new buttons
 			if (navTabs && !navTabs.dataset.loaded) {
 				navTabs.dataset.loaded = true;
+
+				// Flatten groups chapters in rowLanguages
+				for (const group of groups) {
+					let lastCode;
+					for (const chapter of group.chapters) {
+						languageMap[chapter.code] = chapter.language;
+						rowLanguages.push({ code: chapter.code, node: chapter.node });
+						chapter.node.classList.add(
+							'has-fast-in-transition',
+							'is-hidden-lang-chapter',
+							'is-lang-visible'
+						);
+						if (lastCode && lastCode != chapter.code) {
+							const link = document.createElement('a');
+							link.textContent = group.name;
+							link.className = 'text-truncate';
+							link.href = `/title/${group.titleId}`;
+							link.title = group.name;
+							chapter.node.firstElementChild.appendChild(link);
+						}
+						lastCode = chapter.code;
+					}
+				}
 
 				// Find defaultLanguage
 				const availableLanguages = Object.keys(languageMap);

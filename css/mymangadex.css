@@ -85,7 +85,7 @@
 	transform: scaleY(0);
 	transform-origin: top;
 }
-.is-hidden-chapter.is-visible,
+.is-hidden-chapter.is-visible:not(.is-hidden-lang-chapter),
 .is-hidden-chapter.is-visible.is-hidden-lang-chapter.is-lang-visible,
 .is-hidden-lang-chapter.is-lang-visible:not(.is-hidden-chapter) {
 	transform: scaleY(1);
