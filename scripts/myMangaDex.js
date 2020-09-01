@@ -656,6 +656,7 @@ class MyMangaDex {
 
 	highlightChapters() {
 		if (!this.options.highlightChapters) return;
+
 		// Chapters list displayed
 		let chapterList;
 		try {
@@ -733,7 +734,9 @@ class MyMangaDex {
 		// Display or Hide other languages
 		if (this.options.separateLanguages) {
 			const navTabs = document.querySelector('ul.edit.nav.nav-tabs');
-			if (navTabs) {
+			if (navTabs && !navTabs.dataset.loaded) {
+				navTabs.dataset.loaded = true;
+
 				// Find defaultLanguage
 				const availableLanguages = Object.keys(languageMap);
 				const hasWantedLanguage = availableLanguages.includes(this.options.defaultLanguage);
@@ -1836,7 +1839,9 @@ class MyMangaDex {
 
 			// Add buttons and activate wanted Language
 			const navTabs = document.querySelector('#content ul.nav.nav-tabs');
-			if (navTabs) {
+			if (navTabs && !navTabs.dataset.loaded) {
+				navTabs.dataset.loaded = true;
+
 				// Find defaultLanguage
 				const availableLanguages = Object.keys(languageMap);
 				const hasWantedLanguage = availableLanguages.includes(this.options.defaultLanguage);
