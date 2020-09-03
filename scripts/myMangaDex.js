@@ -1616,7 +1616,16 @@ class MyMangaDex {
 		let chapter = +dataNode.dataset.chapter;
 
 		if (this.pageType != 'title') {
+			let col;
+			// Find the name in the first cold of the parent of the the closest col of the eye icon
+			let name =
+				(col = eye.closest('.col')) && col != (col = col.parentElement.firstElementChild)
+					? col.textContent.trim()
+					: undefined;
 			this.manga = { mangaDexId: dataNode.dataset.mangaId };
+			if (name) {
+				this.manga.name = name;
+			}
 			await this.getTitleInfos();
 
 			if (this.manga.myAnimeListId) await this.fetchMyAnimeList();
