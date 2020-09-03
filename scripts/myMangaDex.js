@@ -666,7 +666,9 @@ class MyMangaDex {
 			return;
 		}
 
-		// Collect language for each rows
+		// Separate Languages options
+		const navTabs = document.querySelector('ul.edit.nav.nav-tabs');
+		const langLoaded = navTabs ? !!navTabs.dataset.loaded : true;
 		const languageMap = {};
 		const rowLanguages = [];
 
@@ -717,7 +719,7 @@ class MyMangaDex {
 			}
 
 			// Assign row to it's language list
-			if (this.options.separateLanguages) {
+			if (this.options.separateLanguages && !langLoaded) {
 				const flag = element.querySelector('.flag');
 				if (flag) {
 					try {
@@ -732,40 +734,37 @@ class MyMangaDex {
 		}
 
 		// Display or Hide other languages
-		if (this.options.separateLanguages) {
-			const navTabs = document.querySelector('ul.edit.nav.nav-tabs');
-			if (navTabs && !navTabs.dataset.loaded) {
-				navTabs.dataset.loaded = true;
+		if (this.options.separateLanguages && !langLoaded) {
+			navTabs.dataset.loaded = true;
 
-				// Find defaultLanguage
-				const availableLanguages = Object.keys(languageMap);
-				const hasWantedLanguage = availableLanguages.includes(this.options.defaultLanguage);
-				const defaultLanguage = hasWantedLanguage ? this.options.defaultLanguage : 'all';
+			// Find defaultLanguage
+			const availableLanguages = Object.keys(languageMap);
+			const hasWantedLanguage = availableLanguages.includes(this.options.defaultLanguage);
+			const defaultLanguage = hasWantedLanguage ? this.options.defaultLanguage : 'all';
 
-				// Update style to fix tab height
-				for (const tab of navTabs.children) {
-					tab.style.display = 'flex';
-				}
+			// Update style to fix tab height
+			for (const tab of navTabs.children) {
+				tab.style.display = 'flex';
+			}
 
-				// Add languages buttons
-				const allTab = this.createLanguageTab(
+			// Add languages buttons
+			const allTab = this.createLanguageTab(
+				navTabs,
+				rowLanguages,
+				'all',
+				'All Languages',
+				'Display chapters in all Languages'
+			);
+			if (defaultLanguage == 'all') this.hideAllLanguagesExcept(rowLanguages, defaultLanguage, allTab);
+			for (const language of availableLanguages) {
+				const tab = this.createLanguageTab(
 					navTabs,
 					rowLanguages,
-					'all',
-					'All Languages',
-					'Display chapters in all Languages'
+					language,
+					languageMap[language],
+					`Show only chapters in ${languageMap[language]}`
 				);
-				if (defaultLanguage == 'all') this.hideAllLanguagesExcept(rowLanguages, defaultLanguage, allTab);
-				for (const language of availableLanguages) {
-					const tab = this.createLanguageTab(
-						navTabs,
-						rowLanguages,
-						language,
-						languageMap[language],
-						`Show only chapters in ${languageMap[language]}`
-					);
-					if (language == defaultLanguage) this.hideAllLanguagesExcept(rowLanguages, defaultLanguage, tab);
-				}
+				if (language == defaultLanguage) this.hideAllLanguagesExcept(rowLanguages, defaultLanguage, tab);
 			}
 		}
 	}
@@ -1438,6 +1437,7 @@ class MyMangaDex {
 				const chapterRow = nodes[i].querySelector('[data-chapter]');
 				const titleId = Math.floor(chapterRow.dataset.mangaId);
 				const isFirstRow = nodes[i].firstElementChild.childElementCount > 0;
+
 				// Is this is a new entry push the current group and create a new one
 				if (isFirstRow) {
 					if (currentGroup.chapters.length > 0) {
@@ -1449,10 +1449,16 @@ class MyMangaDex {
 						chapters: [],
 					};
 				}
+
 				let chapter = this.getVolumeChapterFromNode(chapterRow);
 				chapter.value = chapter.chapter;
 				chapter.node = nodes[i];
-				if (this.options.separateLanguages && (flag = chapterRow.querySelector('.flag'))) {
+				if (
+					this.options.separateLanguages &&
+					!chapterRow.dataset.langLoaded &&
+					(flag = chapterRow.querySelector('.flag'))
+				) {
+					chapterRow.dataset.langLoaded = true;
 					try {
 						const code = /flag-(\w+)/.exec(flag.className)[1];
 						chapter.language = flag.title;
@@ -1819,9 +1825,10 @@ class MyMangaDex {
 			const languageMap = {};
 			const rowLanguages = [];
 			const navTabs = document.querySelector('#content ul.nav.nav-tabs');
+			const langLoaded = navTabs ? !!navTabs.dataset.loaded : true;
 
 			// Avoid creating new buttons
-			if (navTabs && !navTabs.dataset.loaded) {
+			if (!langLoaded) {
 				navTabs.dataset.loaded = true;
 
 				// Flatten groups chapters in rowLanguages
