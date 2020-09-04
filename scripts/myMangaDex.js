@@ -1487,7 +1487,7 @@ class MyMangaDex {
 	}
 
 	async saveTitleInHistory(manga) {
-		if (isNaN(+manga.mangadexId)) return;
+		if (isNaN(+manga.mangaDexId)) return;
 		// Load History and initialize if it's empty
 		if (!this.history) {
 			this.history = await storageGet('history');
