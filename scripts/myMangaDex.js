@@ -1768,7 +1768,7 @@ class MyMangaDex {
 			if (!titleInformations[group.titleId]) {
 				titleInformations[group.titleId] = await storageGet(group.titleId);
 				if (titleInformations[group.titleId]) {
-					titleInformations[group.titleId].next = Math.floor(titleInformations[group.titleId].last) + 1;
+					titleInformations[group.titleId].next = null;
 					titleInformations[group.titleId].getsUpdated = !checkUpdates;
 				}
 			}
@@ -1787,7 +1787,7 @@ class MyMangaDex {
 					if (chapter.value > informations.last) {
 						// might be next
 						if (Math.floor(chapter.value) <= informations.last + 1) {
-							informations.next = Math.min(informations.next, chapter.value);
+							informations.next = Math.min(informations.next || Math.floor(titleInformations[group.titleId].last) + 2, chapter.value);
 						}
 						// if check for updates, has mal title and last checked more than 12 hours ago (12*60*60*1000ms)
 						if (
