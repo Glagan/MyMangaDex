@@ -394,7 +394,9 @@ class MyMangaDex {
 			this.saveTitleInHistory(this.manga);
 		}
 		// Update local storage - after, it doesn't really matter
+		console.log(false);
 		this.manga.lastMangaDexChapter = this.manga.currentChapter.chapter;
+		console.log(this.manga.lastMangaDexChapter, this.manga);
 		await updateLocalStorage(this.manga, this.options);
 	}
 
@@ -2383,7 +2385,7 @@ class MyMangaDex {
 		}
 		this.manga.currentChapter = {
 			volume: parseInt(data.volume) || 0,
-			chapter: parseFloat(data.chapter) || -1,
+			chapter: parseFloat(data.chapter) || 0,
 		};
 		const delayed = data.status != 'OK' && data.status != 'external';
 		this.updateChapter(delayed, oldChapter);

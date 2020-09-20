@@ -279,9 +279,10 @@ async function updateLocalStorage(manga, options) {
 	}
 	let nManga = {
 		mal: manga.myAnimeListId || manga.mal,
-		last: manga.lastMangaDexChapter || manga.last,
+		last: manga.lastMangaDexChapter,
 		chapters: manga.chapters,
 	};
+	if (isNaN(nManga.last)) nManga.last = manga.last;
 	if (options.updateHistoryPage) {
 		Object.assign(nManga, {
 			highest: manga.highest,
