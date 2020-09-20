@@ -449,7 +449,7 @@ class MyMangaDex {
 		chapter = parseFloat(chapter);
 		return {
 			volume: Math.floor(node.dataset.volume) || 0,
-			chapter: isNaN(chapter) ? 0 : chapter,
+			chapter: isNaN(chapter) ? -1 : chapter,
 		};
 	}
 
@@ -465,7 +465,7 @@ class MyMangaDex {
 		let chapter = parseFloat(regexResult[2]);
 		return {
 			volume: Math.floor(regexResult[1]) || 0,
-			chapter: isNaN(chapter) ? 0 : chapter,
+			chapter: isNaN(chapter) ? -1 : chapter,
 		};
 	}
 
@@ -682,7 +682,11 @@ class MyMangaDex {
 			chapterVolume.chapterFloored = Math.floor(chapterVolume.chapter);
 
 			if (firstChapter === undefined) {
-				firstChapter = chapterVolume.chapter;
+				if (chapterVolume.chapter < 2) {
+					firstChapter = chapterVolume.chapter;
+				} else {
+					firstChapter = -1;
+				}
 			}
 			let maybeNext = chapterVolume.chapterFloored <= Math.floor(this.manga.lastMangaDexChapter) + 1;
 			if (
@@ -1228,7 +1232,7 @@ class MyMangaDex {
 			this.appendTextWithIcon(rereadButton, 'book-open', 'Re-read');
 			// On click we hide or create the modal
 			rereadButton.addEventListener('click', async () => {
-				this.manga.currentChapter.chapter = 0;
+				this.manga.currentChapter.chapter = -1;
 				this.manga.lastMyAnimeListChapter = 0;
 				this.manga.currentChapter.volume = 0;
 				this.manga.last_volume = 0;
@@ -1610,7 +1614,7 @@ class MyMangaDex {
 		let dataNode = eye;
 		while (true) {
 			dataNode = dataNode.parentNode;
-			if (!dataNode || dataNode.dataset.chapter) break;
+			if (!dataNode || dataNode.dataset.chapter !== undefined) break;
 		}
 		if (!dataNode) return;
 		let chapter = +dataNode.dataset.chapter;
@@ -1636,14 +1640,16 @@ class MyMangaDex {
 		if (markUnread) {
 			let updateLast = this.manga.lastMangaDexChapter == chapter;
 			if (updateLast) {
-				this.manga.currentChapter.chapter = 0;
-				this.manga.lastMangaDexChapter = 0;
+				this.manga.currentChapter.chapter = -1;
+				this.manga.lastMangaDexChapter = -1;
+				this.manga.last = -1;
 			}
 			this.manga.chapters = this.manga.chapters.filter((chap) => {
 				// update to next smaller chapter
 				if (updateLast && chap < chapter) {
 					this.manga.currentChapter.chapter = chap;
 					this.manga.lastMangaDexChapter = chap;
+					this.manga.last = chap;
 					updateLast = false;
 				}
 				return chap != chapter;
@@ -1653,11 +1659,12 @@ class MyMangaDex {
 			if (chapter > this.manga.lastMangaDexChapter || chapter > this.manga.lastMyAnimeListChapter) {
 				this.manga.currentChapter.chapter = chapter;
 				this.manga.lastMangaDexChapter = chapter;
+				this.manga.last = chapter;
 			}
 		}
 
 		if (
-			this.manga.myAnimeListId &&
+			this.manga.myAnimeListId && this.loggedMyAnimeList &&
 			(!this.manga.lastMyAnimeListChapter ||
 				Math.floor(this.manga.lastMangaDexChapter) != this.manga.lastMyAnimeListChapter)
 		) {
@@ -2376,7 +2383,7 @@ class MyMangaDex {
 		}
 		this.manga.currentChapter = {
 			volume: parseInt(data.volume) || 0,
-			chapter: parseFloat(data.chapter) || 0,
+			chapter: parseFloat(data.chapter) || -1,
 		};
 		const delayed = data.status != 'OK' && data.status != 'external';
 		this.updateChapter(delayed, oldChapter);
