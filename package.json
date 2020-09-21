@@ -9,7 +9,9 @@
 		"web-ext": "^4.2.0"
 	},
 	"devDependencies": {
-		"node-watch": "^0.6.4"
+		"eslint": "^7.9.0",
+		"node-watch": "^0.6.4",
+		"prettier": "^2.1.2"
 	},
 	"scripts": {
 		"build": "node build firefox && node build chrome",
@@ -18,7 +20,9 @@
 		"firefox:dev": "node build firefox -dev",
 		"chrome:dev": "node build chrome -dev",
 		"stop": "node build stop",
-		"clean": "node build clean"
+		"clean": "node build clean",
+		"format": "prettier -w \"scripts/*.js\"",
+		"lint": "eslint \"scripts/*.js\""
 	},
 	"repository": {
 		"type": "git",
