@@ -315,26 +315,28 @@ async function updateLocalStorage(manga, options) {
 			{ position: 'bottom-left' }
 		);
 	}
+
 	// Update online
-	if (options.onlineSave && options.isLoggedIn) {
-		// Build body
-		let body = {
-			mal: manga.myAnimeListId,
-			last: manga.lastMangaDexChapter,
-			options: {
-				saveAllOpened: options.saveAllOpened,
-				maxChapterSaved: options.maxChapterSaved,
-			},
-		};
-		if (options.updateHistoryPage && manga.name != undefined && manga.chapterId > 0) {
-			body.options.updateHistoryPage = true;
-			body.volume = manga.currentChapter.volume;
-			body.title_name = manga.name;
-			body.chapter = manga.chapterId;
-			body.highest = manga.highest;
-			body.lastRead = manga.lastRead;
-		}
-		// Send the request
+	if (!options.onlineSave || !options.isLoggedIn) return;
+	// Build body
+	let body = {
+		mal: manga.myAnimeListId,
+		last: manga.lastMangaDexChapter,
+		options: {
+			saveAllOpened: options.saveAllOpened,
+			maxChapterSaved: options.maxChapterSaved,
+		},
+	};
+	if (options.updateHistoryPage && manga.name != undefined && manga.chapterId > 0) {
+		body.options.updateHistoryPage = true;
+		body.volume = manga.currentChapter.volume;
+		body.title_name = manga.name;
+		body.chapter = manga.chapterId;
+		body.highest = manga.highest;
+		body.lastRead = manga.lastRead;
+	}
+	// Send the request
+	const request = async () => {
 		try {
 			let response = await browser.runtime.sendMessage({
 				action: 'fetch',
@@ -352,21 +354,78 @@ async function updateLocalStorage(manga, options) {
 				isJson: true,
 			});
 
-			if (response.status != 200) {
+			if (response.status == 500) {
 				options.isLoggedIn = false;
+			} else if (response.status != 200 && options.showErrors) {
+				let msg = response.status == 0 ? "The request was blocked by your browser. Sometimes restarting it can help.\n" : "";
+				msg += "If this problem persists, please open a new issue at {{https://github.com/Glagan/MyMangaDex/issues}}";
+				SimpleNotification.error(
+					{
+						title: "Couldn't save Online",
+						image: 'https://ramune.nikurasu.org/mymangadex/128b.png',
+						text: `Online save responded with error ${response.status}.\n${msg}`,
+						buttons: [
+							{
+								value: 'Retry',
+								type: 'message',
+								onClick: (n) => {
+									n.close();
+									request();
+								}
+							},
+							{
+								value: 'Close',
+								type: 'message',
+								onClick: (n) => {
+									n.close();
+								},
+							},
+						],
+					},
+					{ sticky: true, position: 'bottom-left' }
+				);
 			}
 		} catch (error) {
-			options.isLoggedIn = false;
-			console.error(error);
-		}
-		if (options.isLoggedIn == false) {
 			if (options.showErrors) {
 				SimpleNotification.error(
 					{
 						title: "Couldn't save Online",
 						image: 'https://ramune.nikurasu.org/mymangadex/128b.png',
 						text:
-							'The Online Service might have a problem, or your credentials have been changed.\nYou have been **logged out**, go to the options to log in again.',
+							'Internal Error sending request to Online Service.\nSometimes restarting your browser can help.',
+						buttons: [
+							{
+								value: 'Retry',
+								type: 'message',
+								onClick: (n) => {
+									n.close();
+									request();
+								},
+							},
+							{
+								value: 'Close',
+								type: 'message',
+								onClick: (n) => {
+									n.close();
+								},
+							},
+						],
+					},
+					{ sticky: true, position: 'bottom-left' }
+				);
+			}
+			console.error(error);
+		}
+
+		if (options.isLoggedIn == false) {
+			await storageSet('options', options);
+			if (options.showErrors) {
+				SimpleNotification.error(
+					{
+						title: "Couldn't save Online",
+						image: 'https://ramune.nikurasu.org/mymangadex/128b.png',
+						text:
+							'It seems the Online Service has a problem, or your credentials have been changed.\nYou have been **logged out**, go to the options to log in again\nIf this problem persists, please open a new issue at {{https://github.com/Glagan/MyMangaDex/issues}}',
 						buttons: {
 							value: 'Open Options',
 							type: 'message',
@@ -379,9 +438,9 @@ async function updateLocalStorage(manga, options) {
 					{ sticky: true, position: 'bottom-left' }
 				);
 			}
-			await storageSet('options', options);
 		}
-	}
+	};
+	request();
 }
 
 function clearDomNode(node) {

@@ -215,7 +215,7 @@ class OptionsManager {
 	// FUNCTIONS
 
 	async sleep(time) {
-		return await new Promise((resolve) => {
+		return new Promise((resolve) => {
 			setTimeout(() => {
 				resolve();
 			}, time);
