@@ -1666,7 +1666,7 @@ class MyMangaDex {
 				this.manga.lastMangaDexChapter = prev + 0.99999;
 			}
 		} else {
-			this.insertChapter(chapter);
+			if (this.options.saveAllOpened) this.insertChapter(chapter);
 			if (chapter > this.manga.lastMangaDexChapter || chapter > this.manga.lastMyAnimeListChapter) {
 				this.manga.currentChapter.chapter = chapter;
 				this.manga.lastMangaDexChapter = chapter;
