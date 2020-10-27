@@ -156,7 +156,7 @@ if (args.indexOf('-dev') >= 0) {
 	debug = true;
 }
 
-console.log(`Building for ${browser}`);
+console.log(`Building for ${browser} [${manifest.version}]`);
 console.log(`Options: no-minify[${noMinify}] debug[${debug}] dev[${dev}]\n`);
 
 // Browser specific elements
