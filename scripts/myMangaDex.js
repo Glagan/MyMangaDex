@@ -1634,6 +1634,8 @@ class MyMangaDex {
 
 			if (this.manga.myAnimeListId) await this.fetchMyAnimeList();
 		}
+
+		let last = this.manga.last;
 		this.manga.currentChapter = this.manga.currentChapter || { chapter: -1, volume: 0 };
 		this.manga.lastMangaDexChapter = this.manga.lastMangaDexChapter || this.manga.currentChapter.chapter;
 		this.manga.chapters = this.manga.chapters || [];
@@ -1654,8 +1656,17 @@ class MyMangaDex {
 				}
 				return chap != chapter;
 			});
+			let prev = Math.floor(last) - 1;
+			// always choose one that is within 1 range
+			// (unavoidable) error: either use floored, leads to false next chapter when using sub-chapters
+			//											or add 0.99999, leads to correct next chapter but no current chapter
+			if (this.manga.last == -1 || Math.floor(this.manga.last) < prev) {
+				this.manga.last = prev + 0.99999;
+				this.manga.currentChapter.chapter = prev + 0.99999;
+				this.manga.lastMangaDexChapter = prev + 0.99999;
+			}
 		} else {
-			this.insertChapter(chapter);
+			if (this.options.saveAllOpened) this.insertChapter(chapter);
 			if (chapter > this.manga.lastMangaDexChapter || chapter > this.manga.lastMyAnimeListChapter) {
 				this.manga.currentChapter.chapter = chapter;
 				this.manga.lastMangaDexChapter = chapter;
