@@ -1636,7 +1636,9 @@ class MyMangaDex {
 		}
 
 		let last = this.manga.last;
-		this.manga.currentChapter = this.manga.currentChapter || { chapter: -1, volume: 0 };
+		if (!this.manga.currentChapter) {
+			this.manga.currentChapter = { chapter: -1, volume: 0 };
+		}
 		this.manga.lastMangaDexChapter = this.manga.lastMangaDexChapter || this.manga.currentChapter.chapter;
 		this.manga.chapters = this.manga.chapters || [];
 		if (markUnread) {
@@ -2396,10 +2398,15 @@ class MyMangaDex {
 		if (this.manga.chapterId != data.id) {
 			oldChapter = this.manga.currentChapter;
 		}
-		this.manga.currentChapter = {
-			volume: parseInt(data.volume) || (oldChapter && oldChapter.volume ? oldChapter.volume : 0),
-			chapter: parseFloat(data.chapter) || (oldChapter && oldChapter.chapter ? oldChapter.chapter : 0),
-		};
+		let volume = parseInt(data.volume);
+		if (isNaN(volume) || !volume) {
+			volume = oldChapter && oldChapter.volume ? oldChapter.volume : this.manga.last_volume;
+		}
+		let chapter = parseInt(data.chapter);
+		if (isNaN(chapter) || !chapter) {
+			chapter = oldChapter && oldChapter.chapter ? oldChapter.chapter : this.manga.lastMyAnimeListChapter;
+		}
+		this.manga.currentChapter = { chapter, volume };
 		const delayed = data.status != 'OK' && data.status != 'external';
 		this.updateChapter(delayed, oldChapter);
 		this.manga.chapterId = data.id;

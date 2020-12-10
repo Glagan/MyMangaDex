@@ -357,8 +357,11 @@ async function updateLocalStorage(manga, options) {
 			if (response.status == 500) {
 				options.isLoggedIn = false;
 			} else if (response.status != 200 && options.showErrors) {
-				let msg = response.status == 0 ? "The request was blocked by your browser. Sometimes restarting it can help.\n" : "";
-				msg += "If this problem persists, please open a new issue at {{https://github.com/Glagan/MyMangaDex/issues}}";
+				let msg =
+					response.status == 0
+						? `The request was blocked by your browser. Sometimes restarting it can help.\n`
+						: '';
+				msg = `${msg}If this problem persists, please open a new issue at {{https://github.com/Glagan/MyMangaDex/issues}}`;
 				SimpleNotification.error(
 					{
 						title: "Couldn't save Online",
@@ -371,7 +374,7 @@ async function updateLocalStorage(manga, options) {
 								onClick: (n) => {
 									n.close();
 									request();
-								}
+								},
 							},
 							{
 								value: 'Close',
@@ -467,12 +470,14 @@ function processMyAnimeListResponse(manga, text) {
 	manga.lastMyAnimeListChapter = /add_manga_num_read_chapters.+value="(\d+)?"/.exec(text);
 	manga.lastMyAnimeListChapter =
 		manga.lastMyAnimeListChapter === null ? manga.lastMangaDexChapter : parseInt(manga.lastMyAnimeListChapter[1]);
+	if (isNaN(manga.lastMyAnimeListChapter)) manga.lastMyAnimeListChapter = 0;
 	// Total times re-read
 	manga.total_reread = /add_manga_num_read_times.+value="(\d+)?"/.exec(text);
 	manga.total_reread = manga.total_reread === null ? 0 : parseInt(manga.total_reread[1]);
 	// Last read volume
 	manga.last_volume = /add_manga_num_read_volumes.+value="(\d+)?"/.exec(text);
 	manga.last_volume = manga.last_volume === null ? 0 : parseInt(manga.last_volume[1]);
+	if (isNaN(manga.last_volume)) manga.last_volume = 0;
 	// Retail volumes
 	manga.retail_volumes = /add_manga_num_retail_volumes.+value="(\d+)?"/.exec(text);
 	manga.retail_volumes = manga.retail_volumes === null ? 0 : parseInt(manga.retail_volumes[1]);
