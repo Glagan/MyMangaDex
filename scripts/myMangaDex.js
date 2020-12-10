@@ -1675,7 +1675,8 @@ class MyMangaDex {
 		}
 
 		if (
-			this.manga.myAnimeListId && this.loggedMyAnimeList &&
+			this.manga.myAnimeListId &&
+			this.loggedMyAnimeList &&
 			(!this.manga.lastMyAnimeListChapter ||
 				Math.floor(this.manga.lastMangaDexChapter) != this.manga.lastMyAnimeListChapter)
 		) {
@@ -1798,7 +1799,10 @@ class MyMangaDex {
 					if (chapter.value > informations.last) {
 						// might be next
 						if (Math.floor(chapter.value) <= informations.last + 1) {
-							informations.next = Math.min(informations.next || Math.floor(titleInformations[group.titleId].last) + 2, chapter.value);
+							informations.next = Math.min(
+								informations.next || Math.floor(titleInformations[group.titleId].last) + 2,
+								chapter.value
+							);
 						}
 						// if check for updates, has mal title and last checked more than 12 hours ago (12*60*60*1000ms)
 						if (
@@ -2393,8 +2397,8 @@ class MyMangaDex {
 			oldChapter = this.manga.currentChapter;
 		}
 		this.manga.currentChapter = {
-			volume: parseInt(data.volume) || 0,
-			chapter: parseFloat(data.chapter) || 0,
+			volume: parseInt(data.volume) || (oldChapter && oldChapter.volume ? oldChapter.volume : 0),
+			chapter: parseFloat(data.chapter) || (oldChapter && oldChapter.chapter ? oldChapter.chapter : 0),
 		};
 		const delayed = data.status != 'OK' && data.status != 'external';
 		this.updateChapter(delayed, oldChapter);
