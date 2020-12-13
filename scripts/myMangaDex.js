@@ -2402,7 +2402,7 @@ class MyMangaDex {
 		if (isNaN(volume) || !volume) {
 			volume = oldChapter && oldChapter.volume ? oldChapter.volume : this.manga.last_volume;
 		}
-		let chapter = parseInt(data.chapter);
+		let chapter = parseFloat(data.chapter);
 		if (isNaN(chapter) || !chapter) {
 			chapter = oldChapter && oldChapter.chapter ? oldChapter.chapter : this.manga.lastMyAnimeListChapter;
 		}
