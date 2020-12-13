@@ -1617,21 +1617,21 @@ class MyMangaDex {
 			if (!dataNode || dataNode.dataset.chapter !== undefined) break;
 		}
 		if (!dataNode) return;
-		let chapter = +dataNode.dataset.chapter;
+		let volume = parseInt(dataNode.dataset.volume);
+		if (isNaN(volume)) volume = 0;
+		const chapter = parseFloat(dataNode.dataset.chapter);
+		if (isNaN(chapter)) return;
 
 		if (this.pageType != 'title') {
 			let col;
 			// Find the name in the first cold of the parent of the the closest col of the eye icon
-			let name =
+			const name =
 				(col = eye.closest('.col')) && col != (col = col.parentElement.firstElementChild)
 					? col.textContent.trim()
 					: undefined;
 			this.manga = { mangaDexId: dataNode.dataset.mangaId };
-			if (name) {
-				this.manga.name = name;
-			}
+			if (name) this.manga.name = name;
 			await this.getTitleInfos();
-
 			if (this.manga.myAnimeListId) await this.fetchMyAnimeList();
 		}
 
@@ -1641,6 +1641,8 @@ class MyMangaDex {
 		}
 		this.manga.lastMangaDexChapter = this.manga.lastMangaDexChapter || this.manga.currentChapter.chapter;
 		this.manga.chapters = this.manga.chapters || [];
+		// If the chapter is already marked as read
+		// Remove read status and revert to the best previous chapter we can find
 		if (markUnread) {
 			let updateLast = this.manga.lastMangaDexChapter == chapter;
 			if (updateLast) {
@@ -1667,9 +1669,14 @@ class MyMangaDex {
 				this.manga.currentChapter.chapter = prev + 0.99999;
 				this.manga.lastMangaDexChapter = prev + 0.99999;
 			}
-		} else {
+		}
+		// If it's not already in list mark it as read and update the progress to the current row
+		else {
 			if (this.options.saveAllOpened) this.insertChapter(chapter);
 			if (chapter > this.manga.lastMangaDexChapter || chapter > this.manga.lastMyAnimeListChapter) {
+				let currentVolume = parseInt(this.manga.currentChapter.volume);
+				if (isNaN(currentVolume)) currentVolume = 0;
+				this.manga.currentChapter.volume = Math.max(currentVolume, volume);
 				this.manga.currentChapter.chapter = chapter;
 				this.manga.lastMangaDexChapter = chapter;
 				this.manga.last = chapter;
@@ -1701,7 +1708,7 @@ class MyMangaDex {
 		}
 
 		// no need to wait until it's saved
-		updateLocalStorage(this.manga, this.options);
+		await updateLocalStorage(this.manga, this.options);
 		if (this.pageType == 'title') {
 			this.highlightChapters();
 		} else if (this.pageType == 'chapterList') {
