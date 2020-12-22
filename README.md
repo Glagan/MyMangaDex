@@ -3,13 +3,12 @@
 ![Follow page Screenshot](screenshots/follow.png)  
 Firefox and Chrome extension that synchronizes what you read on MangaDex.org to your MyAnimeList.net manga list.
 
+![Chrome Web Store](https://img.shields.io/chrome-web-store/v/ihejddjcdmdppiimegmknbcaiebklajl?label=Chrome&logo=google%20chrome&style=for-the-badge)
+![Mozilla Add-on](https://img.shields.io/amo/v/mymangadex?label=Firefox&logo=firefox&style=for-the-badge)
+
 ## Why
 
 Updating your manga one by one, by hand, when you have hundreds of them and read a lot of them each day is a long, tiring task...
-
-## How to Install
-
-You can install it from the [Google Chrome Web Store](https://chrome.google.com/webstore/detail/mymangadex/ihejddjcdmdppiimegmknbcaiebklajl) or the [Firefox add-ons site](https://addons.mozilla.org/en/firefox/addon/mymangadex/) (Also *working* on Firefox for Android).  
 
 ## Requirements
 

@@ -234,6 +234,18 @@ async function loadOptions() {
 			data.version = defaultOptions.version;
 			data.subVersion = defaultOptions.subVersion;
 			fixed = true;
+			SimpleNotification.info(
+				{
+					title: 'SyncDex Beta',
+					text: `A new *version* of **MyMangaDex** is out for testing, you can find it's features and more on Github {{SyncDex|https://github.com/Glagan/SyncDex}}.\nThere is also a quick message in the options for more informations.`,
+					buttons: {
+						value: 'Close',
+						type: 'message',
+						onClick: (n) => n.close(),
+					},
+				},
+				{ sticky: true, position: 'bottom-left' }
+			);
 		}
 		// Save
 		if (fixed) await storageSet('options', data);
