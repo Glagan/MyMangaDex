@@ -1019,7 +1019,7 @@ class MyMangaDex {
 		// prettier-ignore
 		let days = [{ value: '' }, { value: 1 }, { value: 2 }, { value: 3 }, { value: 4 }, { value: 5 }, { value: 6 }, { value: 7 }, { value: 8 }, { value: 9 }, { value: 10 }, { value: 11 }, { value: 12 }, { value: 13 }, { value: 14 }, { value: 15 }, { value: 16 }, { value: 17 }, { value: 18 }, { value: 19 }, { value: 20 }, { value: 21 }, { value: 22 }, { value: 23 }, { value: 24 }, { value: 25 }, { value: 26 }, { value: 27 }, { value: 28 }, { value: 29 }, { value: 30 }, { value: 31 }];
 		// prettier-ignore
-		let years = [{ value: '' }, { value: 2020 }, { value: 2019 }, { value: 2018 }, { value: 2017 }, { value: 2016 }, { value: 2015 }, { value: 2014 }, { value: 2013 }, { value: 2012 }, { value: 2011 }, { value: 2010 }, { value: 2009 }, { value: 2008 }, { value: 2007 }, { value: 2006 }, { value: 2005 }, { value: 2004 }, { value: 2003 }, { value: 2002 }, { value: 2001 }, { value: 2000 }];
+		let years = [{ value: '' }, { value: 2021 }, { value: 2020 }, { value: 2019 }, { value: 2018 }, { value: 2017 }, { value: 2016 }, { value: 2015 }, { value: 2014 }, { value: 2013 }, { value: 2012 }, { value: 2011 }, { value: 2010 }, { value: 2009 }, { value: 2008 }, { value: 2007 }, { value: 2006 }, { value: 2005 }, { value: 2004 }, { value: 2003 }, { value: 2002 }, { value: 2001 }, { value: 2000 }];
 		let dateStart = this.addModalLabel(bodyContainer, 'Start date');
 		dateStart.className = 'col px-0 my-auto form-inline input-group';
 		this.addModalInput(dateStart, 'select', 'start_date.day', this.manga.start_date.day, {
