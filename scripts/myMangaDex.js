@@ -2384,10 +2384,8 @@ class MyMangaDex {
 	async singleChapterEvent(data, firstRun) {
 		if (firstRun) {
 			// Informations
-			this.manga.mangaDexId = data.manga_id;
+			this.manga.mangaDexId = data.manga.id;
 			await this.getTitleInfos();
-
-			this.manga.chapterId = data.id;
 			await this.fetchMyAnimeList();
 
 			if (this.manga.exist && this.manga.is_approved) {
@@ -2434,10 +2432,12 @@ class MyMangaDex {
 		// -> custom events to communicate
 		function relayChapterEvent() {
 			let addEvent = () =>
-				window.reader.model.on('chapterchange', (data) => {
+				window.reader.model.on('chapterchange', (event) => {
 					// note: this function needs to have an actual body to avoid a return
 					// EventEmitter.js removes an event if return matches (default: true)
-					document.dispatchEvent(new CustomEvent('mmdChapterChange', { detail: data._data }));
+					// Deep copy and remove Class Object for Chrome -- manga is a getter explicit copy is required
+					const detail = JSON.parse(JSON.stringify({ ...event, manga: event.manga }));
+					document.dispatchEvent(new CustomEvent('mmdChapterChange', { detail }));
 				});
 			// If the MangaDex reader still hasn't been loaded, check every 50ms
 			if (window.reader === undefined) {

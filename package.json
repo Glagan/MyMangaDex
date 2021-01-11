@@ -1,11 +1,11 @@
 {
 	"name": "mymangadex",
-	"version": "2.4.22",
+	"version": "2.4.23",
 	"description": "Automatically update your MyAnimeList manga list when reading on MangaDex.",
 	"main": "build.js",
 	"dependencies": {},
 	"devDependencies": {
-		"eslint": "^7.16.0",
+		"eslint": "^7.17.0",
 		"node-watch": "^0.6.4",
 		"prettier": "^2.2.1",
 		"rimraf": "^3.0.2",
