@@ -18,6 +18,8 @@ class MyMangaDex {
 		this.myAnimeListImage = 'https://ramune.nikurasu.org/mymangadex/myanimelist.png';
 		this.mmdImage = 'https://ramune.nikurasu.org/mymangadex/128.png';
 		this.mmdCrossedImage = 'https://ramune.nikurasu.org/mymangadex/128b.png';
+		this.editButton = undefined;
+		this.editModal = undefined;
 	}
 
 	async start() {
@@ -1172,6 +1174,10 @@ class MyMangaDex {
 		modalFooter.appendChild(modalSave);
 
 		// Append
+		if (this.editModal) {
+			this.editModal.remove();
+		}
+		this.editModal = modal;
 		document.body.appendChild(modal);
 	}
 
@@ -1211,6 +1217,10 @@ class MyMangaDex {
 			this.modalControl(true);
 		});
 
+		if (this.editButton) {
+			this.editButton.remove();
+		}
+		this.editButton = button;
 		if (parentNode !== undefined) {
 			parentNode.appendChild(button);
 		} else {
@@ -2381,40 +2391,35 @@ class MyMangaDex {
 		}
 	}
 
-	async singleChapterEvent(data, firstRun) {
-		if (firstRun) {
-			// Informations
-			this.manga.mangaDexId = data.manga.id;
-			await this.getTitleInfos();
-			await this.fetchMyAnimeList();
+	pageEvent(content, data, last, page) {
+		const displayedPage = page + parseInt(content.dataset.renderedPages) - 1;
+		const isLastPage = displayedPage >= parseInt(content.dataset.totalPages);
+		// Always trigger on last page, trigger on first page only if saveOnLastPage is disabled
+		if (
+			((this.options.saveOnLastPage && isLastPage) ||
+				(!this.options.saveOnLastPage && (page == 1 || isLastPage || last.page == 0))) &&
+			last.id != data.id
+		) {
+			last.id = data.id;
+			last.page = page;
 
-			if (this.manga.exist && this.manga.is_approved) {
-				this.insertMyAnimeListButton(
-					document.querySelector('.reader-controls-actions.col-auto.row.no-gutters.p-1').lastElementChild
-				);
+			let oldChapter = undefined;
+			if (this.manga.chapterId != data.id) {
+				oldChapter = this.manga.currentChapter;
 			}
-
-			if (this.mangaDexStatus === undefined && (this.options.updateMDList || this.options.updateOnlyInList)) {
-				await this.fetchTitleInfos(false);
+			let volume = parseInt(data.volume);
+			if (isNaN(volume) || !volume) {
+				volume = oldChapter && oldChapter.volume ? oldChapter.volume : this.manga.last_volume;
 			}
+			let chapter = parseFloat(data.chapter);
+			if (isNaN(chapter) || !chapter) {
+				chapter = oldChapter && oldChapter.chapter ? oldChapter.chapter : this.manga.lastMyAnimeListChapter;
+			}
+			this.manga.currentChapter = { chapter, volume };
+			const delayed = data.status != 'OK' && data.status != 'external';
+			this.updateChapter(delayed, oldChapter);
+			this.manga.chapterId = data.id;
 		}
-
-		let oldChapter = undefined;
-		if (this.manga.chapterId != data.id) {
-			oldChapter = this.manga.currentChapter;
-		}
-		let volume = parseInt(data.volume);
-		if (isNaN(volume) || !volume) {
-			volume = oldChapter && oldChapter.volume ? oldChapter.volume : this.manga.last_volume;
-		}
-		let chapter = parseFloat(data.chapter);
-		if (isNaN(chapter) || !chapter) {
-			chapter = oldChapter && oldChapter.chapter ? oldChapter.chapter : this.manga.lastMyAnimeListChapter;
-		}
-		this.manga.currentChapter = { chapter, volume };
-		const delayed = data.status != 'OK' && data.status != 'external';
-		this.updateChapter(delayed, oldChapter);
-		this.manga.chapterId = data.id;
 	}
 
 	singleChapterPage() {
@@ -2427,11 +2432,17 @@ class MyMangaDex {
 			return;
 		}
 
-		let firstRun = true;
 		// only injected scripts can access global variables, but we also need chrome (only in content scripts)
 		// -> custom events to communicate
 		function relayChapterEvent() {
-			let addEvent = () =>
+			let addEvent = () => {
+				window.reader.model.on('mangachange', (event) => {
+					const detail = JSON.parse(JSON.stringify({ ...event, manga: event.manga }));
+					document.dispatchEvent(new CustomEvent('mmdMangaChange', { detail }));
+				});
+				window.reader.model.on('currentpagechange', (event) => {
+					document.dispatchEvent(new CustomEvent('mmdPageChange', { detail: event }));
+				});
 				window.reader.model.on('chapterchange', (event) => {
 					// note: this function needs to have an actual body to avoid a return
 					// EventEmitter.js removes an event if return matches (default: true)
@@ -2439,6 +2450,7 @@ class MyMangaDex {
 					const detail = JSON.parse(JSON.stringify({ ...event, manga: event.manga }));
 					document.dispatchEvent(new CustomEvent('mmdChapterChange', { detail }));
 				});
+			};
 			// If the MangaDex reader still hasn't been loaded, check every 50ms
 			if (window.reader === undefined) {
 				let c = setInterval(() => {
@@ -2451,9 +2463,57 @@ class MyMangaDex {
 		}
 		injectScript(relayChapterEvent);
 
-		document.addEventListener('mmdChapterChange', async (event) => {
-			await this.singleChapterEvent(event.detail, firstRun);
-			firstRun = false;
+		// Manually resolve promise to wait for initialization
+		function createInitialization() {
+			let initResolve = undefined;
+			const initPromise = new Promise((r) => (initResolve = r));
+			function initialization() {
+				return initPromise;
+			}
+			function initialized() {
+				initResolve();
+			}
+			return { initialization, initialized };
+		}
+		let loading = createInitialization();
+		let loadedOnce = false;
+
+		// Initialize on manga change
+		document.addEventListener('mmdMangaChange', async (event) => {
+			if (loadedOnce) {
+				loading = createInitialization();
+			} else loadedOnce = true;
+
+			// Informations
+			this.manga.name = event.detail.title;
+			this.manga.mangaDexId = event.detail.id;
+			await this.getTitleInfos();
+			await this.fetchMyAnimeList();
+
+			if (this.manga.exist && this.manga.is_approved) {
+				this.insertMyAnimeListButton(
+					document.querySelector('.reader-controls-actions.col-auto.row.no-gutters.p-1').lastElementChild
+				);
+			}
+
+			if (this.mangaDexStatus === undefined && (this.options.updateMDList || this.options.updateOnlyInList)) {
+				await this.fetchTitleInfos(false);
+			}
+
+			loading.initialized();
+		});
+		const content = document.getElementById('content');
+		let data = {};
+		const last = { id: 0, page: 0 };
+		// Update current chapter data when changing chapter
+		document.addEventListener('mmdChapterChange', async (event) => (data = event.detail));
+		// Check if it's the last or first page and update on page change
+		document.addEventListener('mmdPageChange', async (event) => {
+			await loading.initialization();
+			const page = event.detail;
+			if (last.id != data.id || last.page != page) {
+				this.pageEvent(content, data, last, page);
+			}
 		});
 	}
 

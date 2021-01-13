@@ -30,6 +30,7 @@ let defaultOptions = {
 	saveOnlyHigher: true,
 	saveOnlyNext: false,
 	confirmChapter: true,
+	saveOnLastPage: false,
 	saveAllOpened: true,
 	maxChapterSaved: 100,
 	updateHistoryPage: false,
