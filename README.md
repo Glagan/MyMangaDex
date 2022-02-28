@@ -1,10 +1,9 @@
+> This project is outdated, use the new version over at https://github.com/Glagan/SyncDex
+
 # MyMangaDex
 
 ![Follow page Screenshot](screenshots/follow.png)  
 Firefox and Chrome extension that synchronizes what you read on MangaDex.org to your MyAnimeList.net manga list.
-
-![Chrome Web Store](https://img.shields.io/chrome-web-store/v/ihejddjcdmdppiimegmknbcaiebklajl?label=Chrome&logo=google%20chrome&style=for-the-badge)
-![Mozilla Add-on](https://img.shields.io/amo/v/mymangadex?label=Firefox&logo=firefox&style=for-the-badge)
 
 ## Why
 
@@ -21,7 +20,7 @@ Once the extension is installed, you have nothing to do!
 Start reading manga and the extension will update them automatically.
 
 If you have a lot of manga, or if you're coming from another site and want to set your follow page up-to-date, you can use the **Import (MAL)** in the options that will update the last opened of all followed manga on MangaDex if they have a MyAnimeList entry.  
-The import *could* be long if you have a lot of manga in your list, don't leave the page until it ends.
+The import _could_ be long if you have a lot of manga in your list, don't leave the page until it ends.
 
 ## Features
 
@@ -60,7 +59,7 @@ The export to MAL feature adds or updates on MyAnimeList all the titles in your 
 ## Online Save
 
 You can enable the option to upload your save to an online service, using a [MMD - Online Save](https://github.com/Glagan/MyMangaDex-OnlineSave) website.  
-By default, this option is turned off and the default website available is my site, [https://mmd.nikurasu.org](https://mmd.nikurasu.org/), but you can clone the Online Save repo and host it yourself, then you just have to change the URL in the options.  
+By default, this option is turned off and the default website available is my site, [https://mmd.nikurasu.org](https://mmd.nikurasu.org/), but you can clone the Online Save repo and host it yourself, then you just have to change the URL in the options.
 
 > Hosting an online service won't actually work for Firefox because of certain limitations...
 
@@ -72,11 +71,11 @@ All of the data is still saved locally and the extension only use local data.
 
 I only store the least possible data:
 
-* The last open chapter for each manga
-* The MyAnimeList id for each manga
-* A list of all opened chapters for each manga
-* The list of options used to customize colors and other parameters
-* If you have the ``Update History page`` option enabled, the name, chapter ID, MangaDex ID and the volume/chapter are saved.
+-   The last open chapter for each manga
+-   The MyAnimeList id for each manga
+-   A list of all opened chapters for each manga
+-   The list of options used to customize colors and other parameters
+-   If you have the `Update History page` option enabled, the name, chapter ID, MangaDex ID and the volume/chapter are saved.
 
 You can disable the option to save all opened chapters, and all of the data can be easily exported using the **Export (MMD)** in the options.
 
@@ -85,56 +84,57 @@ You can disable the option to save all opened chapters, and all of the data can 
 ## Debug installation
 
 You can also install the extension from this repository, but the extension **will** be uninstalled when Firefox is closed and the data **could** be deleted at the same time, Chrome will keep the extension installed.  
-Before you can actually build it, make sure you have [node](https://nodejs.org) and [npm](https://www.npmjs.com) installed. Make sure both are in your path ([On Windows](https://stackoverflow.com/a/27864253)). In the cloned directory then run ``npm install``. This will install all dependencies.
+Before you can actually build it, make sure you have [node](https://nodejs.org) and [npm](https://www.npmjs.com) installed. Make sure both are in your path ([On Windows](https://stackoverflow.com/a/27864253)). In the cloned directory then run `npm install`. This will install all dependencies.
 
-To build the extension, run ``npm run firefox`` or ``npm run chrome``. Both commands support options, separated by ``--``:
+To build the extension, run `npm run firefox` or `npm run chrome`. Both commands support options, separated by `--`:
 
 Options:
 
-* ``-no-minify``: Don't use **terser** to minify scripts.
-* ``-debug``: Add a global try catch block.
+-   `-no-minify`: Don't use **terser** to minify scripts.
+-   `-debug`: Add a global try catch block.
 
-Example: ``npm run chrome -- -no-minify -debug``
+Example: `npm run chrome -- -no-minify -debug`
 
 ### Firefox
 
 1. Be sure that the version from the Firefox add-ons site is not installed (don't know what it would do, maybe it just won't work)
 2. Clone the repo and move your terminal to the new folder
-3. Install dependencies ``npm install``
-4. Build ``npm run firefox``
+3. Install dependencies `npm install`
+4. Build `npm run firefox`
 5. Go to [about:debugging](about:debugging)
-6. Go to *This Firefox*
-7. Click *Load a Temporary Add-on...*
-8. Select *manifest.json* of *firefoxBuild* folder
+6. Go to _This Firefox_
+7. Click _Load a Temporary Add-on..._
+8. Select _manifest.json_ of _firefoxBuild_ folder
 9. Done !
 
 ### Chrome
 
 1. Make sure it isn't already installed
 2. Clone the repo and move your terminal to the new folder
-3. Install dependencies ``npm install``
-4. Build ``npm run chrome``
+3. Install dependencies `npm install`
+4. Build `npm run chrome`
 5. Go to [chrome://extensions/](chrome://extensions/)
-6. Activate *Developper Mode* on the top right
-7. Click *Load Unpacked*
-8. Select the *chromeBuild* folder
+6. Activate _Developper Mode_ on the top right
+7. Click _Load Unpacked_
+8. Select the _chromeBuild_ folder
 9. Done !
 
 ### Developing
 
 MyMangaDex now comes with a developing script.
 Make sure you have the repo and all dependencies installed (see above).
-Run ``npm run firefox:dev`` / ``npm run chrome:dev`` to watch and automatically rebuild and reload the extension.
+Run `npm run firefox:dev` / `npm run chrome:dev` to watch and automatically rebuild and reload the extension.
 
 `chrome:dev` uses the chromium target with less support.
 `firefox:dev` has full support and accepts the following additional arguments:
-- `-profile name` Use existing profile. *This profile should **not** be used for daily use anymore (See [here](https://extensionworkshop.com/documentation/develop/web-ext-command-reference/#web-ext_run))*
-- `-mobile [device]` Connect to FireFox Android over `adb`. If not device is supplied, lists available devices.
-Example: ``npm run firefox:dev -- -mobile 73QPH18801900227``
 
-``-detached`` allows the builder to leave the browser and extension-reloading running in the background and to reconnect the next time you start. Don't forget to terminate this process with ``npm run stop``. Note: This does not check if the background process was started for the same browser. Stop if you want to change browsers.
+-   `-profile name` Use existing profile. _This profile should **not** be used for daily use anymore (See [here](https://extensionworkshop.com/documentation/develop/web-ext-command-reference/#web-ext_run))_
+-   `-mobile [device]` Connect to FireFox Android over `adb`. If not device is supplied, lists available devices.
+    Example: `npm run firefox:dev -- -mobile 73QPH18801900227`
+
+`-detached` allows the builder to leave the browser and extension-reloading running in the background and to reconnect the next time you start. Don't forget to terminate this process with `npm run stop`. Note: This does not check if the background process was started for the same browser. Stop if you want to change browsers.
 
 ## Useful links
 
-* Extension inspired by [MAL-Sync](https://github.com/lolamtisch/MALSync).
-* [Import favorites from KissManga to MangaDex](https://old.reddit.com/r/manga/comments/8qebu4/import_kissmanga_bookmarks_to_mangadex/)
+-   Extension inspired by [MAL-Sync](https://github.com/lolamtisch/MALSync).
+-   [Import favorites from KissManga to MangaDex](https://old.reddit.com/r/manga/comments/8qebu4/import_kissmanga_bookmarks_to_mangadex/)
